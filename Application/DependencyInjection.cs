@@ -11,6 +11,7 @@ namespace Backend_Almacen.Application
             services.AddScoped<TasaService>();
             services.AddScoped<InventarioService>();
             services.AddScoped<PedidosService>();
+            services.AddScoped<ReportesService>();
             services.AddSingleton<ColaWhatsapp>();
             return services;
         }

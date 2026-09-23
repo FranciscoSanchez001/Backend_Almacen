@@ -1,6 +1,7 @@
 using Backend_Almacen.Application.Abstracciones;
 using Backend_Almacen.Application.Comun;
 using Backend_Almacen.Domain.Entidades;
+using Backend_Almacen.Domain.Reglas;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
@@ -64,6 +65,69 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
             db.Productos.AnyAsync(p => p.CodigoSku == sku && p.Id != exceptoId, ct);
 
         public void Agregar(Producto producto) => db.Productos.Add(producto);
+
+        public async Task<List<Producto>> ListarMasVendidosAsync(int limite, CancellationToken ct = default)
+        {
+            var ids = await ItemsVendidosVisibles()
+                .GroupBy(i => i.ProductoId)
+                .Select(g => new { ProductoId = g.Key, Unidades = g.Sum(i => i.Cantidad) })
+                .OrderByDescending(x => x.Unidades).ThenBy(x => x.ProductoId)
+                .Take(limite)
+                .Select(x => x.ProductoId)
+                .ToListAsync(ct);
+            return await CargarEnOrdenAsync(ids, ct);
+        }
+
+        // Cada pedido tiene a lo sumo un ítem por producto, así que Count() = número de pedidos.
+        public async Task<List<Producto>> ListarCompradosFrecuentesAsync(Guid clienteId, int limite,
+            CancellationToken ct = default)
+        {
+            var ids = await ItemsVendidosVisibles()
+                .Where(i => i.Pedido.ClienteId == clienteId)
+                .GroupBy(i => i.ProductoId)
+                .Select(g => new { ProductoId = g.Key, Pedidos = g.Count(), Unidades = g.Sum(i => i.Cantidad) })
+                .OrderByDescending(x => x.Pedidos).ThenByDescending(x => x.Unidades).ThenBy(x => x.ProductoId)
+                .Take(limite)
+                .Select(x => x.ProductoId)
+                .ToListAsync(ct);
+            return await CargarEnOrdenAsync(ids, ct);
+        }
+
+        public async Task<List<Producto>> ListarCompradosRecientesAsync(Guid clienteId, int limite,
+            CancellationToken ct = default)
+        {
+            // Join explícito con pedidos: con la navegación i.Pedido, EF pone el MAX en una
+            // subconsulta correlacionada; así queda ORDER BY max(creado_en) en el mismo GROUP BY.
+            var ids = await (
+                    from i in ItemsVendidosVisibles()
+                    join p in db.Pedidos on i.PedidoId equals p.Id
+                    where p.ClienteId == clienteId
+                    group p.CreadoEn by i.ProductoId into g
+                    orderby g.Max() descending, g.Key
+                    select g.Key)
+                .Take(limite)
+                .ToListAsync(ct);
+            return await CargarEnOrdenAsync(ids, ct);
+        }
+
+        private IQueryable<PedidoItem> ItemsVendidosVisibles() =>
+            db.PedidoItems.AsNoTracking()
+                .Where(i => TransicionesPedido.CuentanComoVenta.Contains(i.Pedido.Estado)
+                    && i.Producto.Activo && i.Producto.StockDisponible > 0);
+
+        // Carga los productos respetando el orden del ranking.
+        private async Task<List<Producto>> CargarEnOrdenAsync(List<Guid> ids, CancellationToken ct)
+        {
+            if (ids.Count == 0)
+            {
+                return [];
+            }
+            var productos = await db.Productos.AsNoTracking()
+                .Include(p => p.Categoria)
+                .Where(p => ids.Contains(p.Id) && p.Activo && p.StockDisponible > 0)
+                .ToDictionaryAsync(p => p.Id, ct);
+            return ids.Where(productos.ContainsKey).Select(id => productos[id]).ToList();
+        }
 
         // Búsqueda por nombre o SKU.
         private static IQueryable<Producto> Filtrar(IQueryable<Producto> query, string? texto, Guid? categoriaId)

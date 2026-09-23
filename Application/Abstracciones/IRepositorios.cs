@@ -9,9 +9,17 @@ namespace Backend_Almacen.Application.Abstracciones
     // (.AsNoTracking()), solo para leer. Los *ParaEditar* devuelven entidades con seguimiento,
     // cuyos cambios se guardan con IUnitOfWork.GuardarCambiosAsync.
 
+    public record FiltroUsuarios(
+        string? Texto = null,
+        RolUsuario? Rol = null,
+        bool? Activo = null);
+
     public interface IUsuarioRepository
     {
         Task<Usuario?> ObtenerAsync(Guid id, CancellationToken ct = default);
+        Task<Usuario?> ObtenerParaEditarAsync(Guid id, CancellationToken ct = default);
+        Task<Pagina<Usuario>> ListarAsync(FiltroUsuarios filtro, int pagina, int tamano, CancellationToken ct = default);
+        Task<bool> EmailEnUsoAsync(string email, Guid? exceptoId, CancellationToken ct = default);
         Task<Usuario?> ObtenerPersonalPorEmailAsync(string email, CancellationToken ct = default);
         Task<Usuario?> ObtenerPorGoogleIdParaEditarAsync(string googleId, CancellationToken ct = default);
         Task<Usuario?> ObtenerPorEmailParaEditarAsync(string email, CancellationToken ct = default);
@@ -37,7 +45,11 @@ namespace Backend_Almacen.Application.Abstracciones
     public interface IZonaRepository
     {
         Task<List<Zona>> ListarActivasAsync(CancellationToken ct = default);
+        Task<List<Zona>> ListarTodasAsync(CancellationToken ct = default);
         Task<bool> ExisteActivaAsync(Guid id, CancellationToken ct = default);
+        Task<bool> NombreEnUsoAsync(string nombre, Guid? exceptoId, CancellationToken ct = default);
+        Task<Zona?> ObtenerParaEditarAsync(Guid id, CancellationToken ct = default);
+        void Agregar(Zona zona);
     }
 
     public record FiltroProductos(
@@ -57,6 +69,18 @@ namespace Backend_Almacen.Application.Abstracciones
         Task<bool> ExisteAsync(Guid id, CancellationToken ct = default);
         Task<bool> SkuEnUsoAsync(string sku, Guid? exceptoId, CancellationToken ct = default);
         void Agregar(Producto producto);
+
+        // Inicio de la tienda. Solo cuentan los pedidos que son venta y solo devuelven productos
+        // visibles en la tienda (activos con stock), con la categoría cargada.
+
+        // Los más vendidos de toda la tienda, por unidades.
+        Task<List<Producto>> ListarMasVendidosAsync(int limite, CancellationToken ct = default);
+
+        // "Los que compras siempre": los que el cliente compró en más pedidos.
+        Task<List<Producto>> ListarCompradosFrecuentesAsync(Guid clienteId, int limite, CancellationToken ct = default);
+
+        // "Tus últimas compras": los que el cliente compró más recientemente.
+        Task<List<Producto>> ListarCompradosRecientesAsync(Guid clienteId, int limite, CancellationToken ct = default);
     }
 
     // Operaciones atómicas de stock: cada una es un único UPDATE condicional sobre productos que
@@ -114,6 +138,9 @@ namespace Backend_Almacen.Application.Abstracciones
 
         Task<List<Guid>> ListarIdsVencidosAsync(DateTime ahora, int maximo, CancellationToken ct = default);
         Task<List<Guid>> ListarIdsPorExpirarSinAvisoAsync(DateTime ahora, DateTime limite, CancellationToken ct = default);
+
+        // Pedidos asignados o en camino del repartidor.
+        Task<int> ContarEnCursoDeRepartidorAsync(Guid repartidorId, CancellationToken ct = default);
         void Agregar(Pedido pedido);
     }
 
@@ -129,16 +156,61 @@ namespace Backend_Almacen.Application.Abstracciones
     public interface IConfiguracionRepository
     {
         Task<Configuracion> ObtenerAsync(CancellationToken ct = default);
+        Task<Configuracion> ObtenerParaEditarAsync(CancellationToken ct = default);
+
+        // Historial de tasas, la más reciente primero, con el usuario que la cargó.
+        Task<Pagina<HistorialTasa>> ListarTasasAsync(int pagina, int tamano, CancellationToken ct = default);
+        void AgregarTasa(HistorialTasa tasa);
     }
+
+    // Desde y Hasta filtran por creado_en: desde inclusive, hasta exclusive.
+    public record FiltroAuditoria(
+        Guid? UsuarioId = null,
+        string? Entidad = null,
+        Guid? EntidadId = null,
+        DateTime? Desde = null,
+        DateTime? Hasta = null);
+
+    public record FiltroCambiosEstado(
+        Guid? UsuarioId = null,
+        Guid? PedidoId = null,
+        DateTime? Desde = null,
+        DateTime? Hasta = null);
 
     public interface IAuditoriaRepository
     {
         void Agregar(Auditoria auditoria);
+
+        // Los más recientes primero.
+        Task<Pagina<RegistroAuditoria>> ListarAsync(FiltroAuditoria filtro, int pagina, int tamano,
+            CancellationToken ct = default);
+
+        // Quién movió cada pedido de estado (historial_estados_pedido), los más recientes primero.
+        Task<Pagina<CambioEstadoPedido>> ListarCambiosEstadoAsync(FiltroCambiosEstado filtro, int pagina, int tamano,
+            CancellationToken ct = default);
     }
 
     public interface IMensajeWhatsappRepository
     {
         void Agregar(MensajeWhatsapp mensaje);
+    }
+
+    // Datos crudos del dashboard y del informe en Excel; ReportesService calcula los KPIs.
+    // Rangos en UTC: desde inclusive, hasta exclusive, sobre pedidos.creado_en.
+    public interface IReportesRepository
+    {
+        // Todos los pedidos creados en el rango, en cualquier estado.
+        Task<List<PedidoReporte>> ListarPedidosAsync(DateTime desdeUtc, DateTime hastaUtc, CancellationToken ct = default);
+
+        // Ítems de los pedidos del rango que cuentan como venta.
+        Task<List<ItemReporte>> ListarItemsVendidosAsync(DateTime desdeUtc, DateTime hastaUtc, CancellationToken ct = default);
+
+        Task<List<ProductoStock>> ListarProductosActivosAsync(CancellationToken ct = default);
+
+        // Stock disponible que tenía cada producto en `momento`, para los productos que tuvieron
+        // movimientos después (disponible_antes del primer movimiento posterior). Los que no
+        // aparecen no cambiaron desde entonces: su stock es el actual.
+        Task<Dictionary<Guid, int>> StockDisponibleEnAsync(DateTime momentoUtc, CancellationToken ct = default);
     }
 
     public interface IDiagnosticoBaseDatos

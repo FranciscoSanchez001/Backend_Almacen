@@ -6,6 +6,7 @@ using Backend_Almacen.Application.Servicios;
 using Backend_Almacen.Domain.Enums;
 using Backend_Almacen.Domain.Reglas;
 using Backend_Almacen.WebAPI.Auth;
+using Backend_Almacen.WebAPI.Comun;
 using Backend_Almacen.WebAPI.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -123,8 +124,8 @@ namespace Backend_Almacen.WebAPI.Controllers
                 Estados: estado is null ? null : [estado.Value],
                 RepartidorId: repartidorId,
                 ZonaId: zonaId,
-                Desde: desde is null ? null : DateTime.SpecifyKind(desde.Value, DateTimeKind.Utc),
-                Hasta: hasta is null ? null : DateTime.SpecifyKind(hasta.Value, DateTimeKind.Utc),
+                Desde: Fechas.AUtc(desde),
+                Hasta: Fechas.AUtc(hasta),
                 Orden: estado == EstadoPedido.Pendiente ? OrdenPedidos.MasUrgentes : OrdenPedidos.MasRecientes);
             return (await repositorio.ListarAsync(filtro, pagina, tamano, ct)).Convertir(PedidoResponse.De);
         }

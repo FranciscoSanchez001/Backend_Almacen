@@ -13,6 +13,40 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
         public Task<Usuario?> ObtenerAsync(Guid id, CancellationToken ct = default) =>
             db.Usuarios.AsNoTracking().SingleOrDefaultAsync(u => u.Id == id, ct);
 
+        public Task<Usuario?> ObtenerParaEditarAsync(Guid id, CancellationToken ct = default) =>
+            db.Usuarios.SingleOrDefaultAsync(u => u.Id == id, ct);
+
+        // Busca por nombre, email o teléfono.
+        public Task<Pagina<Usuario>> ListarAsync(FiltroUsuarios filtro, int pagina, int tamano,
+            CancellationToken ct = default)
+        {
+            var query = db.Usuarios.AsNoTracking();
+            if (filtro.Rol is not null)
+            {
+                query = query.Where(u => u.Rol == filtro.Rol);
+            }
+            if (filtro.Activo is not null)
+            {
+                query = query.Where(u => u.Activo == filtro.Activo);
+            }
+            if (!string.IsNullOrWhiteSpace(filtro.Texto))
+            {
+                var patron = $"%{filtro.Texto.Trim()}%";
+                var telefono = Telefonos.NormalizarVenezolano(filtro.Texto);
+                query = query.Where(u => EF.Functions.ILike(u.Nombre, patron)
+                    || EF.Functions.ILike(u.Email, patron)
+                    || (telefono != null && u.Telefono == telefono));
+            }
+
+            return query.OrderBy(u => u.Rol).ThenBy(u => u.Nombre).ThenBy(u => u.Id).PaginarAsync(pagina, tamano, ct);
+        }
+
+        public Task<bool> EmailEnUsoAsync(string email, Guid? exceptoId, CancellationToken ct = default)
+        {
+            var normalizado = email.Trim().ToLowerInvariant();
+            return db.Usuarios.AnyAsync(u => u.Email.ToLower() == normalizado && u.Id != exceptoId, ct);
+        }
+
         public Task<Usuario?> ObtenerPersonalPorEmailAsync(string email, CancellationToken ct = default)
         {
             var normalizado = email.Trim().ToLowerInvariant();

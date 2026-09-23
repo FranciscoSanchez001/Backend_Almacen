@@ -11,6 +11,10 @@ namespace Backend_Almacen.Application.Servicios
     {
         public const string Producto = "producto";
         public const string Categoria = "categoria";
+        public const string Usuario = "usuario";
+        public const string Zona = "zona";
+        public const string Reporte = "reporte";
+        public const string Configuracion = "configuracion";
     }
 
     public class AuditoriaService(IAuditoriaRepository auditoria)

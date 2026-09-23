@@ -92,6 +92,10 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
                 .Select(p => p.Id)
                 .ToListAsync(ct);
 
+        public Task<int> ContarEnCursoDeRepartidorAsync(Guid repartidorId, CancellationToken ct = default) =>
+            db.Pedidos.CountAsync(p => p.RepartidorId == repartidorId
+                && (p.Estado == EstadoPedido.Asignado || p.Estado == EstadoPedido.EnCamino), ct);
+
         public void Agregar(Pedido pedido) => db.Pedidos.Add(pedido);
     }
 }

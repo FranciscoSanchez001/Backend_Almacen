@@ -1,4 +1,6 @@
 using Backend_Almacen.Application.Abstracciones;
+using Backend_Almacen.Application.Servicios;
+using Backend_Almacen.Infrastructure.Reportes;
 using Backend_Almacen.Infrastructure.Archivos;
 using Backend_Almacen.Infrastructure.Jobs;
 using Backend_Almacen.Infrastructure.Mensajeria;
@@ -32,6 +34,11 @@ namespace Backend_Almacen.Infrastructure
             services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
             services.AddScoped<IMensajeWhatsappRepository, MensajeWhatsappRepository>();
             services.AddScoped<IDiagnosticoBaseDatos, DiagnosticoBaseDatos>();
+            services.AddScoped<IReportesRepository, ReportesRepository>();
+
+            // KPIs e informe en Excel.
+            services.AddSingleton(configuracion.GetSection("Reportes").Get<ReportesOptions>() ?? new ReportesOptions());
+            services.AddSingleton<IGeneradorExcel, GeneradorExcel>();
 
             services.AddSingleton<IHasherContrasenas, HasherBcrypt>();
 

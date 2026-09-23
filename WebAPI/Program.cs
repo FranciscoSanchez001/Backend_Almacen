@@ -92,4 +92,11 @@ app.MapControllers();
 
 await app.Services.InicializarBaseDatosAsync(app.Configuration);
 
+// Datos de demostración (solo desarrollo y a pedido):
+//   dotnet run --project WebAPI -- --SiembraDemo:Habilitada=true
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("SiembraDemo:Habilitada"))
+{
+    await app.Services.SembrarDatosDemoAsync(app.Configuration);
+}
+
 app.Run();

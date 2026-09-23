@@ -1,5 +1,13 @@
+using Backend_Almacen.Application.Modelos;
+
 namespace Backend_Almacen.Application.Abstracciones
 {
+    // Arma el .xlsx del informe de ventas con las 10 hojas de la especificación.
+    public interface IGeneradorExcel
+    {
+        byte[] Generar(DatosReporte datos);
+    }
+
     // Dónde se guardan las capturas de pago (Cloudinary o disco local).
     public interface IAlmacenamientoArchivos
     {

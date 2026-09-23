@@ -68,6 +68,25 @@ namespace Backend_Almacen.WebAPI.Dtos
             p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible);
     }
 
+    // Inicio de la tienda. Las listas personales van vacías si no hay un cliente con sesión.
+    public record InicioTiendaResponse(
+        IReadOnlyList<CatalogoItem> MasVendidos,
+        IReadOnlyList<CatalogoItem> CompraSiempre,
+        IReadOnlyList<CatalogoItem> UltimasCompras);
+
+    // Paso 1 del checkout: datos para pagar. Transferencia y pago móvil se pagan en Bs con la
+    // tasa del día; Binance en USDT 1:1.
+    public record DatosPagoResponse(
+        decimal? TasaBsUsd,
+        string? DatosTransferencia,
+        string? DatosPagoMovil,
+        string? WalletBinance,
+        string? NumeroSoporte)
+    {
+        public static DatosPagoResponse De(Configuracion c) =>
+            new(c.TasaBsUsd, c.DatosTransferencia, c.DatosPagoMovil, c.WalletBinance, c.NumeroSoporte);
+    }
+
     // Lo que se guarda en auditoria.datos_antes / datos_despues.
     public record ProductoAuditoria(
         string CodigoSku,
