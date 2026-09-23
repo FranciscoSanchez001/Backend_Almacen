@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="Backend_Almacen.csproj" />
+  <Project Path="Domain/Backend_Almacen.Domain.csproj" />
+  <Project Path="Application/Backend_Almacen.Application.csproj" />
+  <Project Path="Infrastructure/Backend_Almacen.Infrastructure.csproj" />
+  <Project Path="WebAPI/Backend_Almacen.WebAPI.csproj" />
 </Solution>

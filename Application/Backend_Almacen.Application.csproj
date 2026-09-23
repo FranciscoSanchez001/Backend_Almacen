@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Capa de aplicación: casos de uso (servicios) y contratos (repositorios, almacenamiento,
+       unidad de trabajo) que implementa Infrastructure. No conoce EF Core ni ASP.NET. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Backend_Almacen.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Backend_Almacen.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+</Project>

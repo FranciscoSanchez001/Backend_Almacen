@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Capa de dominio: entidades y reglas de negocio puras, sin dependencias externas. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Backend_Almacen.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>
