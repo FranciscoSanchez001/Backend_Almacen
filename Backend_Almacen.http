@@ -1,6 +1,56 @@
 @Backend_Almacen_HostAddress = http://localhost:5085
+# Pega aquí el token que devuelve /auth/login.
+@token =
 
-GET {{Backend_Almacen_HostAddress}}/weatherforecast/
-Accept: application/json
+### Login del personal
+POST {{Backend_Almacen_HostAddress}}/auth/login
+Content-Type: application/json
 
-###
+{ "email": "gerente@almacen.local", "password": "Cambiar123!" }
+
+### Catálogo público
+GET {{Backend_Almacen_HostAddress}}/catalogo?q=leche&pagina=1
+
+### Categorías
+POST {{Backend_Almacen_HostAddress}}/categorias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nombre": "Lácteos" }
+
+### Crear producto
+POST {{Backend_Almacen_HostAddress}}/productos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nombre": "Leche 1L", "descripcion": "Entera", "precioUsd": 1.25, "categoriaId": 1, "stockInicial": 20 }
+
+### Editar producto (stockDisponible es opcional; si cambia, queda como ajuste)
+PUT {{Backend_Almacen_HostAddress}}/productos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nombre": "Leche entera 1L", "descripcion": "Entera", "precioUsd": 1.30, "categoriaId": 1, "stockDisponible": 18 }
+
+### Borrar producto (solo superadmin, borrado lógico)
+DELETE {{Backend_Almacen_HostAddress}}/productos/1
+Authorization: Bearer {{token}}
+
+### Inventario (agotados primero)
+GET {{Backend_Almacen_HostAddress}}/inventario?soloAgotados=false
+Authorization: Bearer {{token}}
+
+### Reponer
+POST {{Backend_Almacen_HostAddress}}/inventario/1/reponer
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "cantidad": 10 }
+
+### Movimientos de un producto
+GET {{Backend_Almacen_HostAddress}}/inventario/1/movimientos
+Authorization: Bearer {{token}}
+
+### Notificaciones sin leer
+GET {{Backend_Almacen_HostAddress}}/notificaciones
+Authorization: Bearer {{token}}

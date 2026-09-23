@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using NpgsqlTypes;
 
 namespace Backend_Almacen.Models
@@ -33,8 +34,8 @@ namespace Backend_Almacen.Models
 
     public enum MonedaPago
     {
-        [PgName("VES")] Ves,
-        [PgName("USDT")] Usdt
+        [PgName("VES"), JsonStringEnumMemberName("VES")] Ves,
+        [PgName("USDT"), JsonStringEnumMemberName("USDT")] Usdt
     }
 
     public enum TipoMovimientoInventario
