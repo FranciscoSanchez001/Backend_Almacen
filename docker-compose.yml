@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: midatabase
+      POSTGRES_USER: miusuario
+      POSTGRES_PASSWORD: mipassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgrest:
+    image: postgrest/postgrest
+    container_name: postgrest_api
+    ports:
+      - "3000:3000"
+    environment:
+      # Conexión a la base de datos: postgres://usuario:password@servicio:puerto/nombre_bd
+      PGRST_DB_URI: postgres://miusuario:mipassword@db:5432/midatabase
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: miusuario
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
