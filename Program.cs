@@ -1,6 +1,13 @@
+using Backend_Almacen.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddDbContext<AlmacenDbContext>(options => options
+    .UseNpgsql(builder.Configuration.GetConnectionString("Almacen"), AlmacenDbContext.MapEnums)
+    .UseSnakeCaseNamingConvention());
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
