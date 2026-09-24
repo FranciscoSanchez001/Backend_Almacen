@@ -1,4 +1,4 @@
-# Sistema E-commerce para Supermercado (Backend)
+# Sistema E-commerce para Supermercado · API Backend
 
 ### **Asignatura: Desarrollo de Aplicaciones Web (Código: 0423807T)**
 
@@ -19,9 +19,11 @@
 
 ## 📌 Descripción General
 
-El presente proyecto constituye el backend de una plataforma de comercio electrónico para un supermercado. Permite a los clientes consultar el catálogo, comprar con métodos de pago locales (transferencia, pago móvil y Binance) adjuntando el comprobante, y recibir su pedido a domicilio; al personal, gestionar productos, inventario y pedidos; y al gerente, supervisar la operación.
+Este repositorio contiene la **API REST (backend)** de una plataforma de comercio electrónico para un supermercado. La API resuelve la lógica del negocio y la persistencia de datos: catálogo, carrito y creación de pedidos con métodos de pago locales (transferencia, pago móvil y Binance) y comprobante adjunto, inventario con reserva de stock, aprobación y entrega de pedidos, notificaciones por WhatsApp, auditoría, indicadores (KPIs) e informe en Excel.
 
-El sistema maneja **cuatro tipos de usuario**:
+> **Alcance del repositorio:** aquí solo vive el backend. Las aplicaciones cliente (frontend) se desarrollan en repositorios separados y se comunican con esta API mediante HTTP/JSON.
+
+La API atiende a **cuatro tipos de usuario**:
 
 | Rol | Quién es | Cómo inicia sesión |
 | :--- | :--- | :--- |
@@ -164,7 +166,7 @@ El modelo completo (13 tablas y 8 enumeraciones) está en [`docs/MODELO_DATOS.md
 - **ORM & Base de Datos:** Entity Framework Core 10, Npgsql, EFCore.NamingConventions, PostgreSQL 16.
 - **Seguridad:** JSON Web Tokens (JWT) con HMAC-SHA256, contraseñas con **BCrypt**, inicio de sesión de clientes con **Google** (`Google.Apis.Auth`).
 - **Archivos:** Cloudinary para los comprobantes de pago (en desarrollo, disco local).
-- **Reportes:** KPIs para el dashboard del gerente e informe en Excel generado con **ClosedXML**.
+- **Reportes:** endpoint de KPIs e informe en Excel generado con **ClosedXML**.
 - **Datos de demostración:** **Bogus** para simular clientes y pedidos.
 - **Mensajería:** WhatsApp mediante un microservicio con **Baileys** (Node.js).
 - **Contenerización:** Docker y Docker Compose.
@@ -272,7 +274,7 @@ La migración siembra además:
 
 ### Datos de demostración (opcional)
 
-Para que el dashboard de KPIs, el informe en Excel y los paneles tengan información con la cual trabajar, la API puede generar datos simulados con **Bogus**: personal, clientes, productos adicionales, historial de tasas y **90 días de pedidos**.
+Para probar los KPIs, el informe en Excel y el resto de endpoints con información realista, la API puede generar datos simulados con **Bogus**: personal, clientes, productos adicionales, historial de tasas y **90 días de pedidos**.
 
 ```bash
 dotnet run --project WebAPI -- --SiembraDemo:Habilitada=true

@@ -183,7 +183,7 @@ erDiagram
 | `categorias` | Secciones del supermercado (Víveres, Bebidas…). |
 | `productos` | Catálogo. Guarda el stock en dos contadores: **disponible** (lo que se puede vender) y **reservado** (lo apartado por pedidos pendientes). El borrado es lógico con `activo`. |
 | `usuarios` | Clientes y personal. Los clientes tienen `google_id`; el personal, `password_hash`. |
-| `zonas` | Zonas de entrega que el cliente elige al comprar. |
+| `zonas` | Zonas de entrega; cada pedido indica la suya. |
 | `pedidos` | Cada compra, con su estado, método de pago, comprobante, dirección, tasa de cambio congelada y fechas de cada etapa. |
 | `pedido_items` | Productos de cada pedido, con **precio y categoría congelados** al momento de la compra. |
 | `historial_estados_pedido` | Cada cambio de estado de un pedido: de qué estado a cuál, quién y cuándo. |

@@ -55,7 +55,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | `GET` | `/productos/{id}` | 🧾 | Detalle de un producto. |
 | `POST` | `/productos` | 🧾 | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial`. Queda registrado en la auditoría. |
 | `PUT` | `/productos/{id}` | 🧾 | Edita un producto. Si cambia el stock disponible, se registra como ajuste de inventario. |
-| `DELETE` | `/productos/{id}` | 👔 | Borrado lógico (el producto deja de mostrarse, pero se conserva el historial). |
+| `DELETE` | `/productos/{id}` | 👔 | Borrado lógico (el producto deja de aparecer en `/catalogo`, pero se conserva su historial). |
 
 ## 5. Inventario — `/inventario`
 
@@ -97,7 +97,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | `captura` | archivo | Sí | Imagen del comprobante. |
 | `zonaId` | UUID | Sí | Zona de entrega. |
 | `direccionTexto` | texto | Sí | Dirección y punto de referencia (5 a 500 caracteres). |
-| `latitud`, `longitud` | número | No | Ubicación en el mapa. |
+| `latitud`, `longitud` | número | No | Coordenadas de la dirección de entrega. |
 | `telefono` | texto | Sí | Formato venezolano `+58 4XX XXX XXXX`. |
 
 ## 8. Clientes — `/clientes`
@@ -152,7 +152,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/kpis` | 👔 | Indicadores del dashboard del gerente. |
+| `GET` | `/kpis` | 👔 | Indicadores (KPIs) de ventas, productos, pagos, horas pico, zonas, inventario y operación, en JSON. |
 | `GET` | `/reportes/excel` | 👔 | Descarga el informe en Excel (`.xlsx`). |
 
 **Parámetros de período** (ambos endpoints). Las fechas van en formato `yyyy-MM-dd`, en hora local de la tienda, y ambas son inclusive:
@@ -165,13 +165,13 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | `tipo=personalizado` | El rango entre `desde` y `hasta`. |
 | Sin parámetros (solo `/kpis`) | El mes en curso. |
 
-Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **el Excel coincide con lo que se ve en el dashboard**. El informe trae las hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos.
+Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los datos del Excel coinciden con los de `/kpis`**. El informe trae las hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos.
 
 ## 15. Diagnóstico — `/DbTest`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/DbTest` | 🌐 | Verifica la conexión a PostgreSQL y muestra migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
+| `GET` | `/DbTest` | 🌐 | Verifica la conexión a PostgreSQL y devuelve las migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
 
 ---
 

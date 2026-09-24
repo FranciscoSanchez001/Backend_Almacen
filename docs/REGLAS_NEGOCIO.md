@@ -90,7 +90,7 @@ Cada producto tiene dos contadores: **stock disponible** (lo que se puede vender
 Reglas:
 - **Sin sobreventa.** La reserva es atómica y la base de datos impide que el stock quede negativo, así que si dos clientes compran la última unidad al mismo tiempo, solo uno lo consigue.
 - **Todo o nada.** Si un pedido tiene varios productos y uno no alcanza, no se reserva ninguno.
-- **Agotado.** Cuando el stock disponible llega a 0, se crea una notificación de **producto agotado** y el producto deja de mostrarse en el catálogo. Si una reposición, un rechazo o una expiración devuelven unidades, vuelve a aparecer solo.
+- **Agotado.** Cuando el stock disponible llega a 0, se crea una notificación de **producto agotado** y el producto deja de aparecer en `/catalogo`. Si una reposición, un rechazo o una expiración devuelven unidades, vuelve a aparecer solo.
 - **Trazabilidad.** Cada movimiento guarda la cantidad, el stock antes y después, el pedido (si aplica) y el usuario.
 
 ---
@@ -109,7 +109,7 @@ Reglas:
 - La moneda oficial es el **dólar (USD)**: los precios se guardan en USD.
 - El gerente carga la **tasa Bs/USD del día** con `PUT /configuracion/tasa`; cada carga queda en `historial_tasas`.
 - **Sin tasa cargada, la tienda no acepta pedidos**, porque no puede calcular el total en bolívares.
-- El catálogo muestra cada precio en USD y en Bs, calculado con la tasa vigente.
+- `/catalogo` devuelve cada precio en USD y en Bs, calculado con la tasa vigente.
 - Cada pedido **congela la tasa** al momento de la compra, así que los cambios posteriores de tasa no alteran pedidos ya hechos.
 
 ---
@@ -136,11 +136,11 @@ Reglas:
 
 ## 8. KPIs e Informe en Excel
 
-- Solo el **superadmin** accede al dashboard (`GET /kpis`) y al informe (`GET /reportes/excel`).
+- Solo el **superadmin** accede a los KPIs (`GET /kpis`) y al informe (`GET /reportes/excel`).
 - **Solo cuentan como venta** los pedidos `aprobado`, `asignado`, `en_camino` y `entregado`. Los pendientes, rechazados y expirados no suman a los ingresos.
 - Los montos están en USD, con su equivalente en Bs según la tasa congelada de cada pedido.
 - El período puede ser diario, semanal (lunes a domingo), mensual o personalizado, en hora local de la tienda.
-- El dashboard y el Excel salen del mismo cálculo (`ReportesService`), así que siempre coinciden.
+- Los KPIs y el Excel salen del mismo cálculo (`ReportesService`), así que siempre coinciden.
 - El informe trae 10 hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos. La hoja **Detalle de pedidos** trae los datos sin procesar, para que el gerente haga sus propios análisis.
 
 ---

@@ -54,7 +54,7 @@ La entidad `Pedido` encapsula su propia regla: todo cambio de estado pasa por `P
 - `Servicios/`:
   - `PedidosService`: crear, aprobar, rechazar, marcar en camino, entregar y expirar pedidos.
   - `InventarioService`: reservar, confirmar y liberar stock, y reponer productos.
-  - `ReportesService`: calcula los KPIs del dashboard y los datos del informe en Excel.
+  - `ReportesService`: calcula los KPIs y los datos del informe en Excel.
   - `AuditoriaService`: registrar quién cambió qué.
   - `TasaService`: tasa de cambio Bs/USD vigente.
   - `ColaWhatsapp`: cola en memoria de los mensajes pendientes por enviar.
