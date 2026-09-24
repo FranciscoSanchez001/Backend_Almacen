@@ -1,39 +1,372 @@
-# Backend_Almacen
+# Sistema E-commerce para Supermercado (Backend)
 
-Backend del e-commerce del supermercado: ASP.NET Core 10 + EF Core 10 (Code-First) sobre PostgreSQL.
+### **Asignatura: Desarrollo de Aplicaciones Web (Código: 0423807T)**
 
-## Estructura de la solución
+**Facilitador:** M.Sc. Ing. Gabriel Alexis Ramírez Sánchez  
+**Email:** gramirezs@unet.edu.ve  
+**Período Académico:** Septiembre, 2026  
+**San Cristóbal, Estado Táchira, Venezuela**
 
-| Proyecto | Contenido |
-|---|---|
-| `Domain` | Entidades (claves UUID), enums y reglas de negocio puras (transiciones de estado del pedido, teléfonos venezolanos). Sin dependencias externas. |
-| `Application` | Casos de uso (`PedidosService`, `InventarioService`, …) y contratos: interfaces de repositorios, `IUnitOfWork`, almacenamiento de archivos. No conoce EF Core. |
-| `Infrastructure` | Persistencia: `ApplicationDbContext`, una `IEntityTypeConfiguration<T>` por entidad (`Persistencia/Configuraciones`), migraciones, repositorios con `.AsNoTracking()` en las lecturas y datos semilla. También Cloudinary, el envío de WhatsApp y el job de expiración. |
-| `WebAPI` | Controladores, DTOs, autenticación JWT / Google y `Program.cs`. |
+**Integrantes del equipo:**
 
-Dependencias: `WebAPI → Application, Infrastructure`; `Infrastructure → Application → Domain`.
+| Integrante | Rol en el proyecto |
+| :--- | :--- |
+| Gregorio Briceño | Desarrollo backend |
+| Francisco Sánchez | Desarrollo backend |
+| María Fernanda Cachopo Rojas | Gestión del proyecto (Scrum) y documentación |
 
-## Base de datos
+---
+
+## 📌 Descripción General
+
+El presente proyecto constituye el backend de una plataforma de comercio electrónico para un supermercado. Permite a los clientes consultar el catálogo, comprar con métodos de pago locales (transferencia, pago móvil y Binance) adjuntando el comprobante, y recibir su pedido a domicilio; al personal, gestionar productos, inventario y pedidos; y al gerente, supervisar la operación.
+
+El sistema maneja **cuatro tipos de usuario**:
+
+| Rol | Quién es | Cómo inicia sesión |
+| :--- | :--- | :--- |
+| **Superadmin** | Gerente del supermercado | Correo y contraseña |
+| **Ventas** | Personal que revisa y aprueba los pedidos | Correo y contraseña creados por el gerente |
+| **Repartidor** | Personal que entrega los pedidos | Correo y contraseña creados por el gerente |
+| **Cliente** | Persona que compra | Cuenta de Google |
+
+La arquitectura aplica **Onion Architecture** sobre **.NET 10 (C# 14)** para lograr un desacoplamiento estricto entre el dominio del negocio y la infraestructura tecnológica, con persistencia en **PostgreSQL** mediante **Entity Framework Core 10**.
+
+La documentación técnica detallada se encuentra en la carpeta [`docs/`](docs/).
+
+---
+
+## 🏛️ Arquitectura del Sistema
+
+El backend se distribuye en capas concéntricas. Las dependencias apuntan siempre hacia el centro: el dominio no conoce a ninguna otra capa.
+
+```
+┌────────────────────────────────────────────────────────┐
+│                       WebAPI                           │
+│   Controladores REST, DTOs, autenticación JWT/Google   │
+├────────────────────────────────────────────────────────┤
+│                   Infrastructure                       │
+│  EF Core 10 + Npgsql, repositorios, Unit of Work,      │
+│  almacenamiento de archivos, WhatsApp, job expiración  │
+├────────────────────────────────────────────────────────┤
+│                     Application                        │
+│   Casos de uso (servicios) e interfaces (contratos)    │
+├────────────────────────────────────────────────────────┤
+│                       Domain                           │
+│      Entidades, enums y reglas de negocio puras        │
+└────────────────────────────────────────────────────────┘
+```
+
+**Regla de dependencia:** `WebAPI → Application, Infrastructure` · `Infrastructure → Application → Domain`.
+
+### Componentes Clave:
+1. **Domain:** entidades del negocio (`Producto`, `Categoria`, `Pedido`, `PedidoItem`, `Usuario`, `Zona`, etc.), enumeraciones (`RolUsuario`, `EstadoPedido`, `MetodoPago`…) y reglas puras (`TransicionesPedido`, validación de teléfonos venezolanos). **No tiene dependencias de paquetes externos.**
+2. **Application:** casos de uso (`PedidosService`, `InventarioService`, `ReportesService`, `AuditoriaService`, `TasaService`) y los contratos que implementa la infraestructura (`IUnitOfWork`, repositorios, almacenamiento de archivos). No conoce EF Core.
+3. **Infrastructure:** persistencia con **EF Core 10 (Code-First + Fluent API)**, una `IEntityTypeConfiguration<T>` por entidad, migraciones, repositorios, datos semilla y de demostración, subida de comprobantes (Cloudinary o disco local), generación del informe en Excel, cola de envío de WhatsApp y el job de expiración de pedidos.
+4. **WebAPI:** endpoints REST protegidos con **JWT Bearer** y autorización por roles (**RBAC**), inicio de sesión con Google para clientes y configuración de la inyección de dependencias.
+
+Más detalle en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
+
+---
+
+## 🔄 Flujo de un Pedido
+
+```
+Cliente confirma el pedido  (se reserva el stock)
+        │
+        ▼
+    PENDIENTE ──── 5 horas sin revisar ────► EXPIRADO   (stock liberado + WhatsApp)
+        │
+        ├── Ventas rechaza ──► RECHAZADO                 (stock liberado + WhatsApp)
+        │
+        └── Ventas aprueba y asigna repartidor           (stock confirmado)
+                │
+                ▼
+            ASIGNADO ──► EN CAMINO ──► ENTREGADO         (WhatsApp en cada paso)
+```
+
+Las reglas completas (reserva de stock, expiración, tasa de cambio, mensajes) están en [`docs/REGLAS_NEGOCIO.md`](docs/REGLAS_NEGOCIO.md).
+
+---
+
+## 🗄️ Modelo Entidad-Relación (Base de Datos PostgreSQL)
+
+Esquema principal mapeado con **Entity Framework Core 10 (Code-First + Fluent API)**. Todas las claves primarias son **UUID** y las fechas se guardan en **UTC**. Los nombres de tablas y columnas usan `snake_case`.
+
+```mermaid
+erDiagram
+    CATEGORIAS ||--o{ PRODUCTOS : "clasifica"
+    USUARIOS ||--o{ PEDIDOS : "compra (cliente)"
+    ZONAS ||--o{ PEDIDOS : "zona de entrega"
+    PEDIDOS ||--|{ PEDIDO_ITEMS : "contiene"
+    PRODUCTOS ||--o{ PEDIDO_ITEMS : "vendido en"
+    PEDIDOS ||--o{ HISTORIAL_ESTADOS_PEDIDO : "registra"
+    PRODUCTOS ||--o{ MOVIMIENTOS_INVENTARIO : "mueve"
+
+    CATEGORIAS {
+        uuid id PK
+        varchar nombre UK
+    }
+    PRODUCTOS {
+        uuid id PK
+        varchar codigo_sku UK "Ej. VIV-0001"
+        varchar nombre
+        numeric precio_usd "Precio de venta"
+        numeric costo_usd "Costo de compra"
+        uuid categoria_id FK
+        int stock_disponible
+        int stock_reservado
+        boolean activo "Borrado logico"
+        timestamptz creado_en "UTC"
+    }
+    USUARIOS {
+        uuid id PK
+        varchar nombre
+        varchar email UK
+        rol_usuario rol "cliente, ventas, repartidor, superadmin"
+        varchar google_id "Solo clientes"
+        varchar password_hash "Solo personal (bcrypt)"
+        boolean activo
+        timestamptz creado_en "UTC"
+    }
+    PEDIDOS {
+        uuid id PK
+        int numero "Correlativo legible"
+        uuid cliente_id FK
+        estado_pedido estado
+        metodo_pago metodo_pago
+        numeric tasa_cambio "Congelada al comprar"
+        numeric total_usd
+        numeric total_bs
+        uuid zona_id FK
+        varchar telefono_contacto
+        uuid repartidor_id FK
+        timestamptz expira_en "creado_en + 5 h"
+        timestamptz creado_en "UTC"
+    }
+    PEDIDO_ITEMS {
+        uuid id PK
+        uuid pedido_id FK
+        uuid producto_id FK
+        int cantidad
+        numeric precio_usd "Congelado"
+        numeric precio_bs "Congelado"
+    }
+```
+
+El modelo completo (13 tablas y 8 enumeraciones) está en [`docs/MODELO_DATOS.md`](docs/MODELO_DATOS.md).
+
+---
+
+## 🚀 Tecnologías Empleadas
+
+- **Backend:** .NET 10 (C# 14), ASP.NET Core Web API.
+- **ORM & Base de Datos:** Entity Framework Core 10, Npgsql, EFCore.NamingConventions, PostgreSQL 16.
+- **Seguridad:** JSON Web Tokens (JWT) con HMAC-SHA256, contraseñas con **BCrypt**, inicio de sesión de clientes con **Google** (`Google.Apis.Auth`).
+- **Archivos:** Cloudinary para los comprobantes de pago (en desarrollo, disco local).
+- **Reportes:** KPIs para el dashboard del gerente e informe en Excel generado con **ClosedXML**.
+- **Datos de demostración:** **Bogus** para simular clientes y pedidos.
+- **Mensajería:** WhatsApp mediante un microservicio con **Baileys** (Node.js).
+- **Contenerización:** Docker y Docker Compose.
+
+---
+
+## 🛠️ Requisitos Previos
+
+- [SDK de .NET 10](https://dotnet.microsoft.com/download)
+- [PostgreSQL 16](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) (incluye pgAdmin 4)
+- [Git](https://git-scm.com/)
+- Opcional: [Docker Desktop](https://www.docker.com/products/docker-desktop/) para levantar la base de datos en un contenedor.
+
+---
+
+## 📦 Puesta en Marcha
+
+### 1. Clonar y compilar
 
 ```bash
-docker compose up -d                       # PostgreSQL + PostgREST
+git clone https://github.com/FranciscoSanchez001/Backend_Almacen.git
+cd Backend_Almacen
+dotnet build Backend_Almacen.slnx
+```
+
+### 2. Preparar la base de datos
+
+La API usa la cadena de conexión de `WebAPI/appsettings.Development.json`:
+
+| Parámetro | Valor |
+| :--- | :--- |
+| Servidor | `localhost:5432` |
+| Base de datos | `midatabase` |
+| Usuario | `miusuario` |
+| Contraseña | `mipassword` |
+
+**Opción A: PostgreSQL instalado en la computadora.** En pgAdmin, abrir el *Query Tool* sobre la base `postgres` y ejecutar **cada instrucción por separado** (seleccionar la línea y pulsar F5):
+
+```sql
+CREATE USER miusuario WITH PASSWORD 'mipassword';
+```
+
+```sql
+CREATE DATABASE midatabase OWNER miusuario;
+```
+
+**Opción B: Docker.** El `docker-compose.yml` ya trae PostgreSQL con esos mismos datos:
+
+```bash
+docker compose up -d db
+```
+
+### 3. Crear las tablas (migraciones)
+
+```bash
 dotnet tool restore
 dotnet ef database update --project Infrastructure --startup-project WebAPI
 ```
 
-- Nueva migración: `dotnet ef migrations add <Nombre> --project Infrastructure --startup-project WebAPI --output-dir Persistencia/Migraciones`
-- Script SQL: `database/InitialCreate.sql` (se regenera con `dotnet ef migrations script --project Infrastructure --startup-project WebAPI --idempotent -o database/InitialCreate.sql`).
+Se crean las 13 tablas y los datos semilla. Cada vez que el equipo agregue una migración nueva, se repite el último comando.
 
-### Datos semilla
-
-- En la migración (`HasData`, ver `Infrastructure/Persistencia/Semillas/DatosSemilla.cs`): 4 categorías, 11 productos con SKU, precio, costo y stock, y 5 zonas de entrega de San Cristóbal.
-- Al arrancar la API (`InicializadorBaseDatos`): la fila de configuración y el superadmin inicial de la sección `SuperadminInicial` de la configuración (en desarrollo: `gerente@almacen.local` / `Cambiar123!`).
-
-## Ejecutar la API
+### 4. Ejecutar la API
 
 ```bash
-dotnet run --project WebAPI                # http://localhost:5085
+dotnet run --project WebAPI
+```
+
+### Puntos de Acceso del Sistema:
+- **Backend API REST:** [http://localhost:5085](http://localhost:5085)
+- **Documento OpenAPI:** [http://localhost:5085/openapi/v1.json](http://localhost:5085/openapi/v1.json)
+- **Diagnóstico de la base de datos:** [http://localhost:5085/DbTest](http://localhost:5085/DbTest)
+- **Base de Datos PostgreSQL:** `localhost:5432` (`midatabase`)
+
+### Comandos útiles
+
+```bash
+# Crear una migración nueva
+dotnet ef migrations add <Nombre> --project Infrastructure --startup-project WebAPI --output-dir Persistencia/Migraciones
+
+# Regenerar el script SQL de la base de datos
+dotnet ef migrations script --project Infrastructure --startup-project WebAPI --idempotent -o database/InitialCreate.sql
+
+# Construir la imagen Docker de la API
 docker build -f WebAPI/Dockerfile -t backend-almacen .
 ```
 
-Ejemplos de llamadas en `WebAPI/Backend_Almacen.WebAPI.http`.
+---
+
+## 👤 Credenciales y Datos Preconfigurados (Datos de Siembra)
+
+Al arrancar, la API crea el usuario gerente si no existe:
+
+| Rol | Correo | Contraseña | Permisos |
+| :--- | :--- | :--- | :--- |
+| **Superadmin** | `gerente@almacen.local` | `Cambiar123!` | Acceso total, incluido el borrado de productos. |
+
+Los usuarios de **ventas** y **repartidor** los crea el gerente; los **clientes** se registran solos al iniciar sesión con Google.
+
+La migración siembra además:
+- **4 categorías:** Víveres, Lácteos y huevos, Bebidas, Limpieza del hogar.
+- **11 productos** con SKU, precio, costo y stock.
+- **5 zonas de entrega** de San Cristóbal: Centro, Barrio Obrero, Pueblo Nuevo, La Concordia y Santa Teresa.
+
+> Estas credenciales son solo para desarrollo. En producción deben cambiarse en la sección `SuperadminInicial` de la configuración.
+
+### Datos de demostración (opcional)
+
+Para que el dashboard de KPIs, el informe en Excel y los paneles tengan información con la cual trabajar, la API puede generar datos simulados con **Bogus**: personal, clientes, productos adicionales, historial de tasas y **90 días de pedidos**.
+
+```bash
+dotnet run --project WebAPI -- --SiembraDemo:Habilitada=true
+```
+
+- Solo funciona en entorno de desarrollo y **solo si la base de datos todavía no tiene pedidos**.
+- Usa una semilla fija, así que siempre genera los mismos datos.
+- Crea al personal de prueba, todos con la contraseña `Demo1234!`:
+
+| Rol | Correos |
+| :--- | :--- |
+| **Ventas** | `ventas1@almacen.local`, `ventas2@almacen.local` |
+| **Repartidor** | `repartidor1@almacen.local`, `repartidor2@almacen.local`, `repartidor3@almacen.local` |
+
+La cantidad de días, de clientes, la contraseña y la semilla se ajustan en la sección `SiembraDemo` de la configuración.
+
+---
+
+## 🧪 Pruebas de la API
+
+El archivo [`WebAPI/Backend_Almacen.WebAPI.http`](WebAPI/Backend_Almacen.WebAPI.http) contiene peticiones de ejemplo listas para ejecutar desde Visual Studio o VS Code (extensión *REST Client*):
+
+1. Ejecutar **Login del personal** y copiar el `token` de la respuesta.
+2. Pegarlo en la variable `@token` al inicio del archivo.
+3. Ejecutar el resto de peticiones.
+
+Ejemplo con cURL:
+
+```bash
+curl -X POST http://localhost:5085/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"gerente@almacen.local\",\"password\":\"Cambiar123!\"}"
+```
+
+El listado completo de endpoints, con el rol que exige cada uno, está en [`docs/API.md`](docs/API.md).
+
+---
+
+## ⚙️ Configuración
+
+Secciones de `WebAPI/appsettings.Development.json`:
+
+| Sección | Para qué sirve | ¿Obligatoria en local? |
+| :--- | :--- | :---: |
+| `ConnectionStrings:Almacen` | Conexión a PostgreSQL | Sí |
+| `Jwt` | Emisor, audiencia y clave de firma de los tokens (mínimo 32 caracteres) | Sí |
+| `SuperadminInicial` | Usuario gerente que se crea al arrancar | Sí |
+| `Google:ClientId` | Inicio de sesión de clientes con Google | No |
+| `Cloudinary` | Almacenamiento de comprobantes; si está vacío se usa disco local | No |
+| `Whatsapp` | URL y clave del microservicio de Baileys; si está vacío no se envían mensajes | No |
+| `Expiracion` | Cada cuánto corre el job de expiración y con cuánta anticipación avisa | No |
+| `SiembraDemo` | Generación de datos de demostración (desactivada por defecto) | No |
+
+> **Antes de crear pedidos**, el gerente debe cargar la tasa Bs/USD del día con `PUT /configuracion/tasa`. Sin tasa cargada, la tienda no acepta compras. La siembra de demostración ya carga un historial de tasas.
+
+---
+
+## 📂 Estructura del Repositorio
+
+```
+Backend_Almacen/
+├── Domain/                     # Entidades, enums y reglas de negocio puras
+│   ├── Entidades/
+│   ├── Enums/
+│   └── Reglas/
+├── Application/                # Casos de uso y contratos
+│   ├── Abstracciones/          # Interfaces de repositorios, Unit of Work y servicios externos
+│   ├── Servicios/              # PedidosService, InventarioService, ReportesService…
+│   └── Modelos/                # Modelos de lectura y de reportes (KPIs)
+├── Infrastructure/             # Implementaciones técnicas
+│   ├── Persistencia/           # DbContext, configuraciones Fluent API, migraciones, repositorios, semillas
+│   ├── Archivos/               # Cloudinary / disco local
+│   ├── Reportes/               # Generador del informe en Excel (ClosedXML)
+│   ├── Mensajeria/             # Envío de WhatsApp
+│   ├── Jobs/                   # Expiración automática de pedidos
+│   └── Seguridad/              # Hash de contraseñas (BCrypt)
+├── WebAPI/                     # Controladores, DTOs, autenticación y Program.cs
+├── database/
+│   └── InitialCreate.sql       # Script SQL generado desde las migraciones
+├── docs/                       # Documentación técnica del proyecto
+├── docker-compose.yml          # PostgreSQL en contenedor
+├── dotnet-tools.json           # Herramienta dotnet-ef
+├── Backend_Almacen.slnx        # Solución de .NET
+└── README.md
+```
+
+---
+
+## 📚 Documentación del Proyecto
+
+| Documento | Contenido |
+| :--- | :--- |
+| [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) | Capas, regla de dependencia, inyección de dependencias y ciclos de vida |
+| [`docs/MODELO_DATOS.md`](docs/MODELO_DATOS.md) | Diagrama entidad-relación completo, tablas y enumeraciones |
+| [`docs/API.md`](docs/API.md) | Endpoints, roles requeridos y ejemplos |
+| [`docs/REGLAS_NEGOCIO.md`](docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
+| [`docs/GESTION_PROYECTO.md`](docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
