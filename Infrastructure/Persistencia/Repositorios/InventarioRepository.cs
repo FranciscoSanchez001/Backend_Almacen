@@ -1,9 +1,9 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Comun;
-using Backend_Almacen.Domain.Entidades;
+using Core.Application.Abstracciones;
+using Core.Application.Comun;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
+namespace Infrastructure.Persistencia.Repositorios
 {
     // Cada operación es un único UPDATE condicional sobre productos (sin leer antes), así que dos
     // pedidos simultáneos no pueden sobrevender. Deben ejecutarse dentro de una transacción.
@@ -56,7 +56,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
             db.MovimientosInventario.AsNoTracking()
                 .Include(m => m.Usuario)
                 .Where(m => m.ProductoId == productoId)
-                .OrderByDescending(m => m.CreadoEn).ThenByDescending(m => m.Id)
+                .OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
                 .PaginarAsync(pagina, tamano, ct);
 
         private async Task<int?> ActualizarAsync(FormattableString sql, CancellationToken ct)

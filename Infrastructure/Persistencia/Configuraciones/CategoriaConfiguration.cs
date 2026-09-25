@@ -1,9 +1,9 @@
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Infrastructure.Persistencia.Semillas;
+using Core.Domain.Entidades;
+using Infrastructure.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class CategoriaConfiguration : IEntityTypeConfiguration<Categoria>
     {

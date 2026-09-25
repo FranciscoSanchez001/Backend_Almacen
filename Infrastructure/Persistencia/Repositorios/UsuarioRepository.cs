@@ -1,12 +1,12 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Comun;
-using Backend_Almacen.Application.Modelos;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Enums;
-using Backend_Almacen.Domain.Reglas;
+using Core.Application.Abstracciones;
+using Core.Application.Comun;
+using Core.Application.Modelos;
+using Core.Domain.Entidades;
+using Core.Domain.Enums;
+using Core.Domain.Reglas;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
+namespace Infrastructure.Persistencia.Repositorios
 {
     public class UsuarioRepository(ApplicationDbContext db) : IUsuarioRepository
     {
@@ -108,7 +108,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
                 .OrderBy(u => u.Nombre).ThenBy(u => u.Id)
                 .Select(u => new ClienteConPedidos(u.Id, u.Nombre, u.Email, u.Telefono, u.Activo,
                     db.Pedidos.Count(p => p.ClienteId == u.Id),
-                    db.Pedidos.Where(p => p.ClienteId == u.Id).Max(p => (DateTime?)p.CreadoEn)))
+                    db.Pedidos.Where(p => p.ClienteId == u.Id).Max(p => (DateTime?)p.CreatedAt)))
                 .PaginarAsync(pagina, tamano, ct);
         }
 

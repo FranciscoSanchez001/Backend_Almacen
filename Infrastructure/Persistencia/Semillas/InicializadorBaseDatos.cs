@@ -1,12 +1,12 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Enums;
+using Core.Application.Abstracciones;
+using Core.Domain.Entidades;
+using Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
+namespace Infrastructure.Persistencia.Semillas
 {
     // Datos que no pueden ir en HasData y se crean al arrancar, solo si faltan:
     // - la fila única de configuración;

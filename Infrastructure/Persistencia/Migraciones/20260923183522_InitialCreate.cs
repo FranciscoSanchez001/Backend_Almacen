@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Backend_Almacen.Domain.Enums;
+using Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Migraciones
+namespace Infrastructure.Persistencia.Migraciones
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

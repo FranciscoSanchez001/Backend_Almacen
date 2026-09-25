@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class ConfiguracionConfiguration : IEntityTypeConfiguration<Configuracion>
     {

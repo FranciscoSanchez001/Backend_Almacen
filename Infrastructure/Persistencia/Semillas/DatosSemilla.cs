@@ -1,6 +1,6 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
+namespace Infrastructure.Persistencia.Semillas
 {
     // Datos maestros iniciales del supermercado. Se aplican con HasData() desde las
     // configuraciones, así que quedan dentro de la migración y se insertan con
@@ -16,10 +16,10 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
 
         public static Categoria[] Categorias =>
         [
-            new() { Id = Viveres, Nombre = "Víveres" },
-            new() { Id = LacteosHuevos, Nombre = "Lácteos y huevos" },
-            new() { Id = Bebidas, Nombre = "Bebidas" },
-            new() { Id = Limpieza, Nombre = "Limpieza del hogar" },
+            new() { Id = Viveres, Nombre = "Víveres", CreatedAt = Fecha },
+            new() { Id = LacteosHuevos, Nombre = "Lácteos y huevos", CreatedAt = Fecha },
+            new() { Id = Bebidas, Nombre = "Bebidas", CreatedAt = Fecha },
+            new() { Id = Limpieza, Nombre = "Limpieza del hogar", CreatedAt = Fecha },
         ];
 
         public static Producto[] Productos =>
@@ -59,7 +59,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
             StockDisponible = stock,
             StockReservado = 0,
             Activo = true,
-            CreadoEn = Fecha,
+            CreatedAt = Fecha,
         };
 
         private static Zona Z(int n, string nombre) => new()
@@ -67,6 +67,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
             Id = new Guid($"e1000000-0000-4000-8000-{n:D12}"),
             Nombre = nombre,
             Activa = true,
+            CreatedAt = Fecha,
         };
     }
 }

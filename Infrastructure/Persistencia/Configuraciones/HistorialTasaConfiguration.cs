@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class HistorialTasaConfiguration : IEntityTypeConfiguration<HistorialTasa>
     {
@@ -12,7 +12,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
             builder.HasKey(h => h.Id);
 
             builder.Property(h => h.Tasa).HasPrecision(18, 4);
-            builder.Property(h => h.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasOne(h => h.Usuario)
                 .WithMany()

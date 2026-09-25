@@ -1,9 +1,9 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Modelos;
-using Backend_Almacen.Domain.Enums;
+using Core.Application.Abstracciones;
+using Core.Application.Modelos;
+using Core.Domain.Enums;
 using ClosedXML.Excel;
 
-namespace Backend_Almacen.Infrastructure.Reportes
+namespace Infrastructure.Reportes
 {
     // Informe de ventas con ClosedXML. En cada hoja: encabezados en negrita y congelados, filtros
     // automáticos, montos con formato de moneda y fechas con formato de fecha (se guardan como

@@ -1,4 +1,4 @@
-namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
+namespace Infrastructure.Persistencia.Semillas
 {
     // Productos extra de la siembra de demostración (SembradorDemo). Se escriben a mano, no con
     // Bogus, para que sean coherentes con un supermercado venezolano.

@@ -1,10 +1,10 @@
-using Backend_Almacen.Application.Abstracciones;
+using Core.Application.Abstracciones;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Backend_Almacen.Infrastructure.Archivos
+namespace Infrastructure.Archivos
 {
     public class CloudinaryOptions
     {

@@ -1,6 +1,6 @@
-using Backend_Almacen.Application.Abstracciones;
+using Core.Application.Abstracciones;
 
-namespace Backend_Almacen.Infrastructure.Seguridad
+namespace Infrastructure.Seguridad
 {
     public class HasherBcrypt : IHasherContrasenas
     {

@@ -1,11 +1,11 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Comun;
-using Backend_Almacen.Application.Modelos;
-using Backend_Almacen.Application.Servicios;
-using Backend_Almacen.Domain.Entidades;
+using Core.Application.Abstracciones;
+using Core.Application.Comun;
+using Core.Application.Modelos;
+using Core.Application.Servicios;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
+namespace Infrastructure.Persistencia.Repositorios
 {
     public class CategoriaRepository(ApplicationDbContext db) : ICategoriaRepository
     {
@@ -61,7 +61,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
         public Task<Pagina<HistorialTasa>> ListarTasasAsync(int pagina, int tamano, CancellationToken ct = default) =>
             db.HistorialTasas.AsNoTracking()
                 .Include(h => h.Usuario)
-                .OrderByDescending(h => h.CreadoEn).ThenByDescending(h => h.Id)
+                .OrderByDescending(h => h.CreatedAt).ThenByDescending(h => h.Id)
                 .PaginarAsync(pagina, tamano, ct);
 
         public void AgregarTasa(HistorialTasa tasa) => db.HistorialTasas.Add(tasa);
@@ -90,15 +90,15 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
             }
             if (filtro.Desde is not null)
             {
-                query = query.Where(a => a.CreadoEn >= filtro.Desde);
+                query = query.Where(a => a.CreatedAt >= filtro.Desde);
             }
             if (filtro.Hasta is not null)
             {
-                query = query.Where(a => a.CreadoEn < filtro.Hasta);
+                query = query.Where(a => a.CreatedAt < filtro.Hasta);
             }
 
             return query
-                .OrderByDescending(a => a.CreadoEn).ThenByDescending(a => a.Id)
+                .OrderByDescending(a => a.CreatedAt).ThenByDescending(a => a.Id)
                 .Select(a => new RegistroAuditoria(
                     a.Id,
                     a.UsuarioId,
@@ -113,7 +113,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
                     a.Accion,
                     a.DatosAntes,
                     a.DatosDespues,
-                    a.CreadoEn))
+                    a.CreatedAt))
                 .PaginarAsync(pagina, tamano, ct);
         }
 
@@ -131,17 +131,17 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
             }
             if (filtro.Desde is not null)
             {
-                query = query.Where(h => h.CreadoEn >= filtro.Desde);
+                query = query.Where(h => h.CreatedAt >= filtro.Desde);
             }
             if (filtro.Hasta is not null)
             {
-                query = query.Where(h => h.CreadoEn < filtro.Hasta);
+                query = query.Where(h => h.CreatedAt < filtro.Hasta);
             }
 
             return query
                 // "aprobado" y "asignado" se registran en el mismo instante: el desempate por estado
                 // (el enum sigue el orden del flujo) los deja en orden, como en PedidoResponse.
-                .OrderByDescending(h => h.CreadoEn).ThenByDescending(h => h.EstadoNuevo).ThenByDescending(h => h.Id)
+                .OrderByDescending(h => h.CreatedAt).ThenByDescending(h => h.EstadoNuevo).ThenByDescending(h => h.Id)
                 .Select(h => new CambioEstadoPedido(
                     h.Id,
                     h.PedidoId,
@@ -150,7 +150,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
                     h.EstadoNuevo,
                     h.UsuarioId,
                     h.Usuario != null ? h.Usuario.Nombre : null,
-                    h.CreadoEn))
+                    h.CreatedAt))
                 .PaginarAsync(pagina, tamano, ct);
         }
     }

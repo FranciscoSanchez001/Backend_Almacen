@@ -1,9 +1,9 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Modelos;
-using Backend_Almacen.Domain.Reglas;
+using Core.Application.Abstracciones;
+using Core.Application.Modelos;
+using Core.Domain.Reglas;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
+namespace Infrastructure.Persistencia.Repositorios
 {
     // Proyecciones planas y sin seguimiento; los filtros por creado_en usan el índice
     // pedidos(estado, creado_en).
@@ -12,7 +12,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
         public Task<List<PedidoReporte>> ListarPedidosAsync(DateTime desdeUtc, DateTime hastaUtc,
             CancellationToken ct = default) =>
             db.Pedidos.AsNoTracking()
-                .Where(p => p.CreadoEn >= desdeUtc && p.CreadoEn < hastaUtc)
+                .Where(p => p.CreatedAt >= desdeUtc && p.CreatedAt < hastaUtc)
                 .Select(p => new PedidoReporte(
                     p.Id,
                     p.Numero,
@@ -30,7 +30,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
                     p.Longitud,
                     p.RepartidorId,
                     p.Repartidor != null ? p.Repartidor.Nombre : null,
-                    p.CreadoEn,
+                    p.CreatedAt,
                     p.RevisadoEn,
                     p.AsignadoEn,
                     p.EntregadoEn))
@@ -39,7 +39,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
         public Task<List<ItemReporte>> ListarItemsVendidosAsync(DateTime desdeUtc, DateTime hastaUtc,
             CancellationToken ct = default) =>
             db.PedidoItems.AsNoTracking()
-                .Where(i => i.Pedido.CreadoEn >= desdeUtc && i.Pedido.CreadoEn < hastaUtc
+                .Where(i => i.Pedido.CreatedAt >= desdeUtc && i.Pedido.CreatedAt < hastaUtc
                     && TransicionesPedido.CuentanComoVenta.Contains(i.Pedido.Estado))
                 .Select(i => new ItemReporte(
                     i.PedidoId,
@@ -63,12 +63,12 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
         // el stock de antes de ellos (>=).
         public Task<Dictionary<Guid, int>> StockDisponibleEnAsync(DateTime momentoUtc, CancellationToken ct = default) =>
             db.MovimientosInventario.AsNoTracking()
-                .Where(m => m.CreadoEn >= momentoUtc)
+                .Where(m => m.CreatedAt >= momentoUtc)
                 .GroupBy(m => m.ProductoId)
                 .Select(g => new
                 {
                     ProductoId = g.Key,
-                    Disponible = g.OrderBy(m => m.CreadoEn).ThenBy(m => m.Id).Select(m => m.DisponibleAntes).First(),
+                    Disponible = g.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id).Select(m => m.DisponibleAntes).First(),
                 })
                 .ToDictionaryAsync(x => x.ProductoId, x => x.Disponible, ct);
     }

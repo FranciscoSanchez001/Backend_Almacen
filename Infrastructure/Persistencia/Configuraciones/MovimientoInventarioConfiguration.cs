@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class MovimientoInventarioConfiguration : IEntityTypeConfiguration<MovimientoInventario>
     {
@@ -11,7 +11,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
             builder.ToTable("movimientos_inventario");
             builder.HasKey(m => m.Id);
 
-            builder.Property(m => m.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasOne(m => m.Producto)
                 .WithMany()
@@ -28,7 +27,8 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
                 .HasForeignKey(m => m.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasIndex(m => new { m.ProductoId, m.CreadoEn });
+            builder.HasIndex(m => new { m.ProductoId, m.CreatedAt })
+                .HasDatabaseName("ix_movimientos_inventario_producto_id_creado_en");
         }
     }
 }

@@ -1,0 +1,78 @@
+@Backend_Almacen_HostAddress = http://localhost:5085
+# Pega aquí el token que devuelve /auth/login.
+@token =
+# Ids sembrados (Persistencia/Semillas/DatosSemilla.cs).
+@categoriaViveres = c1000000-0000-4000-8000-000000000001
+@productoHarina = a1000000-0000-4000-8000-000000000001
+
+### Login del personal
+POST {{Backend_Almacen_HostAddress}}/auth/login
+Content-Type: application/json
+
+{ "email": "gerente@almacen.local", "password": "Cambiar123!" }
+
+### Diagnóstico de la base de datos
+GET {{Backend_Almacen_HostAddress}}/DbTest
+
+### Catálogo público
+GET {{Backend_Almacen_HostAddress}}/catalogo?q=harina&pagina=1
+
+### Zonas de entrega
+GET {{Backend_Almacen_HostAddress}}/catalogo/zonas
+
+### Categorías
+POST {{Backend_Almacen_HostAddress}}/categorias
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nombre": "Charcutería" }
+
+### Crear producto
+POST {{Backend_Almacen_HostAddress}}/productos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "codigoSku": "VIV-0005", "nombre": "Azúcar refinada 1 kg", "precioUsd": 1.45, "costoUsd": 1.10, "categoriaId": "{{categoriaViveres}}", "stockInicial": 100 }
+
+### Editar producto (stockDisponible es opcional; si cambia, queda como ajuste)
+PUT {{Backend_Almacen_HostAddress}}/productos/{{productoHarina}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "codigoSku": "VIV-0001", "nombre": "Harina de maíz precocida 1 kg", "precioUsd": 1.40, "costoUsd": 1.05, "categoriaId": "{{categoriaViveres}}", "stockDisponible": 118 }
+
+### Borrar producto (solo superadmin, borrado lógico)
+DELETE {{Backend_Almacen_HostAddress}}/productos/{{productoHarina}}
+Authorization: Bearer {{token}}
+
+### Inventario (agotados primero)
+GET {{Backend_Almacen_HostAddress}}/inventario?soloAgotados=false
+Authorization: Bearer {{token}}
+
+### Reponer
+POST {{Backend_Almacen_HostAddress}}/inventario/{{productoHarina}}/reponer
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "cantidad": 10 }
+
+### Movimientos de un producto
+GET {{Backend_Almacen_HostAddress}}/inventario/{{productoHarina}}/movimientos
+Authorization: Bearer {{token}}
+
+### Notificaciones sin leer
+GET {{Backend_Almacen_HostAddress}}/notificaciones
+Authorization: Bearer {{token}}
+
+### Bandeja de pedidos pendientes
+GET {{Backend_Almacen_HostAddress}}/pedidos?estado=pendiente
+Authorization: Bearer {{token}}
+
+### Errores RFC 7807 (ExceptionMiddleware): 404, 400 y 500 en application/problem+json
+GET {{Backend_Almacen_HostAddress}}/pruebas/errores/no-encontrado
+
+###
+GET {{Backend_Almacen_HostAddress}}/pruebas/errores/operacion-invalida
+
+###
+GET {{Backend_Almacen_HostAddress}}/pruebas/errores/interno
