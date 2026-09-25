@@ -1,9 +1,9 @@
-using Backend_Almacen.Application.Servicios;
+using Core.Application.Servicios;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Backend_Almacen.Infrastructure.Jobs
+namespace Infrastructure.Jobs
 {
     public class ExpiracionOptions
     {

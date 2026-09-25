@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
     {
@@ -25,7 +25,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
             builder.Property(p => p.TelefonoContacto).IsRequired().HasMaxLength(20);
             builder.Property(p => p.MotivoRechazo).HasMaxLength(300);
             builder.Property(p => p.RevisadoPorId).HasColumnName("revisado_por");
-            builder.Property(p => p.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasOne(p => p.Cliente)
                 .WithMany()
@@ -48,7 +47,8 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Índices para la bandeja, los KPIs, el Excel y el job de expiración.
-            builder.HasIndex(p => new { p.Estado, p.CreadoEn });
+            builder.HasIndex(p => new { p.Estado, p.CreatedAt })
+                .HasDatabaseName("ix_pedidos_estado_creado_en");
             builder.HasIndex(p => new { p.Estado, p.ExpiraEn });
             builder.HasIndex(p => p.ZonaId);
         }

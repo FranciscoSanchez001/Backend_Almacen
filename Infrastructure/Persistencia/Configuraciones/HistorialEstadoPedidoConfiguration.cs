@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class HistorialEstadoPedidoConfiguration : IEntityTypeConfiguration<HistorialEstadoPedido>
     {
@@ -11,7 +11,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
             builder.ToTable("historial_estados_pedido");
             builder.HasKey(h => h.Id);
 
-            builder.Property(h => h.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasOne(h => h.Pedido)
                 .WithMany(p => p.HistorialEstados)

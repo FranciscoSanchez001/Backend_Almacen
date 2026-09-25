@@ -1,9 +1,9 @@
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Infrastructure.Persistencia.Semillas;
+using Core.Domain.Entidades;
+using Infrastructure.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
     {
@@ -27,7 +27,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
             builder.Property(p => p.PrecioUsd).HasPrecision(18, 2);
             builder.Property(p => p.CostoUsd).HasPrecision(18, 2);
             builder.Property(p => p.CreadoPorId).HasColumnName("creado_por");
-            builder.Property(p => p.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasOne(p => p.Categoria)
                 .WithMany(c => c.Productos)

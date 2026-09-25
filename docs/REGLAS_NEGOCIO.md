@@ -40,7 +40,7 @@ Cliente confirma el pedido  (se reserva el stock)
             ASIGNADO ──► EN CAMINO ──► ENTREGADO         (WhatsApp en cada paso)
 ```
 
-**Transiciones permitidas** (`Domain/Reglas/TransicionesPedido.cs`):
+**Transiciones permitidas** (`Core.Domain/Reglas/TransicionesPedido.cs`):
 
 | Desde | Hacia |
 | :--- | :--- |
@@ -64,7 +64,7 @@ Al confirmar la compra, el cliente envía (`POST /pedidos`):
 - **Método de pago:** transferencia o pago móvil (en bolívares) o Binance (en USDT, 1:1 con el dólar).
 - **Referencia** del pago y **captura** del comprobante (obligatorias).
 - **Zona**, dirección con punto de referencia y, opcionalmente, coordenadas.
-- **Teléfono venezolano obligatorio** (`+58 4XX XXX XXXX`), validado en `Domain/Reglas/Telefonos.cs`. Se guarda en el pedido, porque el cliente puede comprar para otra persona.
+- **Teléfono venezolano obligatorio** (`+58 4XX XXX XXXX`), validado en `Core.Domain/Reglas/Telefonos.cs`. Se guarda en el pedido, porque el cliente puede comprar para otra persona.
 
 El sistema entonces:
 1. Verifica que haya **tasa del día** cargada. Si no la hay, el pedido no se crea.
@@ -77,7 +77,7 @@ El sistema entonces:
 
 ## 4. Inventario y Reserva de Stock
 
-Cada producto tiene dos contadores: **stock disponible** (lo que se puede vender) y **stock reservado** (lo apartado por pedidos pendientes). Lo implementa `Application/Servicios/InventarioService.cs`.
+Cada producto tiene dos contadores: **stock disponible** (lo que se puede vender) y **stock reservado** (lo apartado por pedidos pendientes). Lo implementa `Core.Application/Servicios/InventarioService.cs`.
 
 | Momento | Disponible | Reservado | Movimiento registrado |
 | :--- | :---: | :---: | :--- |
@@ -116,7 +116,7 @@ Reglas:
 
 ## 7. Notificaciones por WhatsApp
 
-Los mensajes se generan en `Application/Servicios/ColaWhatsapp.cs` y los envía `Infrastructure/Mensajeria/EnvioWhatsappWorker.cs` a través del microservicio de **Baileys** (`POST {ServicioUrl}/enviar`).
+Los mensajes se generan en `Core.Application/Servicios/ColaWhatsapp.cs` y los envía `Infrastructure/Mensajeria/EnvioWhatsappWorker.cs` a través del microservicio de **Baileys** (`POST {ServicioUrl}/enviar`).
 
 | Evento | Mensaje |
 | :--- | :--- |

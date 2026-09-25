@@ -43,7 +43,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/categorias` | 🧾 | Lista de categorías. |
+| `GET` | `/categorias` | 🌐 | Lista de categorías. Es pública porque la tienda la usa para filtrar el catálogo. |
 | `POST` | `/categorias` | 🧾 | Crea una categoría. Cuerpo: `{ "nombre" }`. Responde `409` si el nombre ya existe. |
 | `PUT` | `/categorias/{id}` | 🧾 | Renombra una categoría. |
 
@@ -173,6 +173,16 @@ Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los d
 | :--- | :--- | :---: | :--- |
 | `GET` | `/DbTest` | 🌐 | Verifica la conexión a PostgreSQL y devuelve las migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
 
+## 16. Pruebas del manejo de errores — `/pruebas/errores`
+
+Provocan una excepción a propósito para comprobar el `ExceptionMiddleware`. Todas responden con `application/problem+json` (RFC 7807).
+
+| Método | Ruta | Acceso | Excepción | Respuesta |
+| :--- | :--- | :---: | :--- | :---: |
+| `GET` | `/pruebas/errores/no-encontrado` | 🌐 | `KeyNotFoundException` | `404` |
+| `GET` | `/pruebas/errores/operacion-invalida` | 🌐 | `InvalidOperationException` | `400` |
+| `GET` | `/pruebas/errores/interno` | 🌐 | `NullReferenceException` | `500`, sin detalles internos |
+
 ---
 
 ## Códigos de respuesta
@@ -185,7 +195,25 @@ Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los d
 | `403 Forbidden` | El rol del usuario no tiene permiso para ese endpoint. |
 | `404 Not Found` | El recurso no existe. |
 | `409 Conflict` | Duplicados (categoría o SKU repetidos), stock insuficiente o un cambio de estado que el pedido ya no admite (por ejemplo, aprobar un pedido que expiró). |
+| `500 Internal Server Error` | Error no controlado. Lo responde el `ExceptionMiddleware` con un mensaje genérico, sin detalles internos. |
 | `503 Service Unavailable` | `/DbTest` no pudo conectarse a la base de datos, o un servicio externo necesario para el pedido no está disponible. |
+
+### Formato de los errores no controlados (RFC 7807)
+
+Cualquier excepción que un controlador no maneje llega al `ExceptionMiddleware`, que responde con `Content-Type: application/problem+json`:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "No existe el producto con id 00000000-0000-0000-0000-000000000000.",
+  "instance": "/pruebas/errores/no-encontrado",
+  "traceId": "00-872c4b349bd0d77afcca6b30e546fd88-b8ab4b6fa809fd4f-00"
+}
+```
+
+`KeyNotFoundException` → `404`, `InvalidOperationException` → `400` y cualquier otra → `500`. Detalle en [ARQUITECTURA.md](ARQUITECTURA.md#5-manejo-global-de-errores-rfc-7807).
 
 ---
 
@@ -208,4 +236,4 @@ curl -X POST http://localhost:5085/inventario/a1000000-0000-4000-8000-0000000000
   -d "{\"cantidad\":20}"
 ```
 
-Más peticiones de ejemplo en [`WebAPI/Backend_Almacen.WebAPI.http`](../WebAPI/Backend_Almacen.WebAPI.http).
+Más peticiones de ejemplo en [`Presentation.API/Presentation.API.http`](../Presentation.API/Presentation.API.http) y en la [colección de Postman](postman/Backend_Almacen.postman_collection.json).

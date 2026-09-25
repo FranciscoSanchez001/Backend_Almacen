@@ -560,3 +560,114 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    ALTER TABLE zonas ADD creado_en timestamp with time zone NOT NULL DEFAULT (now());
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    ALTER TABLE pedido_items ADD creado_en timestamp with time zone NOT NULL DEFAULT (now());
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    ALTER TABLE configuracion ADD creado_en timestamp with time zone NOT NULL DEFAULT (now());
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    ALTER TABLE categorias ADD creado_en timestamp with time zone NOT NULL DEFAULT (now());
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE categorias SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'c1000000-0000-4000-8000-000000000001';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE categorias SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'c1000000-0000-4000-8000-000000000002';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE categorias SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'c1000000-0000-4000-8000-000000000003';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE categorias SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'c1000000-0000-4000-8000-000000000004';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE zonas SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'e1000000-0000-4000-8000-000000000001';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE zonas SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'e1000000-0000-4000-8000-000000000002';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE zonas SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'e1000000-0000-4000-8000-000000000003';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE zonas SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'e1000000-0000-4000-8000-000000000004';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    UPDATE zonas SET creado_en = TIMESTAMPTZ '2026-09-23T00:00:00Z'
+    WHERE id = 'e1000000-0000-4000-8000-000000000005';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260925005101_BaseEntityCreatedAt') THEN
+    INSERT INTO "__EFMigrationsHistory" (migration_id, product_version)
+    VALUES ('20260925005101_BaseEntityCreatedAt', '10.0.12');
+    END IF;
+END $EF$;
+COMMIT;
+

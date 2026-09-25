@@ -1,11 +1,12 @@
 using System.Reflection;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Enums;
+using Core.Domain.Comun;
+using Core.Domain.Entidades;
+using Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
-namespace Backend_Almacen.Infrastructure.Persistencia
+namespace Infrastructure.Persistencia
 {
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
     {
@@ -42,6 +43,17 @@ namespace Backend_Almacen.Infrastructure.Persistencia
 
             // Cada entidad tiene su IEntityTypeConfiguration<T> en Persistencia/Configuraciones.
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            // Columnas comunes de BaseEntity: la fecha de creación se guarda en creado_en (UTC) y,
+            // si un INSERT no la trae, la pone PostgreSQL.
+            foreach (var entidad in modelBuilder.Model.GetEntityTypes()
+                         .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType)))
+            {
+                modelBuilder.Entity(entidad.ClrType)
+                    .Property(nameof(BaseEntity.CreatedAt))
+                    .HasColumnName("creado_en")
+                    .HasDefaultValueSql("now()");
+            }
         }
 
         // MonedaPago se guarda como VES / USDT. Instancia única: EF compara las opciones del

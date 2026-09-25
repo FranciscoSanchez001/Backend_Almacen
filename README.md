@@ -44,28 +44,29 @@ El backend se distribuye en capas concéntricas. Las dependencias apuntan siempr
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                       WebAPI                           │
-│   Controladores REST, DTOs, autenticación JWT/Google   │
+│                   Presentation.API                     │
+│   Controladores REST, DTOs, autenticación JWT/Google,  │
+│   middleware global de errores (RFC 7807)              │
 ├────────────────────────────────────────────────────────┤
 │                   Infrastructure                       │
 │  EF Core 10 + Npgsql, repositorios, Unit of Work,      │
 │  almacenamiento de archivos, WhatsApp, job expiración  │
 ├────────────────────────────────────────────────────────┤
-│                     Application                        │
+│                   Core.Application                     │
 │   Casos de uso (servicios) e interfaces (contratos)    │
 ├────────────────────────────────────────────────────────┤
-│                       Domain                           │
-│      Entidades, enums y reglas de negocio puras        │
+│                     Core.Domain                        │
+│   BaseEntity, entidades, enums y reglas de negocio     │
 └────────────────────────────────────────────────────────┘
 ```
 
-**Regla de dependencia:** `WebAPI → Application, Infrastructure` · `Infrastructure → Application → Domain`.
+**Regla de dependencia:** `Presentation.API → Core.Application, Infrastructure` · `Infrastructure → Core.Application → Core.Domain`.
 
 ### Componentes Clave:
-1. **Domain:** entidades del negocio (`Producto`, `Categoria`, `Pedido`, `PedidoItem`, `Usuario`, `Zona`, etc.), enumeraciones (`RolUsuario`, `EstadoPedido`, `MetodoPago`…) y reglas puras (`TransicionesPedido`, validación de teléfonos venezolanos). **No tiene dependencias de paquetes externos.**
-2. **Application:** casos de uso (`PedidosService`, `InventarioService`, `ReportesService`, `AuditoriaService`, `TasaService`) y los contratos que implementa la infraestructura (`IUnitOfWork`, repositorios, almacenamiento de archivos). No conoce EF Core.
+1. **Core.Domain:** clase base `BaseEntity` (`Id` Guid + `CreatedAt` UTC) de la que heredan todas las entidades del negocio (`Producto`, `Categoria`, `Pedido`, `PedidoItem`, `Usuario`, `Zona`, etc.), enumeraciones (`RolUsuario`, `EstadoPedido`, `MetodoPago`…) y reglas puras (`TransicionesPedido`, validación de teléfonos venezolanos). **No tiene dependencias de paquetes externos.**
+2. **Core.Application:** casos de uso (`PedidosService`, `InventarioService`, `ReportesService`, `AuditoriaService`, `TasaService`) y los contratos que implementa la infraestructura (`IUnitOfWork`, repositorios, almacenamiento de archivos). No conoce EF Core.
 3. **Infrastructure:** persistencia con **EF Core 10 (Code-First + Fluent API)**, una `IEntityTypeConfiguration<T>` por entidad, migraciones, repositorios, datos semilla y de demostración, subida de comprobantes (Cloudinary o disco local), generación del informe en Excel, cola de envío de WhatsApp y el job de expiración de pedidos.
-4. **WebAPI:** endpoints REST protegidos con **JWT Bearer** y autorización por roles (**RBAC**), inicio de sesión con Google para clientes y configuración de la inyección de dependencias.
+4. **Presentation.API:** endpoints REST protegidos con **JWT Bearer** y autorización por roles (**RBAC**), inicio de sesión con Google para clientes, `ExceptionMiddleware` que responde los errores en formato **RFC 7807** (`application/problem+json`) y configuración de la inyección de dependencias (Scoped, Singleton y Transient).
 
 Más detalle en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md).
 
@@ -108,6 +109,7 @@ erDiagram
     CATEGORIAS {
         uuid id PK
         varchar nombre UK
+        timestamptz creado_en "UTC"
     }
     PRODUCTOS {
         uuid id PK
@@ -194,7 +196,7 @@ dotnet build Backend_Almacen.slnx
 
 ### 2. Preparar la base de datos
 
-La API usa la cadena de conexión de `WebAPI/appsettings.Development.json`:
+La API usa la cadena de conexión de `Presentation.API/appsettings.Development.json`:
 
 | Parámetro | Valor |
 | :--- | :--- |
@@ -223,7 +225,7 @@ docker compose up -d db
 
 ```bash
 dotnet tool restore
-dotnet ef database update --project Infrastructure --startup-project WebAPI
+dotnet ef database update --project Infrastructure --startup-project Presentation.API
 ```
 
 Se crean las 13 tablas y los datos semilla. Cada vez que el equipo agregue una migración nueva, se repite el último comando.
@@ -231,7 +233,7 @@ Se crean las 13 tablas y los datos semilla. Cada vez que el equipo agregue una m
 ### 4. Ejecutar la API
 
 ```bash
-dotnet run --project WebAPI
+dotnet run --project Presentation.API
 ```
 
 ### Puntos de Acceso del Sistema:
@@ -244,13 +246,13 @@ dotnet run --project WebAPI
 
 ```bash
 # Crear una migración nueva
-dotnet ef migrations add <Nombre> --project Infrastructure --startup-project WebAPI --output-dir Persistencia/Migraciones
+dotnet ef migrations add <Nombre> --project Infrastructure --startup-project Presentation.API --output-dir Persistencia/Migraciones
 
 # Regenerar el script SQL de la base de datos
-dotnet ef migrations script --project Infrastructure --startup-project WebAPI --idempotent -o database/InitialCreate.sql
+dotnet ef migrations script --project Infrastructure --startup-project Presentation.API --idempotent -o database/InitialCreate.sql
 
 # Construir la imagen Docker de la API
-docker build -f WebAPI/Dockerfile -t backend-almacen .
+docker build -f Presentation.API/Dockerfile -t backend-almacen .
 ```
 
 ---
@@ -277,7 +279,7 @@ La migración siembra además:
 Para probar los KPIs, el informe en Excel y el resto de endpoints con información realista, la API puede generar datos simulados con **Bogus**: personal, clientes, productos adicionales, historial de tasas y **90 días de pedidos**.
 
 ```bash
-dotnet run --project WebAPI -- --SiembraDemo:Habilitada=true
+dotnet run --project Presentation.API -- --SiembraDemo:Habilitada=true
 ```
 
 - Solo funciona en entorno de desarrollo y **solo si la base de datos todavía no tiene pedidos**.
@@ -295,7 +297,7 @@ La cantidad de días, de clientes, la contraseña y la semilla se ajustan en la 
 
 ## 🧪 Pruebas de la API
 
-El archivo [`WebAPI/Backend_Almacen.WebAPI.http`](WebAPI/Backend_Almacen.WebAPI.http) contiene peticiones de ejemplo listas para ejecutar desde Visual Studio o VS Code (extensión *REST Client*):
+El archivo [`Presentation.API/Presentation.API.http`](Presentation.API/Presentation.API.http) contiene peticiones de ejemplo listas para ejecutar desde Visual Studio o VS Code (extensión *REST Client*):
 
 1. Ejecutar **Login del personal** y copiar el `token` de la respuesta.
 2. Pegarlo en la variable `@token` al inicio del archivo.
@@ -311,22 +313,56 @@ curl -X POST http://localhost:5085/auth/login \
 
 El listado completo de endpoints, con el rol que exige cada uno, está en [`docs/API.md`](docs/API.md).
 
+### Colección de Postman
+
+[`docs/postman/Backend_Almacen.postman_collection.json`](docs/postman/Backend_Almacen.postman_collection.json) trae 62 peticiones agrupadas por área. Se importa en Postman (o en Bruno, con *Import Collection → Postman*).
+
+- La variable `baseUrl` apunta a `http://localhost:5085`.
+- **Login del personal** guarda el token solo en la variable `token`, que usan el resto de peticiones.
+- Los listados guardan el primer id (`productoId`, `pedidoId`, `zonaId`…) para las peticiones de detalle.
+- La carpeta **Errores RFC 7807** trae pruebas automáticas: revisan el código HTTP, el `Content-Type: application/problem+json`, los campos del Problem Details y, en el error 500, que no se filtre el detalle interno.
+
+### Manejo de errores (RFC 7807)
+
+Las excepciones no controladas las atiende `ExceptionMiddleware` y se responden en formato Problem Details:
+
+| Excepción | Código |
+| :--- | :---: |
+| `KeyNotFoundException` | `404` |
+| `InvalidOperationException` | `400` |
+| Cualquier otra | `500` (mensaje genérico, sin *stack trace*) |
+
+Para probarlo sin tocar datos:
+
+```bash
+curl -i http://localhost:5085/pruebas/errores/no-encontrado
+curl -i http://localhost:5085/pruebas/errores/operacion-invalida
+curl -i http://localhost:5085/pruebas/errores/interno
+```
+
+Las respuestas reales están en [`docs/evidencias/errores-rfc7807.md`](docs/evidencias/errores-rfc7807.md).
+
 ---
 
 ## ⚙️ Configuración
 
-Secciones de `WebAPI/appsettings.Development.json`:
+Secciones de `Presentation.API/appsettings.Development.json`:
 
 | Sección | Para qué sirve | ¿Obligatoria en local? |
 | :--- | :--- | :---: |
 | `ConnectionStrings:Almacen` | Conexión a PostgreSQL | Sí |
 | `Jwt` | Emisor, audiencia y clave de firma de los tokens (mínimo 32 caracteres) | Sí |
 | `SuperadminInicial` | Usuario gerente que se crea al arrancar | Sí |
-| `Google:ClientId` | Inicio de sesión de clientes con Google | No |
+| `Google:ClientId` | Inicio de sesión de clientes con Google. Ya viene cargado en `appsettings.json` (el Client ID es público, no es un secreto) | Ya configurada |
+| `Cors:OrigenesPermitidos` | Direcciones del frontend que pueden llamar a la API desde el navegador. En desarrollo trae los puertos locales habituales (5173, 3000, 4200…); en producción hay que poner el dominio real | Ya configurada |
 | `Cloudinary` | Almacenamiento de comprobantes; si está vacío se usa disco local | No |
 | `Whatsapp` | URL y clave del microservicio de Baileys; si está vacío no se envían mensajes | No |
 | `Expiracion` | Cada cuánto corre el job de expiración y con cuánta anticipación avisa | No |
 | `SiembraDemo` | Generación de datos de demostración (desactivada por defecto) | No |
+
+> **CORS:** si el frontend corre en un puerto o dominio que no está en `Cors:OrigenesPermitidos`, el navegador bloquea sus llamadas. Se agrega a la lista en `appsettings.Development.json` (local) o con variables de entorno en producción: `Cors__OrigenesPermitidos__0=https://mi-tienda.com`.
+>
+> **Google:** en Google Cloud Console, el Client ID debe tener como *Orígenes autorizados de JavaScript* las mismas direcciones del frontend (por ejemplo `http://localhost:5173`).
 
 > **Antes de crear pedidos**, el gerente debe cargar la tasa Bs/USD del día con `PUT /configuracion/tasa`. Sin tasa cargada, la tienda no acepta compras. La siembra de demostración ya carga un historial de tasas.
 
@@ -336,11 +372,12 @@ Secciones de `WebAPI/appsettings.Development.json`:
 
 ```
 Backend_Almacen/
-├── Domain/                     # Entidades, enums y reglas de negocio puras
+├── Core.Domain/                # BaseEntity, entidades, enums y reglas de negocio puras
+│   ├── Comun/                  # BaseEntity (Id + CreatedAt)
 │   ├── Entidades/
 │   ├── Enums/
 │   └── Reglas/
-├── Application/                # Casos de uso y contratos
+├── Core.Application/           # Casos de uso y contratos
 │   ├── Abstracciones/          # Interfaces de repositorios, Unit of Work y servicios externos
 │   ├── Servicios/              # PedidosService, InventarioService, ReportesService…
 │   └── Modelos/                # Modelos de lectura y de reportes (KPIs)
@@ -351,10 +388,13 @@ Backend_Almacen/
 │   ├── Mensajeria/             # Envío de WhatsApp
 │   ├── Jobs/                   # Expiración automática de pedidos
 │   └── Seguridad/              # Hash de contraseñas (BCrypt)
-├── WebAPI/                     # Controladores, DTOs, autenticación y Program.cs
+├── Presentation.API/           # Controladores, DTOs, autenticación, middleware y Program.cs
+│   └── Middleware/             # ExceptionMiddleware (RFC 7807)
 ├── database/
 │   └── InitialCreate.sql       # Script SQL generado desde las migraciones
 ├── docs/                       # Documentación técnica del proyecto
+│   ├── postman/                # Colección de Postman
+│   └── evidencias/             # Respuestas reales de error en formato RFC 7807
 ├── docker-compose.yml          # PostgreSQL en contenedor
 ├── dotnet-tools.json           # Herramienta dotnet-ef
 ├── Backend_Almacen.slnx        # Solución de .NET
@@ -372,3 +412,5 @@ Backend_Almacen/
 | [`docs/API.md`](docs/API.md) | Endpoints, roles requeridos y ejemplos |
 | [`docs/REGLAS_NEGOCIO.md`](docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
 | [`docs/GESTION_PROYECTO.md`](docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
+| [`docs/postman/`](docs/postman/Backend_Almacen.postman_collection.json) | Colección de Postman con todos los endpoints y las pruebas de errores RFC 7807 |
+| [`docs/evidencias/errores-rfc7807.md`](docs/evidencias/errores-rfc7807.md) | Respuestas reales de error en formato Problem Details |

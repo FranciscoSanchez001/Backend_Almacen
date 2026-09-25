@@ -1,10 +1,10 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Comun;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Enums;
+using Core.Application.Abstracciones;
+using Core.Application.Comun;
+using Core.Domain.Entidades;
+using Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
+namespace Infrastructure.Persistencia.Repositorios
 {
     public class PedidoRepository(ApplicationDbContext db) : IPedidoRepository
     {
@@ -42,11 +42,11 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
             }
             if (filtro.Desde is not null)
             {
-                query = query.Where(p => p.CreadoEn >= filtro.Desde);
+                query = query.Where(p => p.CreatedAt >= filtro.Desde);
             }
             if (filtro.Hasta is not null)
             {
-                query = query.Where(p => p.CreadoEn < filtro.Hasta);
+                query = query.Where(p => p.CreatedAt < filtro.Hasta);
             }
 
             var ordenada = filtro.Orden switch
@@ -54,7 +54,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
                 OrdenPedidos.MasUrgentes => query.OrderBy(p => p.ExpiraEn).ThenBy(p => p.Numero),
                 OrdenPedidos.PorAsignacion => query.OrderBy(p => p.AsignadoEn).ThenBy(p => p.Numero),
                 OrdenPedidos.PorEntrega => query.OrderByDescending(p => p.EntregadoEn).ThenByDescending(p => p.Numero),
-                _ => query.OrderByDescending(p => p.CreadoEn).ThenByDescending(p => p.Numero),
+                _ => query.OrderByDescending(p => p.CreatedAt).ThenByDescending(p => p.Numero),
             };
             return ordenada.PaginarAsync(pagina, tamano, ct);
         }

@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class NotificacionConfiguration : IEntityTypeConfiguration<Notificacion>
     {
@@ -12,7 +12,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
                 "producto_id IS NOT NULL OR pedido_id IS NOT NULL"));
             builder.HasKey(n => n.Id);
 
-            builder.Property(n => n.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasOne(n => n.Producto)
                 .WithMany()
@@ -24,7 +23,8 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
                 .HasForeignKey(n => n.PedidoId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasIndex(n => new { n.Leida, n.CreadoEn });
+            builder.HasIndex(n => new { n.Leida, n.CreatedAt })
+                .HasDatabaseName("ix_notificaciones_leida_creado_en");
         }
     }
 }

@@ -1,15 +1,15 @@
 using System.Text;
 using System.Text.Json;
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Servicios;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Enums;
-using Backend_Almacen.Domain.Reglas;
+using Core.Application.Abstracciones;
+using Core.Application.Servicios;
+using Core.Domain.Entidades;
+using Core.Domain.Enums;
+using Core.Domain.Reglas;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Backend_Almacen.Infrastructure.Mensajeria
+namespace Infrastructure.Mensajeria
 {
     public class WhatsappOptions
     {

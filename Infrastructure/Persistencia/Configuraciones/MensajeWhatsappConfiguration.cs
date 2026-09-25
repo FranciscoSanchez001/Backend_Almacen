@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class MensajeWhatsappConfiguration : IEntityTypeConfiguration<MensajeWhatsapp>
     {
@@ -15,7 +15,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
             builder.Property(m => m.Plantilla).IsRequired().HasMaxLength(50);
             builder.Property(m => m.Texto).IsRequired().HasMaxLength(1000);
             builder.Property(m => m.Error).HasMaxLength(2000);
-            builder.Property(m => m.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasOne(m => m.Pedido)
                 .WithMany()

@@ -1,8 +1,8 @@
-using Backend_Almacen.Domain.Entidades;
+using Core.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
+namespace Infrastructure.Persistencia.Configuraciones
 {
     public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
     {
@@ -17,7 +17,6 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Configuraciones
             builder.Property(u => u.Telefono).HasMaxLength(20);
             builder.Property(u => u.GoogleId).HasMaxLength(255);
             builder.Property(u => u.PasswordHash).HasMaxLength(100);
-            builder.Property(u => u.CreadoEn).HasDefaultValueSql("now()");
 
             builder.HasIndex(u => u.Email).IsUnique();
             builder.HasIndex(u => u.GoogleId).IsUnique();

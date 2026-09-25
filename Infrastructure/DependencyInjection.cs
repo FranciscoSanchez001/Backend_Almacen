@@ -1,17 +1,17 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Servicios;
-using Backend_Almacen.Infrastructure.Reportes;
-using Backend_Almacen.Infrastructure.Archivos;
-using Backend_Almacen.Infrastructure.Jobs;
-using Backend_Almacen.Infrastructure.Mensajeria;
-using Backend_Almacen.Infrastructure.Persistencia;
-using Backend_Almacen.Infrastructure.Persistencia.Repositorios;
-using Backend_Almacen.Infrastructure.Seguridad;
+using Core.Application.Abstracciones;
+using Core.Application.Servicios;
+using Infrastructure.Reportes;
+using Infrastructure.Archivos;
+using Infrastructure.Jobs;
+using Infrastructure.Mensajeria;
+using Infrastructure.Persistencia;
+using Infrastructure.Persistencia.Repositorios;
+using Infrastructure.Seguridad;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Backend_Almacen.Infrastructure
+namespace Infrastructure
 {
     public static class DependencyInjection
     {

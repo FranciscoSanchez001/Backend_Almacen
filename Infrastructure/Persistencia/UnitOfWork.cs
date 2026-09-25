@@ -1,9 +1,9 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Comun;
+using Core.Application.Abstracciones;
+using Core.Application.Comun;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace Backend_Almacen.Infrastructure.Persistencia
+namespace Infrastructure.Persistencia
 {
     public class UnitOfWork(ApplicationDbContext db) : IUnitOfWork
     {

@@ -1,10 +1,10 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Comun;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Enums;
+using Core.Application.Abstracciones;
+using Core.Application.Comun;
+using Core.Domain.Entidades;
+using Core.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
+namespace Infrastructure.Persistencia.Repositorios
 {
     public class NotificacionRepository(ApplicationDbContext db) : INotificacionRepository
     {
@@ -16,7 +16,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
             {
                 query = query.Where(n => !n.Leida);
             }
-            return query.OrderByDescending(n => n.CreadoEn).ThenByDescending(n => n.Id).PaginarAsync(pagina, tamano, ct);
+            return query.OrderByDescending(n => n.CreatedAt).ThenByDescending(n => n.Id).PaginarAsync(pagina, tamano, ct);
         }
 
         public async Task<bool> MarcarLeidaAsync(Guid id, CancellationToken ct = default) =>

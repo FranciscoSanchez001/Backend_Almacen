@@ -1,10 +1,10 @@
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Comun;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Reglas;
+using Core.Application.Abstracciones;
+using Core.Application.Comun;
+using Core.Domain.Entidades;
+using Core.Domain.Reglas;
 using Microsoft.EntityFrameworkCore;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
+namespace Infrastructure.Persistencia.Repositorios
 {
     public class ProductoRepository(ApplicationDbContext db) : IProductoRepository
     {
@@ -102,7 +102,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Repositorios
                     from i in ItemsVendidosVisibles()
                     join p in db.Pedidos on i.PedidoId equals p.Id
                     where p.ClienteId == clienteId
-                    group p.CreadoEn by i.ProductoId into g
+                    group p.CreatedAt by i.ProductoId into g
                     orderby g.Max() descending, g.Key
                     select g.Key)
                 .Take(limite)

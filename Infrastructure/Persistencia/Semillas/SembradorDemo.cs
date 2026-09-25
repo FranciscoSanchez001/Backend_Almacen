@@ -2,17 +2,17 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Backend_Almacen.Application.Abstracciones;
-using Backend_Almacen.Application.Servicios;
-using Backend_Almacen.Domain.Entidades;
-using Backend_Almacen.Domain.Enums;
+using Core.Application.Abstracciones;
+using Core.Application.Servicios;
+using Core.Domain.Entidades;
+using Core.Domain.Enums;
 using Bogus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
+namespace Infrastructure.Persistencia.Semillas
 {
     public class SiembraDemoOptions
     {
@@ -159,7 +159,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
             }
 
             // En orden cronológico, para que el número correlativo (identity) siga la fecha.
-            foreach (var lote in pedidos.OrderBy(p => p.CreadoEn).Chunk(200))
+            foreach (var lote in pedidos.OrderBy(p => p.CreatedAt).Chunk(200))
             {
                 db.Pedidos.AddRange(lote);
                 await db.SaveChangesAsync(ct);
@@ -189,7 +189,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                 Telefono = Telefono(),
                 Rol = rol,
                 PasswordHash = hash,
-                CreadoEn = creado,
+                CreatedAt = creado,
             };
 
             vendedores = [Nuevo("ventas1@almacen.local", RolUsuario.Ventas), Nuevo("ventas2@almacen.local", RolUsuario.Ventas)];
@@ -225,7 +225,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                     Telefono = Telefono(),
                     Rol = RolUsuario.Cliente,
                     GoogleId = "demo-" + f.Random.ReplaceNumbers("#####################"),
-                    CreadoEn = creado,
+                    CreatedAt = creado,
                 });
             }
             db.Usuarios.AddRange(clientes);
@@ -263,7 +263,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                     CategoriaId = d.CategoriaId,
                     StockDisponible = f.Random.Int(40, 120),
                     CreadoPorId = admin.Id,
-                    CreadoEn = creado,
+                    CreatedAt = creado,
                 };
                 db.Productos.Add(producto);
                 Movimiento(producto.Id, null, admin.Id, TipoMovimientoInventario.Reposicion, producto.StockDisponible, 0,
@@ -299,7 +299,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                 }
                 tasa = Math.Round(tasa * (1 + (decimal)f.Random.Double(0.0005, 0.004)), 2);
                 tasas.Add((cuando, tasa));
-                db.HistorialTasas.Add(new HistorialTasa { Id = Guid.CreateVersion7(cuando), Tasa = tasa, UsuarioId = admin.Id, CreadoEn = cuando });
+                db.HistorialTasas.Add(new HistorialTasa { Id = Guid.CreateVersion7(cuando), Tasa = tasa, UsuarioId = admin.Id, CreatedAt = cuando });
             }
             config.TasaBsUsd = tasas[^1].Tasa;
         }
@@ -371,7 +371,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                 TasaCambio = tasa,
                 DireccionTexto = Direccion(),
                 TelefonoContacto = cliente.Telefono!,
-                CreadoEn = creado,
+                CreatedAt = creado,
                 ExpiraEn = creado.AddHours(horasExpiracion),
             };
             pedido.MonedaPago = pedido.MetodoPago == MetodoPago.Binance ? MonedaPago.Usdt : MonedaPago.Ves;
@@ -429,6 +429,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                 pedido.Items.Add(new PedidoItem
                 {
                     Id = Guid.CreateVersion7(creado),
+                    CreatedAt = creado,
                     PedidoId = pedido.Id,
                     ProductoId = s.Producto.Id,
                     CategoriaId = s.Producto.CategoriaId,
@@ -453,9 +454,9 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
         // estado actual (pendiente, asignado o en camino).
         private void DecidirDestino(Pedido pedido)
         {
-            var creado = pedido.CreadoEn;
+            var creado = pedido.CreatedAt;
             var sorteo = f.Random.Double();
-            var nuevo = new Notificacion { Id = Guid.CreateVersion7(creado), Tipo = TipoNotificacion.PedidoNuevo, PedidoId = pedido.Id, CreadoEn = creado };
+            var nuevo = new Notificacion { Id = Guid.CreateVersion7(creado), Tipo = TipoNotificacion.PedidoNuevo, PedidoId = pedido.Id, CreatedAt = creado };
             notificaciones.Add(nuevo);
 
             if (sorteo >= 0.93)
@@ -466,7 +467,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                     notificaciones.Add(new Notificacion
                     {
                         Id = Guid.CreateVersion7(pedido.ExpiraEn.AddHours(-1)), Tipo = TipoNotificacion.PedidoPorExpirar,
-                        PedidoId = pedido.Id, Leida = true, CreadoEn = pedido.ExpiraEn.AddHours(-1),
+                        PedidoId = pedido.Id, Leida = true, CreatedAt = pedido.ExpiraEn.AddHours(-1),
                     });
                     Programar(pedido.ExpiraEn, () => Expirar(pedido));
                 }
@@ -503,7 +504,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
             {
                 notificaciones.Add(new Notificacion
                 {
-                    Id = Guid.CreateVersion7(aviso), Tipo = TipoNotificacion.PedidoPorExpirar, PedidoId = pedido.Id, CreadoEn = aviso,
+                    Id = Guid.CreateVersion7(aviso), Tipo = TipoNotificacion.PedidoPorExpirar, PedidoId = pedido.Id, CreatedAt = aviso,
                 });
             }
         }
@@ -627,7 +628,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
         {
             s.Agotado = new Notificacion
             {
-                Id = Guid.CreateVersion7(cuando), Tipo = TipoNotificacion.StockAgotado, ProductoId = s.Producto.Id, CreadoEn = cuando,
+                Id = Guid.CreateVersion7(cuando), Tipo = TipoNotificacion.StockAgotado, ProductoId = s.Producto.Id, CreatedAt = cuando,
             };
             notificaciones.Add(s.Agotado);
         }
@@ -684,7 +685,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                 EstadoAnterior = anterior,
                 EstadoNuevo = nuevo,
                 UsuarioId = usuarioId,
-                CreadoEn = cuando,
+                CreatedAt = cuando,
             });
 
         private void Movimiento(Guid productoId, Guid? pedidoId, Guid? usuarioId, TipoMovimientoInventario tipo, int cantidad,
@@ -699,7 +700,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                 Cantidad = cantidad,
                 DisponibleAntes = antes,
                 DisponibleDespues = despues,
-                CreadoEn = cuando,
+                CreatedAt = cuando,
             });
 
         private void Auditar(Guid usuarioId, string entidad, Guid? entidadId, AccionAuditoria accion, object? antes, object? despues,
@@ -713,7 +714,7 @@ namespace Backend_Almacen.Infrastructure.Persistencia.Semillas
                 Accion = accion,
                 DatosAntes = antes is null ? null : JsonSerializer.Serialize(antes, Json),
                 DatosDespues = despues is null ? null : JsonSerializer.Serialize(despues, Json),
-                CreadoEn = cuando,
+                CreatedAt = cuando,
             });
 
         private string Telefono() =>
