@@ -62,6 +62,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+// CORS: el frontend corre en otro origen (otro dominio o puerto), así que el navegador bloquea
+// sus llamadas si la API no lo autoriza. Los orígenes permitidos se configuran en
+// Cors:OrigenesPermitidos. No se usan cookies (el JWT va en el encabezado Authorization), así
+// que no hace falta AllowCredentials.
+const string PoliticaFrontend = "Frontend";
+var origenesPermitidos = builder.Configuration.GetSection("Cors:OrigenesPermitidos").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddPolicy(PoliticaFrontend, policy => policy
+    .WithOrigins(origenesPermitidos)
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    // Para que el frontend pueda leer el nombre del archivo del informe en Excel.
+    .WithExposedHeaders("Content-Disposition")));
+
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(
         new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower)));
@@ -71,7 +84,15 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-// Primero en el pipeline, para capturar las excepciones de todo lo que viene después.
+// CORS va antes que todo: responde el preflight (OPTIONS) sin pasar por el resto del pipeline y
+// agrega sus encabezados también a las respuestas de error del ExceptionMiddleware.
+app.UseCors(PoliticaFrontend);
+if (origenesPermitidos.Length == 0)
+{
+    app.Logger.LogWarning("Cors:OrigenesPermitidos está vacío: el navegador bloqueará las llamadas del frontend.");
+}
+
+// Justo después, para capturar las excepciones de todo lo que viene detrás.
 app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())

@@ -112,13 +112,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 Orden de los *middlewares* en `Program.cs`:
 
-1. `UseMiddleware<ExceptionMiddleware>()`: va primero para capturar las excepciones de todo lo que viene después.
-2. `MapOpenApi()` (solo en desarrollo): publica el documento OpenAPI en `/openapi/v1.json`.
-3. `UseHttpsRedirection()`.
-4. `UseStaticFiles(...)` para `/capturas`, solo cuando los comprobantes se guardan en disco local.
-5. `UseAuthentication()`: valida el JWT. Además rechaza el token si el usuario fue desactivado, aunque el token no haya vencido.
-6. `UseAuthorization()`: aplica los roles de cada endpoint.
-7. `MapControllers()`.
+1. `UseCors("Frontend")`: autoriza al frontend (otro origen) a llamar a la API desde el navegador. Va primero para responder el *preflight* (`OPTIONS`) y para que también las respuestas de error lleven los encabezados CORS. Los orígenes se leen de `Cors:OrigenesPermitidos`; se permite cualquier encabezado y método, y se expone `Content-Disposition` para la descarga del Excel. No usa credenciales/cookies porque el JWT viaja en el encabezado `Authorization`.
+2. `UseMiddleware<ExceptionMiddleware>()`: captura las excepciones de todo lo que viene después.
+3. `MapOpenApi()` (solo en desarrollo): publica el documento OpenAPI en `/openapi/v1.json`.
+4. `UseHttpsRedirection()`.
+5. `UseStaticFiles(...)` para `/capturas`, solo cuando los comprobantes se guardan en disco local.
+6. `UseAuthentication()`: valida el JWT. Además rechaza el token si el usuario fue desactivado, aunque el token no haya vencido.
+7. `UseAuthorization()`: aplica los roles de cada endpoint.
+8. `MapControllers()`.
 
 Antes de atender peticiones, la aplicación ejecuta `InicializarBaseDatosAsync`, que crea la fila de configuración y el superadmin inicial si no existen. En desarrollo, y solo si se pide con `--SiembraDemo:Habilitada=true`, también genera los datos de demostración.
 
@@ -161,7 +162,7 @@ Para probarlo están los endpoints `GET /pruebas/errores/no-encontrado`, `/opera
 ## 6. Autenticación y Autorización
 
 - **Personal** (superadmin, ventas, repartidor): `POST /auth/login` con correo y contraseña; la contraseña se verifica contra el hash BCrypt.
-- **Clientes**: `POST /auth/google` con el *ID token* de Google, que el backend valida con `Google.Apis.Auth`. Si el cliente no existe, se crea.
+- **Clientes**: `POST /auth/google` con el *ID token* de Google, que el backend valida con `Google.Apis.Auth` contra el Client ID configurado en `Google:ClientId` (el token debe haber sido emitido para ese Client ID). Si el cliente no existe, se crea.
 - En ambos casos se devuelve un **JWT firmado con HMAC-SHA256** que incluye el rol del usuario.
 - Los endpoints se protegen con `[Authorize(Roles = ...)]`. El rol compuesto `Personal` agrupa a ventas y superadmin.
 

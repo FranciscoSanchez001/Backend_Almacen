@@ -353,11 +353,16 @@ Secciones de `Presentation.API/appsettings.Development.json`:
 | `ConnectionStrings:Almacen` | Conexión a PostgreSQL | Sí |
 | `Jwt` | Emisor, audiencia y clave de firma de los tokens (mínimo 32 caracteres) | Sí |
 | `SuperadminInicial` | Usuario gerente que se crea al arrancar | Sí |
-| `Google:ClientId` | Inicio de sesión de clientes con Google | No |
+| `Google:ClientId` | Inicio de sesión de clientes con Google. Ya viene cargado en `appsettings.json` (el Client ID es público, no es un secreto) | Ya configurada |
+| `Cors:OrigenesPermitidos` | Direcciones del frontend que pueden llamar a la API desde el navegador. En desarrollo trae los puertos locales habituales (5173, 3000, 4200…); en producción hay que poner el dominio real | Ya configurada |
 | `Cloudinary` | Almacenamiento de comprobantes; si está vacío se usa disco local | No |
 | `Whatsapp` | URL y clave del microservicio de Baileys; si está vacío no se envían mensajes | No |
 | `Expiracion` | Cada cuánto corre el job de expiración y con cuánta anticipación avisa | No |
 | `SiembraDemo` | Generación de datos de demostración (desactivada por defecto) | No |
+
+> **CORS:** si el frontend corre en un puerto o dominio que no está en `Cors:OrigenesPermitidos`, el navegador bloquea sus llamadas. Se agrega a la lista en `appsettings.Development.json` (local) o con variables de entorno en producción: `Cors__OrigenesPermitidos__0=https://mi-tienda.com`.
+>
+> **Google:** en Google Cloud Console, el Client ID debe tener como *Orígenes autorizados de JavaScript* las mismas direcciones del frontend (por ejemplo `http://localhost:5173`).
 
 > **Antes de crear pedidos**, el gerente debe cargar la tasa Bs/USD del día con `PUT /configuracion/tasa`. Sin tasa cargada, la tienda no acepta compras. La siembra de demostración ya carga un historial de tasas.
 
