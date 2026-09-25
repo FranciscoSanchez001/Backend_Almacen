@@ -8,13 +8,13 @@ La solución se organiza en cuatro proyectos concéntricos. Cada capa solo conoc
 
 ```
         ┌──────────────────────────────────────────────┐
-        │                   WebAPI                     │
+        │              Presentation.API                │
         │   ┌──────────────────────────────────────┐   │
         │   │            Infrastructure            │   │
         │   │   ┌──────────────────────────────┐   │   │
-        │   │   │         Application          │   │   │
+        │   │   │       Core.Application       │   │   │
         │   │   │   ┌──────────────────────┐   │   │   │
-        │   │   │   │        Domain        │   │   │   │
+        │   │   │   │     Core.Domain      │   │   │   │
         │   │   │   └──────────────────────┘   │   │   │
         │   │   └──────────────────────────────┘   │   │
         │   └──────────────────────────────────────┘   │
@@ -23,17 +23,17 @@ La solución se organiza en cuatro proyectos concéntricos. Cada capa solo conoc
 
 | Proyecto | Responsabilidad | Referencia a |
 | :--- | :--- | :--- |
-| `Backend_Almacen.Domain` | Entidades, enumeraciones y reglas de negocio puras | Ninguna |
-| `Backend_Almacen.Application` | Casos de uso y contratos (interfaces) | Domain |
-| `Backend_Almacen.Infrastructure` | Persistencia, archivos, mensajería y tareas en segundo plano | Application |
-| `Backend_Almacen.WebAPI` | Controladores HTTP, DTOs, autenticación y composición de la aplicación | Application, Infrastructure |
+| `Core.Domain` | Entidades, enumeraciones y reglas de negocio puras | Ninguna |
+| `Core.Application` | Casos de uso y contratos (interfaces) | Core.Domain |
+| `Infrastructure` | Persistencia, archivos, mensajería y tareas en segundo plano | Core.Application |
+| `Presentation.API` | Controladores HTTP, DTOs, autenticación, manejo global de errores y composición de la aplicación | Core.Application, Infrastructure |
 
 ### Regla de dependencia
 
-- **Domain no tiene ninguna dependencia**: ni a otros proyectos ni a paquetes NuGet. Su `.csproj` no contiene referencias.
-- **Application** solo depende de Domain (y de `Microsoft.Extensions.Logging.Abstractions` para registrar eventos). Declara las interfaces que necesita (`IPedidoRepository`, `IUnitOfWork`, `IAlmacenamientoArchivos`…) sin saber cómo se implementan.
+- **Core.Domain no tiene ninguna dependencia**: ni a otros proyectos ni a paquetes NuGet. Su `.csproj` no contiene referencias.
+- **Core.Application** solo depende de Core.Domain (y de `Microsoft.Extensions.Logging.Abstractions` para registrar eventos). Declara las interfaces que necesita (`IPedidoRepository`, `IUnitOfWork`, `IAlmacenamientoArchivos`…) sin saber cómo se implementan.
 - **Infrastructure** implementa esas interfaces con EF Core, Npgsql, Cloudinary y BCrypt. Es la única capa que conoce la base de datos.
-- **WebAPI** es la raíz de composición: registra todas las dependencias y expone los endpoints.
+- **Presentation.API** es la raíz de composición: registra todas las dependencias y expone los endpoints.
 
 Esto aplica el **Principio de Inversión de Dependencias (DIP)**: los casos de uso dependen de abstracciones, y la infraestructura se "enchufa" desde afuera.
 
@@ -41,15 +41,16 @@ Esto aplica el **Principio de Inversión de Dependencias (DIP)**: los casos de u
 
 ## 2. Contenido de cada capa
 
-### Domain
-- `Entidades/`: 13 entidades del negocio (ver [MODELO_DATOS.md](MODELO_DATOS.md)).
+### Core.Domain
+- `Comun/BaseEntity.cs`: clase base abstracta de todas las entidades, con `Id` (`Guid`) y `CreatedAt` (`DateTime` en UTC). En la base de datos `CreatedAt` se guarda en la columna `creado_en` con valor por defecto `now()`; el mapeo se hace una sola vez para todas las entidades en `ApplicationDbContext`.
+- `Entidades/`: 13 entidades del negocio, todas heredan de `BaseEntity` (ver [MODELO_DATOS.md](MODELO_DATOS.md)).
 - `Enums/`: roles, estados del pedido, métodos de pago, tipos de movimiento de inventario, etc.
 - `Reglas/TransicionesPedido.cs`: qué cambios de estado de un pedido son legales y qué estados cuentan como venta.
 - `Reglas/Telefonos.cs`: validación y normalización de teléfonos venezolanos (`+58 4XX XXX XXXX`).
 
 La entidad `Pedido` encapsula su propia regla: todo cambio de estado pasa por `Pedido.CambiarEstado(...)`, que valida la transición y registra la línea en el historial.
 
-### Application
+### Core.Application
 - `Abstracciones/`: interfaces de repositorios, `IUnitOfWork` y servicios externos.
 - `Servicios/`:
   - `PedidosService`: crear, aprobar, rechazar, marcar en camino, entregar y expirar pedidos.
@@ -60,7 +61,7 @@ La entidad `Pedido` encapsula su propia regla: todo cambio de estado pasa por `P
   - `ColaWhatsapp`: cola en memoria de los mensajes pendientes por enviar.
 
 ### Infrastructure
-- `Persistencia/ApplicationDbContext.cs`: contexto de EF Core con enums nativos de PostgreSQL y nombres en `snake_case`.
+- `Persistencia/ApplicationDbContext.cs`: contexto de EF Core con enums nativos de PostgreSQL y nombres en `snake_case`. Configura las columnas comunes de `BaseEntity` para todas las entidades.
 - `Persistencia/Configuraciones/`: una clase `IEntityTypeConfiguration<T>` por entidad (Fluent API).
 - `Persistencia/Migraciones/`: migraciones Code-First.
 - `Persistencia/Repositorios/`: implementaciones de los repositorios; las lecturas usan `.AsNoTracking()`.
@@ -72,8 +73,9 @@ La entidad `Pedido` encapsula su propia regla: todo cambio de estado pasa por `P
 - `Jobs/ExpiracionPedidosJob.cs`: servicio en segundo plano que expira los pedidos pendientes vencidos.
 - `Seguridad/HasherBcrypt.cs`: hash de contraseñas.
 
-### WebAPI
-- `Controllers/`: un controlador por recurso (ver [API.md](API.md)).
+### Presentation.API
+- `Controllers/`: un controlador por recurso (ver [API.md](API.md)). `PruebasErroresController` provoca errores a propósito para probar el middleware.
+- `Middleware/ExceptionMiddleware.cs`: manejo global de excepciones con Problem Details (RFC 7807). Ver la sección 5.
 - `Dtos/`: objetos de entrada y salida de la API; las entidades nunca se exponen directamente.
 - `Auth/`: emisión de tokens JWT, constantes de roles y extensiones para leer el usuario autenticado.
 - `Program.cs`: composición de servicios y pipeline HTTP.
@@ -96,6 +98,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 | `PedidosService`, `InventarioService`, `ReportesService`, `AuditoriaService`, `TasaService` | **Scoped** | Dependen de repositorios Scoped. |
 | `IGeneradorExcel` (ClosedXML) | **Singleton** | No guarda estado; cada llamada arma un libro nuevo. |
 | `TokenService` | **Scoped** | Se usa solo durante el inicio de sesión. |
+| `ExceptionMiddleware` | **Transient** | Implementa `IMiddleware`, así que el contenedor lo crea en cada petición. No guarda estado entre peticiones, por lo que no hace falta compartir una instancia. |
 | `IHasherContrasenas` (BCrypt) | **Singleton** | No guarda estado; una sola instancia sirve para toda la aplicación. |
 | `IAlmacenamientoArchivos` y cliente de Cloudinary | **Singleton** | Cliente sin estado por petición; crearlo una vez evita costo repetido. |
 | `ColaWhatsapp` | **Singleton** | La cola debe ser la misma para quien encola (servicios) y quien consume (worker). |
@@ -109,18 +112,53 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 Orden de los *middlewares* en `Program.cs`:
 
-1. `MapOpenApi()` (solo en desarrollo): publica el documento OpenAPI en `/openapi/v1.json`.
-2. `UseHttpsRedirection()`.
-3. `UseStaticFiles(...)` para `/capturas`, solo cuando los comprobantes se guardan en disco local.
-4. `UseAuthentication()`: valida el JWT. Además rechaza el token si el usuario fue desactivado, aunque el token no haya vencido.
-5. `UseAuthorization()`: aplica los roles de cada endpoint.
-6. `MapControllers()`.
+1. `UseMiddleware<ExceptionMiddleware>()`: va primero para capturar las excepciones de todo lo que viene después.
+2. `MapOpenApi()` (solo en desarrollo): publica el documento OpenAPI en `/openapi/v1.json`.
+3. `UseHttpsRedirection()`.
+4. `UseStaticFiles(...)` para `/capturas`, solo cuando los comprobantes se guardan en disco local.
+5. `UseAuthentication()`: valida el JWT. Además rechaza el token si el usuario fue desactivado, aunque el token no haya vencido.
+6. `UseAuthorization()`: aplica los roles de cada endpoint.
+7. `MapControllers()`.
 
 Antes de atender peticiones, la aplicación ejecuta `InicializarBaseDatosAsync`, que crea la fila de configuración y el superadmin inicial si no existen. En desarrollo, y solo si se pide con `--SiembraDemo:Habilitada=true`, también genera los datos de demostración.
 
 ---
 
-## 5. Autenticación y Autorización
+## 5. Manejo global de errores (RFC 7807)
+
+`Presentation.API/Middleware/ExceptionMiddleware.cs` captura cualquier excepción no controlada y responde con un objeto **Problem Details** (RFC 7807, actualizado por RFC 9457) y el tipo de contenido `application/problem+json`:
+
+| Excepción | Código | `title` |
+| :--- | :---: | :--- |
+| `KeyNotFoundException` | `404` | Recurso no encontrado |
+| `InvalidOperationException` | `400` | Solicitud inválida |
+| Cualquier otra | `500` | Error interno del servidor |
+
+- En los errores `404` y `400`, `detail` lleva el mensaje de la excepción, que es un mensaje de negocio pensado para el usuario.
+- En los errores `500`, `detail` es siempre un texto genérico. El mensaje original y el *stack trace* **nunca** llegan al cliente: se escriben en el log del servidor junto con el `traceId`, que también va en la respuesta para poder cruzarlos.
+- Si el cliente cierra la conexión (`OperationCanceledException`), no se responde nada.
+- El middleware se registra como **Transient** (`AddTransient<ExceptionMiddleware>()`) y se agrega de primero en el pipeline.
+
+Ejemplo de respuesta:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.6.1",
+  "title": "Error interno del servidor",
+  "status": 500,
+  "detail": "Ocurrió un error inesperado. Intenta de nuevo más tarde.",
+  "instance": "/pruebas/errores/interno",
+  "traceId": "00-9ec4162eb81c08e9f77dcd719eb97315-cc7a21935643c750-00"
+}
+```
+
+Para probarlo están los endpoints `GET /pruebas/errores/no-encontrado`, `/operacion-invalida` e `/interno` (ver [API.md](API.md)), la carpeta **Errores RFC 7807** de la [colección de Postman](postman/Backend_Almacen.postman_collection.json) y las respuestas reales capturadas en [evidencias/errores-rfc7807.md](evidencias/errores-rfc7807.md).
+
+> Los controladores siguen devolviendo sus propios códigos para los casos de negocio que ya validan (por ejemplo, `409` al aprobar un pedido que no está pendiente). El middleware es la red de seguridad para todo lo que no se controla ahí.
+
+---
+
+## 6. Autenticación y Autorización
 
 - **Personal** (superadmin, ventas, repartidor): `POST /auth/login` con correo y contraseña; la contraseña se verifica contra el hash BCrypt.
 - **Clientes**: `POST /auth/google` con el *ID token* de Google, que el backend valida con `Google.Apis.Auth`. Si el cliente no existe, se crea.
@@ -129,11 +167,8 @@ Antes de atender peticiones, la aplicación ejecuta `InicializarBaseDatosAsync`,
 
 ---
 
-## 6. Pendientes técnicos de la Fase 1
+## 7. Pendientes técnicos
 
 | Pendiente | Descripción |
 | :--- | :--- |
-| Middleware global de excepciones | Capturar `KeyNotFoundException` (404), `InvalidOperationException` (400) y `Exception` (500) en un `ExceptionMiddleware`, responder con `application/problem+json` (RFC 7807) y ocultar las trazas en los errores 500. |
-| Entidad base | Clase abstracta `BaseEntity` con `Id: Guid` y `CreatedAt: DateTime` (UTC) de la que hereden todas las entidades. |
-| Nombres de proyectos | Alinear con la nomenclatura de la asignatura: `Core.Domain`, `Core.Application`, `Infrastructure`, `Presentation.API`. |
 | Pruebas unitarias | Proyecto de pruebas con xUnit y Moq para la capa Application. |

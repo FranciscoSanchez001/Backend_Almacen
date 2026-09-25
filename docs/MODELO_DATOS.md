@@ -5,8 +5,9 @@
 La base de datos es **PostgreSQL 16** y se genera con **Entity Framework Core 10 (Code-First)**. La configuración de cada tabla está en `Infrastructure/Persistencia/Configuraciones/` (Fluent API) y el script completo en [`database/InitialCreate.sql`](../database/InitialCreate.sql).
 
 Convenciones:
+- **Entidad base:** todas las entidades heredan de `BaseEntity` (`Core.Domain/Comun/BaseEntity.cs`), que define `Id` (`Guid`) y `CreatedAt` (`DateTime` en UTC). Por eso **todas las tablas** tienen `id` y `creado_en`.
 - **Claves primarias UUID** en todas las tablas.
-- **Fechas en UTC** (`timestamp with time zone`); las fechas de creación toman `now()` por defecto.
+- **Fechas en UTC** (`timestamp with time zone`). `CreatedAt` se guarda en la columna `creado_en`, con `now()` por defecto; ese mapeo se configura una sola vez para todas las entidades en `ApplicationDbContext`.
 - **Nombres en `snake_case`** (por ejemplo, la propiedad `StockDisponible` se guarda en la columna `stock_disponible`).
 - **Montos** con precisión `numeric(18,2)` y tasas de cambio con `numeric(18,4)`.
 - Las enumeraciones se guardan como **tipos enum nativos de PostgreSQL**.
@@ -40,11 +41,13 @@ erDiagram
     CATEGORIAS {
         uuid id PK
         varchar_100 nombre UK
+        timestamptz creado_en
     }
     ZONAS {
         uuid id PK
         varchar nombre UK
         boolean activa
+        timestamptz creado_en
     }
     USUARIOS {
         uuid id PK
@@ -108,6 +111,7 @@ erDiagram
         int cantidad
         numeric_18_2 precio_usd
         numeric_18_2 precio_bs
+        timestamptz creado_en
     }
     HISTORIAL_ESTADOS_PEDIDO {
         uuid id PK
@@ -165,6 +169,7 @@ erDiagram
         varchar_1000 datos_pago_movil
         varchar_200 wallet_binance
         text_array numeros_prueba
+        timestamptz creado_en
     }
     HISTORIAL_TASAS {
         uuid id PK

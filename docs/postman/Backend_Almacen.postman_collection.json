@@ -1,0 +1,2533 @@
+{
+  "info": {
+    "_postman_id": "b1f9de8d-bc4c-5bbf-9e45-5644869ae123",
+    "name": "Backend_Almacen",
+    "description": "API ASP.NET Core del almacén. Ejecuta primero **Auth > Login del personal** para guardar `token`. Los enums van en snake_case (p. ej. `pago_movil`, `en_camino`). Propiedades JSON en camelCase.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Inicio de sesión. El personal entra con correo y contraseña; los clientes con Google.",
+      "item": [
+        {
+          "name": "Login del personal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. Login del gerente (superadmin sembrado). Guarda `token` (propiedad `token` de LoginResponse) y `usuarioId` en variables de colección.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gerente@almacen.local\",\n  \"password\": \"Cambiar123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Respuesta trae token', () => pm.expect(json.token).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('token', json.token);",
+                  "if (json.usuario) { pm.collectionVariables.set('usuarioId', json.usuario.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login ventas (demo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. Login de un vendedor del sembrador demo (ventas1..2@almacen.local / Demo1234!). Reemplaza `token` por el de rol ventas.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ventas1@almacen.local\",\n  \"password\": \"Demo1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Respuesta trae token', () => pm.expect(json.token).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('token', json.token);",
+                  "if (json.usuario) { pm.collectionVariables.set('usuarioId', json.usuario.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login repartidor (demo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. Login de un repartidor del sembrador demo (repartidor1..3@almacen.local / Demo1234!). Reemplaza `token` por el de rol repartidor.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"repartidor1@almacen.local\",\n  \"password\": \"Demo1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Respuesta trae token', () => pm.expect(json.token).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('token', json.token);",
+                  "if (json.usuario) { pm.collectionVariables.set('usuarioId', json.usuario.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con Google (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
+            },
+            "description": "Público. Login de clientes con el ID token de Google Identity Services. Crea el cliente si no existe. 503 si falta Google:ClientId. Guarda `token` si responde 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"<ID token de Google>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Usuario de la sesión",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/yo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "yo"
+              ]
+            },
+            "description": "Autenticado (cualquier rol). Datos del usuario del token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catálogo (público)",
+      "description": "Tienda pública: productos activos con stock.",
+      "item": [
+        {
+          "name": "Listar catálogo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo?pagina=1&tamano=24",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "harina",
+                  "disabled": true
+                },
+                {
+                  "key": "categoriaId",
+                  "value": "{{categoriaId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "24"
+                }
+              ]
+            },
+            "description": "Público. Productos visibles en tienda con precio en USD y Bs. Guarda el primero en `productoId`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('productoId', lista[0].id);",
+                  "    console.log('productoId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de producto (catálogo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "{{productoId}}"
+              ]
+            },
+            "description": "Público. Detalle de un producto visible en tienda (404 si está inactivo o sin stock).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Inicio de la tienda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/inicio?limite=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "inicio"
+              ],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Público. Más vendidos; si el token es de un cliente, también 'compras siempre' y 'últimas compras'. Usa el token de la colección si existe."
+          },
+          "response": []
+        },
+        {
+          "name": "Datos de pago (checkout)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "pago"
+              ]
+            },
+            "description": "Autenticado (cualquier rol). Tasa, datos de transferencia, pago móvil, wallet Binance y número de soporte."
+          },
+          "response": []
+        },
+        {
+          "name": "Zonas de entrega activas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/zonas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "zonas"
+              ]
+            },
+            "description": "Público. Zonas activas para el checkout. Guarda la primera en `zonaId`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json) ? json : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('zonaId', lista[0].id);",
+                  "    console.log('zonaId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categorías (público)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias"
+              ]
+            },
+            "description": "Público ([AllowAnonymous]). Lista de categorías para el filtro de la tienda. Guarda la primera en `categoriaId`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json) ? json : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('categoriaId', lista[0].id);",
+                  "    console.log('categoriaId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "description": "Gestión de productos del panel (ventas y superadmin).",
+      "item": [
+        {
+          "name": "Listar productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos?incluirInactivos=false&pagina=1&tamano=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "categoriaId",
+                  "value": "{{categoriaId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "incluirInactivos",
+                  "value": "false"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Guarda el primero en `productoId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('productoId', lista[0].id);",
+                  "    console.log('productoId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener producto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": "Rol: ventas o superadmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. 409 si el SKU ya existe; 400 si la categoría no existe. Guarda el nuevo `productoId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoSku\": \"VIV-0005\",\n  \"nombre\": \"Azúcar refinada 1 kg\",\n  \"descripcion\": \"Paquete de 1 kg\",\n  \"precioUsd\": 1.45,\n  \"costoUsd\": 1.1,\n  \"imagenUrl\": null,\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"stockInicial\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('productoId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar producto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. `stockDisponible` es opcional: si cambia, se registra como ajuste de inventario.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoSku\": \"VIV-0005\",\n  \"nombre\": \"Azúcar refinada 1 kg\",\n  \"descripcion\": \"Paquete de 1 kg\",\n  \"precioUsd\": 1.5,\n  \"costoUsd\": 1.1,\n  \"imagenUrl\": null,\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"stockDisponible\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Borrar producto (lógico)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoId}}"
+              ]
+            },
+            "description": "Rol: solo superadmin. Borrado lógico; responde 204."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categorías",
+      "description": "Categorías de productos.",
+      "item": [
+        {
+          "name": "Listar categorías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias"
+              ]
+            },
+            "description": "Público ([AllowAnonymous]). Guarda la primera en `categoriaId`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json) ? json : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('categoriaId', lista[0].id);",
+                  "    console.log('categoriaId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear categoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. 409 si el nombre ya existe. Guarda el nuevo `categoriaId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Charcutería\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('categoriaId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Renombrar categoría",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categorias/{{categoriaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias",
+                "{{categoriaId}}"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. 409 si el nombre ya existe.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Charcutería y embutidos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Zonas",
+      "description": "Zonas de entrega (administración).",
+      "item": [
+        {
+          "name": "Listar zonas (todas)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/zonas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zonas"
+              ]
+            },
+            "description": "Rol: solo superadmin. Activas e inactivas. Guarda la primera en `zonaId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json) ? json : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('zonaId', lista[0].id);",
+                  "    console.log('zonaId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear zona",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/zonas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zonas"
+              ]
+            },
+            "description": "Rol: solo superadmin. 409 si el nombre ya existe. Guarda el nuevo `zonaId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Zona Norte\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('zonaId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar / desactivar zona",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/zonas/{{zonaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "zonas",
+                "{{zonaId}}"
+              ]
+            },
+            "description": "Rol: solo superadmin. Cambia el nombre o `activa` (las zonas no se borran).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Zona Norte\",\n  \"activa\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inventario",
+      "description": "Stock disponible y reservado.",
+      "item": [
+        {
+          "name": "Listar inventario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inventario?soloAgotados=false",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inventario"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "categoriaId",
+                  "value": "{{categoriaId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "soloAgotados",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Agotados primero. Guarda el primer `productoId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json) ? json : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('productoId', lista[0].productoId);",
+                  "    console.log('productoId =', lista[0].productoId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reponer stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventario/{{productoId}}/reponer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inventario",
+                "{{productoId}}",
+                "reponer"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Suma `cantidad` (1 a 1.000.000) al disponible.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cantidad\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Movimientos de un producto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inventario/{{productoId}}/movimientos?pagina=1&tamano=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "inventario",
+                "{{productoId}}",
+                "movimientos"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Reservas, ventas, liberaciones, reposiciones y ajustes."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pedidos (cliente)",
+      "description": "Requieren un token de rol cliente (obtenido con POST /auth/google).",
+      "item": [
+        {
+          "name": "Crear pedido (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "Rol: cliente. multipart/form-data con la captura del comprobante. Reserva el stock. Guarda el nuevo `pedidoId`. 503 si no hay tasa cargada; 409 si no hay stock.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "items[0].productoId",
+                  "value": "{{productoId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "items[0].cantidad",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "metodoPago",
+                  "value": "pago_movil",
+                  "type": "text",
+                  "description": "transferencia | pago_movil | binance"
+                },
+                {
+                  "key": "referenciaPago",
+                  "value": "123456789",
+                  "type": "text"
+                },
+                {
+                  "key": "captura",
+                  "type": "file",
+                  "src": [],
+                  "description": "Imagen JPG, PNG o WEBP de máximo 5 MB (selecciónala en Postman)."
+                },
+                {
+                  "key": "zonaId",
+                  "value": "{{zonaId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "direccionTexto",
+                  "value": "Av. Principal, casa azul frente a la panadería",
+                  "type": "text"
+                },
+                {
+                  "key": "latitud",
+                  "value": "10.4806",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "longitud",
+                  "value": "-66.9036",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "telefono",
+                  "value": "+58 412 123 4567",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('pedidoId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/mios?pagina=1&tamano=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "mios"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Rol: cliente. Pedidos del cliente de la sesión. Guarda el primero en `pedidoId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('pedidoId', lista[0].id);",
+                  "    console.log('pedidoId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            },
+            "description": "Autenticado. Cliente: solo los suyos; repartidor: los asignados; ventas y superadmin: todos."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pedidos (ventas)",
+      "description": "Bandeja y revisión de pedidos del panel.",
+      "item": [
+        {
+          "name": "Bandeja de pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos?estado=pendiente&pagina=1&tamano=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "pendiente"
+                },
+                {
+                  "key": "zonaId",
+                  "value": "{{zonaId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "repartidorId",
+                  "value": "{{repartidorId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "2026-09-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-10-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Rol: ventas o superadmin. `estado` en snake_case (pendiente, aprobado, rechazado, expirado, asignado, en_camino, entregado). Guarda el primero en `pedidoId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('pedidoId', lista[0].id);",
+                  "    console.log('pedidoId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Repartidores activos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/repartidores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "repartidores"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Repartidores activos con sus pedidos en curso. Guarda el primero en `repartidorId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json) ? json : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('repartidorId', lista[0].id);",
+                  "    console.log('repartidorId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            },
+            "description": "Rol: ventas o superadmin (ven todos)."
+          },
+          "response": []
+        },
+        {
+          "name": "Aprobar pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/aprobar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "{{pedidoId}}",
+                "aprobar"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Aprueba, asigna repartidor y confirma el stock. 409 si el estado ya no lo admite.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"repartidorId\": \"{{repartidorId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rechazar pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/rechazar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "{{pedidoId}}",
+                "rechazar"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Libera el stock. Cuerpo opcional; sin motivo se usa 'el método de pago no procede'.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"La referencia de pago no coincide.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Repartidor",
+      "description": "Panel del repartidor.",
+      "item": [
+        {
+          "name": "Mis pedidos por entregar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repartidor/pedidos?historial=false&pagina=1&tamano=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repartidor",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "historial",
+                  "value": "false"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Rol: repartidor. historial=false: asignados y en camino. Guarda el primero en `pedidoId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('pedidoId', lista[0].id);",
+                  "    console.log('pedidoId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis entregas (historial)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/repartidor/pedidos?historial=true&pagina=1&tamano=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "repartidor",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "historial",
+                  "value": "true"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Rol: repartidor. historial=true: pedidos ya entregados."
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar en camino",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/en-camino",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "{{pedidoId}}",
+                "en-camino"
+              ]
+            },
+            "description": "Rol: repartidor (solo sus pedidos) o superadmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar entregado",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/{{pedidoId}}/entregado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "{{pedidoId}}",
+                "entregado"
+              ]
+            },
+            "description": "Rol: repartidor (solo sus pedidos) o superadmin. Estado final."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "description": "Gestión del personal (solo superadmin). Solo crea/edita ventas y repartidores.",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios?pagina=1&tamano=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "buscar",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "rol",
+                  "value": "repartidor",
+                  "disabled": true
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Rol: solo superadmin. `rol` en snake_case (cliente, ventas, repartidor, superadmin). Guarda el primero en `usuarioId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('usuarioId', lista[0].id);",
+                  "    console.log('usuarioId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            },
+            "description": "Rol: solo superadmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Rol: solo superadmin. `rol` solo ventas o repartidor; password de 8 a 72 caracteres. Guarda el nuevo `usuarioId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos Pérez\",\n  \"email\": \"carlos.perez@almacen.local\",\n  \"telefono\": \"+58 414 555 1234\",\n  \"rol\": \"repartidor\",\n  \"password\": \"Cambiar123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('usuarioId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editar usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            },
+            "description": "Rol: solo superadmin. `password` es opcional (si viene, reemplaza la actual).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos Pérez\",\n  \"email\": \"carlos.perez@almacen.local\",\n  \"telefono\": \"+58 414 555 1234\",\n  \"rol\": \"repartidor\",\n  \"password\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar usuario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioId}}/activar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioId}}",
+                "activar"
+              ]
+            },
+            "description": "Rol: solo superadmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Desactivar usuario",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioId}}/desactivar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioId}}",
+                "desactivar"
+              ]
+            },
+            "description": "Rol: solo superadmin. Pierde el acceso de inmediato; 409 si es repartidor con pedidos en curso."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "description": "Historial de compras de clientes.",
+      "item": [
+        {
+          "name": "Buscar clientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes?pagina=1&tamano=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "buscar",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Busca por nombre, email o teléfono. Guarda el primero en `clienteId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('clienteId', lista[0].id);",
+                  "    console.log('clienteId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pedidos de un cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}/pedidos?pagina=1&tamano=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Rol: ventas o superadmin. 404 si el id no es de un cliente."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Configuración",
+      "description": "Configuración de la tienda (solo superadmin).",
+      "item": [
+        {
+          "name": "Obtener configuración",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion"
+              ]
+            },
+            "description": "Rol: solo superadmin."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar configuración",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion"
+              ]
+            },
+            "description": "Rol: solo superadmin. horasExpiracion 1 a 168; numerosPrueba hasta 20 celulares venezolanos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroSoporte\": \"+58 412 000 0000\",\n  \"horasExpiracion\": 24,\n  \"datosTransferencia\": \"Banco X, cuenta 0102-..., RIF J-...\",\n  \"datosPagoMovil\": \"0102, 0412-0000000, V-12345678\",\n  \"walletBinance\": \"TXYZ...\",\n  \"numerosPrueba\": [\n    \"+58 412 123 4567\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cargar tasa del día",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion/tasa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion",
+                "tasa"
+              ]
+            },
+            "description": "Rol: solo superadmin. Tasa Bs/USD (> 0); queda en el historial. Necesaria para crear pedidos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tasa\": 36.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Historial de tasas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion/tasas?pagina=1&tamano=30",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion",
+                "tasas"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": "Rol: solo superadmin."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notificaciones",
+      "description": "Avisos del panel (agotados, pedidos nuevos, por expirar).",
+      "item": [
+        {
+          "name": "Listar notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones?soloNoLeidas=true&pagina=1&tamano=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones"
+              ],
+              "query": [
+                {
+                  "key": "soloNoLeidas",
+                  "value": "true"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Guarda la primera en `notificacionId`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "const lista = Array.isArray(json.items) ? json.items : [];",
+                  "if (lista.length > 0) {",
+                  "    pm.collectionVariables.set('notificacionId', lista[0].id);",
+                  "    console.log('notificacionId =', lista[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcar como leída",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/{{notificacionId}}/leer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "{{notificacionId}}",
+                "leer"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. 204; 404 si no existe."
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar todas como leídas",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/leer-todas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "leer-todas"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. 204."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "description": "KPIs e informe Excel (solo superadmin). Fechas yyyy-MM-dd locales, inclusive.",
+      "item": [
+        {
+          "name": "KPIs (mes en curso)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/kpis",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "kpis"
+              ]
+            },
+            "description": "Rol: solo superadmin. Sin parámetros: mes en curso."
+          },
+          "response": []
+        },
+        {
+          "name": "KPIs por período",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/kpis?tipo=personalizado&desde=2026-09-01&hasta=2026-09-15",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "kpis"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "personalizado"
+                },
+                {
+                  "key": "desde",
+                  "value": "2026-09-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-09-15"
+                }
+              ]
+            },
+            "description": "Rol: solo superadmin. tipo = diario | semanal | mensual | personalizado."
+          },
+          "response": []
+        },
+        {
+          "name": "Informe Excel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reportes/excel?tipo=mensual&desde=2026-09-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes",
+                "excel"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "mensual"
+                },
+                {
+                  "key": "desde",
+                  "value": "2026-09-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Rol: solo superadmin. Descarga .xlsx (usa 'Send and Download'). `tipo` es obligatorio. Queda en la auditoría."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auditoría",
+      "description": "Auditoría (solo superadmin). Fechas en UTC: desde inclusive, hasta exclusive.",
+      "item": [
+        {
+          "name": "Cambios registrados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auditoria?pagina=1&tamano=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auditoria"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": "{{usuarioId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "productoId",
+                  "value": "{{productoId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "entidad",
+                  "value": "producto",
+                  "disabled": true
+                },
+                {
+                  "key": "entidadId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "2026-09-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-10-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Rol: solo superadmin. entidad = producto | categoria | usuario | zona | reporte | configuracion. productoId es atajo de entidad=producto."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambios de estado de pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auditoria/pedidos?pagina=1&tamano=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auditoria",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": "{{usuarioId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "pedidoId",
+                  "value": "{{pedidoId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "2026-09-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-10-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Rol: solo superadmin. Usuario null = cambio hecho por el sistema (expiración)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Diagnóstico",
+      "description": "Diagnóstico de la base de datos.",
+      "item": [
+        {
+          "name": "Probar base de datos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/DbTest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "DbTest"
+              ]
+            },
+            "description": "Público (sin [Authorize]). Conexión a PostgreSQL, migraciones, configuración y totales. 503 si no conecta.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Conectado', () => pm.expect(pm.response.json().conectado).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Errores RFC 7807",
+      "description": "Endpoints de prueba del manejador global de excepciones (ProblemDetails, RFC 7807/9457). Anónimos.",
+      "item": [
+        {
+          "name": "404 No encontrado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pruebas/errores/no-encontrado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pruebas",
+                "errores",
+                "no-encontrado"
+              ]
+            },
+            "description": "Público. Lanza una excepción de 'no encontrado'; espera 404 con ProblemDetails.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "404 ProblemDetails",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/pruebas/errores/no-encontrado",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pruebas",
+                    "errores",
+                    "no-encontrado"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.5\",\n  \"title\": \"Recurso no encontrado\",\n  \"status\": 404,\n  \"detail\": \"El recurso solicitado no existe.\",\n  \"instance\": \"/pruebas/errores/no-encontrado\",\n  \"traceId\": \"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Content-Type es application/problem+json', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('Cuerpo ProblemDetails (type, title, status, instance)', () => {",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('instance');",
+                  "    pm.expect(body.status).to.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "400 Operación inválida",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pruebas/errores/operacion-invalida",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pruebas",
+                "errores",
+                "operacion-invalida"
+              ]
+            },
+            "description": "Público. Lanza una operación inválida; espera 400 con ProblemDetails.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "400 ProblemDetails",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/pruebas/errores/operacion-invalida",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pruebas",
+                    "errores",
+                    "operacion-invalida"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.1\",\n  \"title\": \"Solicitud inválida\",\n  \"status\": 400,\n  \"detail\": \"La operación solicitada no es válida.\",\n  \"instance\": \"/pruebas/errores/operacion-invalida\",\n  \"traceId\": \"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Content-Type es application/problem+json', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('Cuerpo ProblemDetails (type, title, status, instance)', () => {",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('instance');",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "500 Error interno",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/pruebas/errores/interno",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pruebas",
+                "errores",
+                "interno"
+              ]
+            },
+            "description": "Público. Lanza una excepción no controlada; espera 500 sin stack trace en `detail`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "500 ProblemDetails",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/pruebas/errores/interno",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "pruebas",
+                    "errores",
+                    "interno"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.6.1\",\n  \"title\": \"Error interno del servidor\",\n  \"status\": 500,\n  \"detail\": \"Ocurrió un error inesperado. Intenta de nuevo más tarde.\",\n  \"instance\": \"/pruebas/errores/interno\",\n  \"traceId\": \"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00\"\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 500', () => pm.response.to.have.status(500));",
+                  "pm.test('Content-Type es application/problem+json', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('Cuerpo ProblemDetails (type, title, status, instance)', () => {",
+                  "    pm.expect(body).to.have.property('type');",
+                  "    pm.expect(body).to.have.property('title');",
+                  "    pm.expect(body).to.have.property('instance');",
+                  "    pm.expect(body.status).to.eql(500);",
+                  "});",
+                  "pm.test('detail sin stack trace', () => {",
+                  "    const detail = String(body.detail || '');",
+                  "    pm.expect(detail).to.not.include('Exception');",
+                  "    pm.expect(detail).to.not.include('at ');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producto inexistente (con token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "description": "Rol: ventas o superadmin. Id inexistente: muestra lo que devuelve hoy el controlador (NotFound()). Sin test de formato."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5085",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pedidoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "zonaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "usuarioId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "repartidorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clienteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificacionId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
