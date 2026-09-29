@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 # Capturas de pago guardadas en disco en desarrollo
 wwwroot/capturas/
+/ESTRUCTURA_DEL_PROYECTO.txt
+/postman/globals/workspace.globals.yaml
+/.postman/resources.yaml
