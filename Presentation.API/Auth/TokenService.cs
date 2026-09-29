@@ -34,6 +34,8 @@ namespace Presentation.API.Auth
                 SigningCredentials = new SigningCredentials(jwt.SigningKey(), SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(
                 [
+                    // iat, nbf y exp los agrega JsonWebTokenHandler a partir de Expires.
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Sub, usuario.Id.ToString()),
                     new Claim(JwtRegisteredClaimNames.Name, usuario.Nombre),
                     new Claim(JwtRegisteredClaimNames.Email, usuario.Email),

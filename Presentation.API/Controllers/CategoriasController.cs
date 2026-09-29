@@ -1,4 +1,5 @@
 using Core.Application.Abstracciones;
+using Core.Application.Dtos;
 using Core.Application.Servicios;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
@@ -23,7 +24,9 @@ namespace Presentation.API.Controllers
         public async Task<IEnumerable<CategoriaResponse>> Listar(CancellationToken ct) =>
             (await categorias.ListarAsync(ct)).Select(CategoriaResponse.De);
 
+        // Crear y editar categorías: solo Admin. Un Employee (ventas) recibe 403 Forbidden.
         [HttpPost]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<ActionResult<CategoriaResponse>> Crear(CategoriaRequest req, CancellationToken ct)
         {
             var nombre = req.Nombre.Trim();
@@ -42,6 +45,7 @@ namespace Presentation.API.Controllers
         }
 
         [HttpPut("{id:guid}")]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<ActionResult<CategoriaResponse>> Actualizar(Guid id, CategoriaRequest req, CancellationToken ct)
         {
             var categoria = await categorias.ObtenerParaEditarAsync(id, ct);

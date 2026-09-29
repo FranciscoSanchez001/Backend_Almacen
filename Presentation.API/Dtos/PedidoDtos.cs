@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+using Core.Application.Dtos;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
 
@@ -6,44 +6,12 @@ namespace Presentation.API.Dtos
 {
     // multipart/form-data, porque trae la captura del pago. Los ítems van como
     // items[0].productoId=..., items[0].cantidad=2, items[1].productoId=...
-    public class CrearPedidoForm
+    // Los datos del pedido y sus reglas están en Core.Application (DatosPedido); aquí solo se
+    // agrega el archivo, que es un concepto HTTP.
+    public class CrearPedidoForm : DatosPedido
     {
-        [Required, MinLength(1, ErrorMessage = "El pedido debe tener al menos un producto."), MaxLength(50)]
-        public List<ItemPedidoRequest> Items { get; set; } = [];
-
-        // transferencia | pago_movil | binance
-        [Required]
-        public string MetodoPago { get; set; } = "";
-
-        [Required, StringLength(100, MinimumLength = 1)]
-        public string ReferenciaPago { get; set; } = "";
-
-        [Required]
         public IFormFile? Captura { get; set; }
-
-        public Guid ZonaId { get; set; }
-
-        // Dirección más el texto de referencia ("casa azul frente a la panadería").
-        [Required, StringLength(500, MinimumLength = 5)]
-        public string DireccionTexto { get; set; } = "";
-
-        [Range(-90, 90)]
-        public double? Latitud { get; set; }
-
-        [Range(-180, 180)]
-        public double? Longitud { get; set; }
-
-        // +58 4XX XXX XXXX
-        [Required]
-        public string Telefono { get; set; } = "";
     }
-
-    public record ItemPedidoRequest(Guid ProductoId, [Range(1, 1000)] int Cantidad);
-
-    public record AprobarPedidoRequest(Guid RepartidorId);
-
-    // Sin motivo se usa "el método de pago no procede".
-    public record RechazarPedidoRequest([StringLength(300)] string? Motivo);
 
     public record UsuarioResumen(Guid Id, string Nombre, string? Telefono);
 

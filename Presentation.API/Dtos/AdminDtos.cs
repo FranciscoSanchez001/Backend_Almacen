@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Core.Application.Modelos;
 using Core.Domain.Entidades;
@@ -6,10 +5,6 @@ using Core.Domain.Enums;
 
 namespace Presentation.API.Dtos
 {
-    public record CrearZonaRequest([Required, StringLength(100, MinimumLength = 1)] string Nombre);
-
-    public record ActualizarZonaRequest([Required, StringLength(100, MinimumLength = 1)] string Nombre, bool Activa);
-
     public record ZonaAdminResponse(Guid Id, string Nombre, bool Activa)
     {
         public static ZonaAdminResponse De(Zona z) => new(z.Id, z.Nombre, z.Activa);

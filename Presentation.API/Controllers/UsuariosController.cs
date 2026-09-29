@@ -1,5 +1,6 @@
 using Core.Application.Abstracciones;
 using Core.Application.Comun;
+using Core.Application.Dtos;
 using Core.Application.Servicios;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
@@ -46,7 +47,7 @@ namespace Presentation.API.Controllers
         public async Task<ActionResult<UsuarioResponse>> Crear(CrearUsuarioRequest req, CancellationToken ct)
         {
             var email = req.Email.Trim().ToLowerInvariant();
-            if (await ValidarAsync(req.Rol, email, req.Telefono, null, ct) is { } invalido)
+            if (await VerificarEmailAsync(email, null, ct) is { } invalido)
             {
                 return invalido;
             }
@@ -84,7 +85,7 @@ namespace Presentation.API.Controllers
             }
 
             var email = req.Email.Trim().ToLowerInvariant();
-            if (await ValidarAsync(req.Rol, email, req.Telefono, id, ct) is { } invalido)
+            if (await VerificarEmailAsync(email, id, ct) is { } invalido)
             {
                 return invalido;
             }
@@ -159,22 +160,10 @@ namespace Presentation.API.Controllers
             return UsuarioResponse.De(usuario);
         }
 
-        private async Task<ActionResult?> ValidarAsync(RolUsuario rol, string email, string? telefono, Guid? usuarioId,
-            CancellationToken ct)
+        // El rol y el teléfono ya los validó FluentValidation (Crear/ActualizarUsuarioValidator);
+        // aquí solo queda lo que depende de la base de datos.
+        private async Task<ActionResult?> VerificarEmailAsync(string email, Guid? usuarioId, CancellationToken ct)
         {
-            if (!EsEditable(rol))
-            {
-                ModelState.AddModelError(nameof(CrearUsuarioRequest.Rol), "El rol debe ser ventas o repartidor.");
-            }
-            if (!string.IsNullOrWhiteSpace(telefono) && Telefonos.NormalizarVenezolano(telefono) is null)
-            {
-                ModelState.AddModelError(nameof(CrearUsuarioRequest.Telefono),
-                    "El teléfono debe ser un celular venezolano (+58 4XX XXX XXXX).");
-            }
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem(ModelState);
-            }
             if (await usuarios.EmailEnUsoAsync(email, usuarioId, ct))
             {
                 return Conflict(new { mensaje = $"Ya existe un usuario con el correo {email}." });

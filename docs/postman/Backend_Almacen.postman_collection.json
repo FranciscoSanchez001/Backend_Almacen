@@ -2476,9 +2476,610 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Fase 3 - Seguridad (JWT, RBAC, FluentValidation)",
+      "description": "Escenarios obligatorios de la Fase 3. Carpeta autocontenida: ejecútala completa con el Collection Runner, en orden.\n\nMatriz RBAC: Admin = rol `superadmin`; Employee = rol `ventas`.\n\n1. Login exitoso Admin y Employee (200 + AuthResponseDto).\n2. Endpoint protegido sin token (401).\n3. Borrar producto con token de Employee (403).\n4. Producto con precio negativo (400 con errores de FluentValidation).\n\nExtras: Employee consulta catálogo (200) y registra producto (201); Employee intenta crear categoría (403).",
+      "item": [
+        {
+          "name": "1a. Login Admin (superadmin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. LoginDto con el superadmin sembrado (SuperadminInicial en appsettings.Development.json). Guarda `tokenAdmin`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gerente@almacen.local\",\n  \"password\": \"Cambiar123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('AuthResponseDto: token, username, email y rol', () => {",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.username).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.email).to.eql('gerente@almacen.local');",
+                  "    pm.expect(json.rol).to.eql('superadmin');",
+                  "});",
+                  "const partes = json.token.split('.');",
+                  "const b64 = s => JSON.parse(atob(s.replace(/-/g, '+').replace(/_/g, '/')));",
+                  "const header = b64(partes[0]);",
+                  "const payload = b64(partes[1]);",
+                  "pm.test('JWT firmado con HMAC-SHA256 (HS256)', () => {",
+                  "    pm.expect(partes).to.have.lengthOf(3);",
+                  "    pm.expect(header.alg).to.eql('HS256');",
+                  "});",
+                  "pm.test('Claims: sub, name, email, role, jti, iat y exp futura', () => {",
+                  "    pm.expect(payload).to.include.keys('sub', 'name', 'email', 'role', 'jti', 'iat', 'exp');",
+                  "    pm.expect(payload.role).to.eql('superadmin');",
+                  "    pm.expect(payload.exp * 1000).to.be.above(Date.now());",
+                  "});",
+                  "pm.collectionVariables.set('tokenAdmin', json.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preparar: crear Employee de prueba (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Solo Admin. Crea un usuario con rol ventas (Employee) para las pruebas. Si ya existe responde 409, que también es válido.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Empleado Fase 3\",\n  \"email\": \"empleado.fase3@almacen.local\",\n  \"telefono\": null,\n  \"rol\": \"ventas\",\n  \"password\": \"Empleado123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created o 409 si ya existía', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1b. Login Employee (ventas)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. Login del Employee creado en el paso anterior. Guarda `tokenEmpleado`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"empleado.fase3@almacen.local\",\n  \"password\": \"Empleado123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('AuthResponseDto con rol ventas (Employee)', () => {",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.username).to.eql('Empleado Fase 3');",
+                  "    pm.expect(json.email).to.eql('empleado.fase3@almacen.local');",
+                  "    pm.expect(json.rol).to.eql('ventas');",
+                  "});",
+                  "pm.collectionVariables.set('tokenEmpleado', json.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con contraseña incorrecta (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. Credenciales inválidas: 401 sin token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gerente@almacen.local\",\n  \"password\": \"incorrecta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('No entrega token', () => pm.expect(pm.response.json()).to.not.have.property('token'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Endpoint protegido sin token (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "Sin encabezado Authorization: 401 Unauthorized con Problem Details.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('WWW-Authenticate: Bearer', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.include('Bearer'));",
+                  "pm.test('application/problem+json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "pm.test('status 401 en el cuerpo', () => pm.expect(pm.response.json().status).to.eql(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Employee intenta borrar producto (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/a1000000-0000-4000-8000-000000000001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "a1000000-0000-4000-8000-000000000001"
+              ]
+            },
+            "description": "DELETE es solo para Admin. Con token de Employee (ventas): 403 Forbidden y el producto no se borra.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmpleado}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));",
+                  "pm.test('application/problem+json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "pm.test('status 403 en el cuerpo', () => pm.expect(pm.response.json().status).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Producto con precio negativo (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "FluentValidation (CrearProductoValidator) rechaza precio y costo <= 0, stock negativo y stock máximo <= mínimo: 400 con el detalle por campo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoSku\": \"PRU-0001\",\n  \"nombre\": \"Producto inválido\",\n  \"descripcion\": null,\n  \"precioUsd\": -5,\n  \"costoUsd\": 1.00,\n  \"imagenUrl\": null,\n  \"categoriaId\": \"c1000000-0000-4000-8000-000000000001\",\n  \"stockInicial\": -1,\n  \"stockMinimo\": 10,\n  \"stockMaximo\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmpleado}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('application/problem+json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "const errors = pm.response.json().errors;",
+                  "pm.test('Error de precio con mensaje de validación', () => {",
+                  "    pm.expect(errors).to.have.property('precioUsd');",
+                  "    pm.expect(errors.precioUsd[0]).to.include('mayor que 0');",
+                  "});",
+                  "pm.test('Errores de stock negativo y stock máximo <= mínimo', () => {",
+                  "    pm.expect(errors).to.have.property('stockInicial');",
+                  "    pm.expect(errors).to.have.property('stockMaximo');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Extra: Employee consulta productos (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos?tamano=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ],
+              "query": [
+                {
+                  "key": "tamano",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "El Employee sí puede consultar el catálogo del panel.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmpleado}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Extra: Employee registra producto (201)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('skuFase3', 'F3-' + Date.now().toString().slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Guarda límites de stock, ubicación y unidad', () => {",
+                  "    pm.expect(json.stockMinimo).to.eql(5);",
+                  "    pm.expect(json.stockMaximo).to.eql(50);",
+                  "    pm.expect(json.ubicacion).to.eql('P9-E1');",
+                  "    pm.expect(json.unidadMedida).to.eql('unidad');",
+                  "});",
+                  "pm.collectionVariables.set('productoFase3Id', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "El Employee sí puede registrar productos. SKU aleatorio para poder repetir la prueba.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoSku\": \"{{skuFase3}}\",\n  \"nombre\": \"Galletas de soda 250 g\",\n  \"descripcion\": \"Producto creado por la prueba de la Fase 3.\",\n  \"precioUsd\": 1.50,\n  \"costoUsd\": 1.05,\n  \"imagenUrl\": null,\n  \"categoriaId\": \"c1000000-0000-4000-8000-000000000001\",\n  \"stockInicial\": 20,\n  \"stockMinimo\": 5,\n  \"stockMaximo\": 50,\n  \"ubicacion\": \"P9-E1\",\n  \"unidadMedida\": \"unidad\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmpleado}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Extra: Employee intenta crear categoría (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categorias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categorias"
+              ]
+            },
+            "description": "Crear y editar categorías es solo para Admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Categoría no permitida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmpleado}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Extra: Admin borra el producto de prueba (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/{{productoFase3Id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "{{productoFase3Id}}"
+              ]
+            },
+            "description": "El Admin sí puede borrar (borrado lógico). Limpia el producto creado por el Employee.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
+    {
+      "key": "tokenAdmin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenEmpleado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "skuFase3",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productoFase3Id",
+      "value": "",
+      "type": "string"
+    },
     {
       "key": "baseUrl",
       "value": "http://localhost:5085",

@@ -1,19 +1,7 @@
-using System.ComponentModel.DataAnnotations;
 using Core.Domain.Entidades;
 
 namespace Presentation.API.Dtos
 {
-    // La tasa no va aquí: se carga con PUT /configuracion/tasa para que quede en el historial.
-    public record ActualizarConfiguracionRequest(
-        [StringLength(20)] string? NumeroSoporte,
-        [Range(1, 168)] int HorasExpiracion,
-        [StringLength(1000)] string? DatosTransferencia,
-        [StringLength(1000)] string? DatosPagoMovil,
-        [StringLength(200)] string? WalletBinance,
-        [MaxLength(20)] List<string>? NumerosPrueba);
-
-    public record TasaRequest([Range(0.0001, 1_000_000_000)] decimal Tasa);
-
     public record ConfiguracionResponse(
         decimal? TasaBsUsd,
         string? NumeroSoporte,

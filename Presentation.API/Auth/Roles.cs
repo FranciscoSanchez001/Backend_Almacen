@@ -10,8 +10,15 @@ namespace Presentation.API.Auth
         public const string Repartidor = "repartidor";
         public const string Superadmin = "superadmin";
 
+        // Matriz RBAC de la Fase 3 (Admin / Employee) sobre los roles del negocio:
+        //   Admin    = superadmin: todo, incluido borrar y gestionar categorías, usuarios y configuración.
+        //   Employee = ventas: consulta catálogos, registra y edita productos, gestiona pedidos.
+        //              No puede borrar (DELETE -> 403 Forbidden) ni crear/editar categorías.
+        public const string Admin = Superadmin;
+        public const string Employee = Ventas;
+
         // Para [Authorize(Roles = ...)]: cualquiera de los roles listados.
-        public const string Personal = Ventas + "," + Superadmin;
+        public const string Personal = Employee + "," + Admin;
 
         public static string De(RolUsuario rol) => rol switch
         {

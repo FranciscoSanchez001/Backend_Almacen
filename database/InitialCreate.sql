@@ -671,3 +671,144 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    ALTER TABLE productos ADD stock_maximo integer NOT NULL DEFAULT 100;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    ALTER TABLE productos ADD stock_minimo integer NOT NULL DEFAULT 5;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    ALTER TABLE productos ADD ubicacion character varying(50);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    ALTER TABLE productos ADD unidad_medida character varying(20) NOT NULL DEFAULT 'unidad';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 200, stock_minimo = 20, ubicacion = 'P1-E1', unidad_medida = 'paquete'
+    WHERE id = 'a1000000-0000-4000-8000-000000000001';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 200, stock_minimo = 20, ubicacion = 'P1-E2', unidad_medida = 'paquete'
+    WHERE id = 'a1000000-0000-4000-8000-000000000002';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 150, stock_minimo = 10, ubicacion = 'P1-E3', unidad_medida = 'paquete'
+    WHERE id = 'a1000000-0000-4000-8000-000000000003';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 100, stock_minimo = 10, ubicacion = 'P1-E4', unidad_medida = 'botella'
+    WHERE id = 'a1000000-0000-4000-8000-000000000004';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 120, stock_minimo = 10, ubicacion = 'R1-N1', unidad_medida = 'caja'
+    WHERE id = 'a1000000-0000-4000-8000-000000000005';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 40, stock_minimo = 5, ubicacion = 'R1-N2', unidad_medida = 'kg'
+    WHERE id = 'a1000000-0000-4000-8000-000000000006';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 60, stock_minimo = 5, ubicacion = 'R1-N3', unidad_medida = 'cartón'
+    WHERE id = 'a1000000-0000-4000-8000-000000000007';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 80, stock_minimo = 5, ubicacion = 'P2-E1', unidad_medida = 'paquete'
+    WHERE id = 'a1000000-0000-4000-8000-000000000008';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 100, stock_minimo = 10, ubicacion = 'P2-E2', unidad_medida = 'botella'
+    WHERE id = 'a1000000-0000-4000-8000-000000000009';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 80, stock_minimo = 5, ubicacion = 'P3-E1', unidad_medida = 'bolsa'
+    WHERE id = 'a1000000-0000-4000-8000-000000000010';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    UPDATE productos SET stock_maximo = 100, stock_minimo = 10, ubicacion = 'P3-E2', unidad_medida = 'botella'
+    WHERE id = 'a1000000-0000-4000-8000-000000000011';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    ALTER TABLE productos ADD CONSTRAINT ck_productos_stock_maximo CHECK (stock_maximo > stock_minimo);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    ALTER TABLE productos ADD CONSTRAINT ck_productos_stock_minimo CHECK (stock_minimo >= 0);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20260929014037_ProductoLimitesStockUbicacion') THEN
+    INSERT INTO "__EFMigrationsHistory" (migration_id, product_version)
+    VALUES ('20260929014037_ProductoLimitesStockUbicacion', '10.0.12');
+    END IF;
+END $EF$;
+COMMIT;
+

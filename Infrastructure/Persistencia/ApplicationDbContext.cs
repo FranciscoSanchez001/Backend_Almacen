@@ -2,6 +2,7 @@ using System.Reflection;
 using Core.Domain.Comun;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
+using Infrastructure.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
@@ -54,6 +55,17 @@ namespace Infrastructure.Persistencia
                     .HasColumnName("creado_en")
                     .HasDefaultValueSql("now()");
             }
+
+            SembrarDatosMaestros(modelBuilder);
+        }
+
+        // Data seeding con HasData(): categorías, productos y zonas iniciales. Quedan dentro de la
+        // migración y se insertan con `dotnet ef database update` (ver Semillas/DatosSemilla.cs).
+        private static void SembrarDatosMaestros(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Categoria>().HasData(DatosSemilla.Categorias);
+            modelBuilder.Entity<Producto>().HasData(DatosSemilla.Productos);
+            modelBuilder.Entity<Zona>().HasData(DatosSemilla.Zonas);
         }
 
         // MonedaPago se guarda como VES / USDT. Instancia única: EF compara las opciones del

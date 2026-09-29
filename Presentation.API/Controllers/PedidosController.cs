@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Core.Application.Abstracciones;
 using Core.Application.Comun;
+using Core.Application.Dtos;
 using Core.Application.Modelos;
 using Core.Application.Servicios;
 using Core.Domain.Enums;
@@ -8,6 +9,7 @@ using Core.Domain.Reglas;
 using Presentation.API.Auth;
 using Presentation.API.Comun;
 using Presentation.API.Dtos;
+using Presentation.API.Validadores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -22,60 +24,27 @@ namespace Presentation.API.Controllers
         IUsuarioRepository usuarios,
         PedidosService pedidos) : ControllerBase
     {
-        private const long TamanoMaximoCaptura = 5 * 1024 * 1024;
-        private static readonly string[] TiposCaptura = ["image/jpeg", "image/png", "image/webp"];
-
         // ---- Cliente ----
 
+        // El formulario ya pasó por CrearPedidoFormValidator (FluentValidation), así que el método
+        // de pago, el teléfono y la captura son válidos.
         [HttpPost]
         [Authorize(Roles = Roles.Cliente)]
         [Consumes("multipart/form-data")]
-        [RequestSizeLimit(TamanoMaximoCaptura + 1024 * 1024)]
+        [RequestSizeLimit(CrearPedidoFormValidator.TamanoMaximoCaptura + 1024 * 1024)]
         public async Task<ActionResult<PedidoResponse>> Crear([FromForm] CrearPedidoForm form, CancellationToken ct)
         {
-            var metodo = form.MetodoPago.Trim().ToLowerInvariant() switch
-            {
-                "transferencia" => MetodoPago.Transferencia,
-                "pago_movil" => MetodoPago.PagoMovil,
-                "binance" => MetodoPago.Binance,
-                _ => (MetodoPago?)null,
-            };
-            if (metodo is null)
-            {
-                ModelState.AddModelError(nameof(form.MetodoPago), "Debe ser transferencia, pago_movil o binance.");
-            }
-
-            var telefono = Telefonos.NormalizarVenezolano(form.Telefono);
-            if (telefono is null)
-            {
-                ModelState.AddModelError(nameof(form.Telefono), "Debe ser un celular venezolano: +58 4XX XXX XXXX.");
-            }
-
             var captura = form.Captura!;
-            if (captura.Length == 0 || captura.Length > TamanoMaximoCaptura)
-            {
-                ModelState.AddModelError(nameof(form.Captura), "La captura debe pesar como máximo 5 MB.");
-            }
-            if (!TiposCaptura.Contains(captura.ContentType.ToLowerInvariant()))
-            {
-                ModelState.AddModelError(nameof(form.Captura), "La captura debe ser una imagen JPG, PNG o WEBP.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return ValidationProblem(ModelState);
-            }
-
             await using var contenido = captura.OpenReadStream();
             var resultado = await pedidos.CrearAsync(User.GetUsuarioId(), new NuevoPedido(
                 form.Items.Select(i => new ItemNuevoPedido(i.ProductoId, i.Cantidad)).ToList(),
-                metodo!.Value,
+                DatosPedido.ParsearMetodoPago(form.MetodoPago)!.Value,
                 form.ReferenciaPago,
                 form.ZonaId,
                 form.DireccionTexto,
                 form.Latitud,
                 form.Longitud,
-                telefono!), new ArchivoSubido(contenido, captura.FileName), ct);
+                Telefonos.NormalizarVenezolano(form.Telefono)!), new ArchivoSubido(contenido, captura.FileName), ct);
 
             if (resultado.Error is not null)
             {

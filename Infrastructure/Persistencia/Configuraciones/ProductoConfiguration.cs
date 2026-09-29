@@ -1,5 +1,4 @@
 using Core.Domain.Entidades;
-using Infrastructure.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,6 +14,8 @@ namespace Infrastructure.Persistencia.Configuraciones
                 t.HasCheckConstraint("ck_productos_costo_usd", "costo_usd >= 0");
                 t.HasCheckConstraint("ck_productos_stock_disponible", "stock_disponible >= 0");
                 t.HasCheckConstraint("ck_productos_stock_reservado", "stock_reservado >= 0");
+                t.HasCheckConstraint("ck_productos_stock_minimo", "stock_minimo >= 0");
+                t.HasCheckConstraint("ck_productos_stock_maximo", "stock_maximo > stock_minimo");
             });
             builder.HasKey(p => p.Id);
 
@@ -28,6 +29,16 @@ namespace Infrastructure.Persistencia.Configuraciones
             builder.Property(p => p.CostoUsd).HasPrecision(18, 2);
             builder.Property(p => p.CreadoPorId).HasColumnName("creado_por");
 
+            // Valores por defecto también en la base. El centinela -1 hace que EF mande siempre el
+            // valor de la entidad (incluido un 0 explícito) y deje el default solo para INSERTs manuales.
+            builder.Property(p => p.StockMinimo)
+                .HasDefaultValue(Producto.ValoresPorDefecto.StockMinimo).HasSentinel(-1);
+            builder.Property(p => p.StockMaximo)
+                .HasDefaultValue(Producto.ValoresPorDefecto.StockMaximo).HasSentinel(-1);
+            builder.Property(p => p.Ubicacion).HasMaxLength(50);
+            builder.Property(p => p.UnidadMedida).IsRequired().HasMaxLength(20)
+                .HasDefaultValue(Producto.ValoresPorDefecto.UnidadMedida);
+
             builder.HasOne(p => p.Categoria)
                 .WithMany(c => c.Productos)
                 .HasForeignKey(p => p.CategoriaId)
@@ -40,8 +51,6 @@ namespace Infrastructure.Persistencia.Configuraciones
 
             // Catálogo público: activo = true AND stock_disponible > 0.
             builder.HasIndex(p => new { p.Activo, p.StockDisponible });
-
-            builder.HasData(DatosSemilla.Productos);
         }
     }
 }

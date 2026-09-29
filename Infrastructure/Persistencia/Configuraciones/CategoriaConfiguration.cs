@@ -1,5 +1,4 @@
 using Core.Domain.Entidades;
-using Infrastructure.Persistencia.Semillas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,8 +13,6 @@ namespace Infrastructure.Persistencia.Configuraciones
 
             builder.Property(c => c.Nombre).IsRequired().HasMaxLength(100);
             builder.HasIndex(c => c.Nombre).IsUnique();
-
-            builder.HasData(DatosSemilla.Categorias);
         }
     }
 }

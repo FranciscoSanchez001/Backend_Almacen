@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using Core.Application.Abstracciones;
+using Core.Application.Dtos;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
 using Presentation.API.Auth;
@@ -9,15 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.API.Controllers
 {
-    public record LoginRequest([Required, EmailAddress] string Email, [Required] string Password);
-
-    public record GoogleLoginRequest([Required] string IdToken);
-
-    public record UsuarioSesion(Guid Id, string Nombre, string Email, RolUsuario Rol);
-
-    public record LoginResponse(string Token, DateTime ExpiraEn, UsuarioSesion Usuario);
-
+    // Autenticación stateless con JWT. Responde en /api/auth (ruta de la Fase 3) y en /auth
+    // (la que usa el frontend).
     [ApiController]
+    [Route("api/auth")]
     [Route("auth")]
     public class AuthController(
         IUsuarioRepository usuarios,
@@ -26,9 +21,11 @@ namespace Presentation.API.Controllers
         TokenService tokens) : ControllerBase
     {
         // Login del personal (superadmin, ventas, repartidor). Los clientes entran con Google.
+        // La contraseña se compara contra el hash bcrypt guardado; con credenciales inválidas la
+        // respuesta es la misma exista o no el usuario, para no revelar qué correos están registrados.
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<ActionResult<LoginResponse>> Login(LoginRequest req, CancellationToken ct)
+        public async Task<ActionResult<AuthResponseDto>> Login(LoginDto req, CancellationToken ct)
         {
             var usuario = await usuarios.ObtenerPersonalPorEmailAsync(req.Email, ct);
             if (usuario is null || !usuario.Activo || usuario.PasswordHash is null
@@ -44,7 +41,7 @@ namespace Presentation.API.Controllers
         // manda aquí. Si es la primera vez, se crea el cliente.
         [HttpPost("google")]
         [AllowAnonymous]
-        public async Task<ActionResult<LoginResponse>> Google(GoogleLoginRequest req, [FromServices] IConfiguration config,
+        public async Task<ActionResult<AuthResponseDto>> Google(GoogleLoginDto req, [FromServices] IConfiguration config,
             CancellationToken ct)
         {
             var clientId = config["Google:ClientId"];
@@ -108,10 +105,10 @@ namespace Presentation.API.Controllers
             return usuario is null ? NotFound() : new UsuarioSesion(usuario.Id, usuario.Nombre, usuario.Email, usuario.Rol);
         }
 
-        private LoginResponse Sesion(Usuario usuario)
+        private AuthResponseDto Sesion(Usuario usuario)
         {
             var (token, expiraEn) = tokens.Crear(usuario);
-            return new LoginResponse(token, expiraEn,
+            return new AuthResponseDto(token, expiraEn, usuario.Nombre, usuario.Email, usuario.Rol,
                 new UsuarioSesion(usuario.Id, usuario.Nombre, usuario.Email, usuario.Rol));
         }
     }

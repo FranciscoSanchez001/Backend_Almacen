@@ -15,19 +15,19 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | 🌐 Público | Cualquiera, sin token |
 | 🔑 Autenticado | Cualquier usuario con sesión iniciada |
 | 🛒 Cliente | `cliente` |
-| 🧾 Personal | `ventas` y `superadmin` |
+| 🧾 Personal | `ventas` (Employee) y `superadmin` (Admin) |
 | 🚚 Repartidor | `repartidor` (y `superadmin` donde se indica) |
-| 👔 Superadmin | Solo `superadmin` |
+| 👔 Superadmin | Solo `superadmin` (Admin) |
 
 ---
 
-## 1. Autenticación — `/auth`
+## 1. Autenticación — `/api/auth` (alias `/auth`)
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `POST` | `/auth/login` | 🌐 | Inicio de sesión del personal. Cuerpo: `{ "email", "password" }`. Devuelve el token JWT. |
-| `POST` | `/auth/google` | 🌐 | Inicio de sesión del cliente. Cuerpo: `{ "idToken" }` (token de Google). Si el cliente no existe, se crea. |
-| `GET` | `/auth/yo` | 🔑 | Datos del usuario de la sesión actual. |
+| `POST` | `/api/auth/login` | 🌐 | Inicio de sesión del personal. Cuerpo (`LoginDto`): `{ "email", "password" }`. Devuelve `AuthResponseDto`: `{ "token", "expiraEn", "username", "email", "rol", "usuario" }`. `401` si las credenciales no son válidas. |
+| `POST` | `/api/auth/google` | 🌐 | Inicio de sesión del cliente. Cuerpo: `{ "idToken" }` (token de Google). Si el cliente no existe, se crea. |
+| `GET` | `/api/auth/yo` | 🔑 | Datos del usuario de la sesión actual. |
 
 ## 2. Catálogo público — `/catalogo`
 
@@ -44,8 +44,8 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
 | `GET` | `/categorias` | 🌐 | Lista de categorías. Es pública porque la tienda la usa para filtrar el catálogo. |
-| `POST` | `/categorias` | 🧾 | Crea una categoría. Cuerpo: `{ "nombre" }`. Responde `409` si el nombre ya existe. |
-| `PUT` | `/categorias/{id}` | 🧾 | Renombra una categoría. |
+| `POST` | `/categorias` | 👔 | Crea una categoría. Cuerpo: `{ "nombre" }`. Responde `409` si el nombre ya existe y `403` a un Employee (ventas). |
+| `PUT` | `/categorias/{id}` | 👔 | Renombra una categoría. `403` a un Employee (ventas). |
 
 ## 4. Productos — `/productos`
 
@@ -53,9 +53,9 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | :--- | :--- | :---: | :--- |
 | `GET` | `/productos` | 🧾 | Lista para el personal. Filtros: `q`, `categoriaId`, `incluirInactivos`, `pagina`, `tamano`. |
 | `GET` | `/productos/{id}` | 🧾 | Detalle de un producto. |
-| `POST` | `/productos` | 🧾 | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial`. Queda registrado en la auditoría. |
-| `PUT` | `/productos/{id}` | 🧾 | Edita un producto. Si cambia el stock disponible, se registra como ajuste de inventario. |
-| `DELETE` | `/productos/{id}` | 👔 | Borrado lógico (el producto deja de aparecer en `/catalogo`, pero se conserva su historial). |
+| `POST` | `/productos` | 🧾 | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial` y, opcionales, `stockMinimo` (5), `stockMaximo` (100), `ubicacion`, `unidadMedida` (`unidad`). Validación: precio y costo `> 0`, stocks `>= 0`, `stockMaximo > stockMinimo`. Queda registrado en la auditoría. |
+| `PUT` | `/productos/{id}` | 🧾 | Edita un producto (mismos campos, con `stockDisponible` opcional en lugar de `stockInicial`). Si cambia el stock disponible, se registra como ajuste de inventario. |
+| `DELETE` | `/productos/{id}` | 👔 | Borrado lógico (el producto deja de aparecer en `/catalogo`, pero se conserva su historial). Un Employee (ventas) recibe `403`. |
 
 ## 5. Inventario — `/inventario`
 
@@ -190,9 +190,9 @@ Provocan una excepción a propósito para comprobar el `ExceptionMiddleware`. To
 | Código | Cuándo |
 | :--- | :--- |
 | `200 OK` / `201 Created` | Operación exitosa. |
-| `400 Bad Request` | Datos inválidos (validaciones de los DTOs o del caso de uso, como un teléfono con formato incorrecto). |
-| `401 Unauthorized` | Sin token, token vencido o usuario desactivado. |
-| `403 Forbidden` | El rol del usuario no tiene permiso para ese endpoint. |
+| `400 Bad Request` | Datos inválidos: reglas de FluentValidation sobre los DTOs (con el detalle por campo en `errors`) o del caso de uso. |
+| `401 Unauthorized` | Sin token, token vencido o usuario desactivado (Problem Details). |
+| `403 Forbidden` | El rol del usuario no tiene permiso para ese endpoint (Problem Details). |
 | `404 Not Found` | El recurso no existe. |
 | `409 Conflict` | Duplicados (categoría o SKU repetidos), stock insuficiente o un cambio de estado que el pedido ya no admite (por ejemplo, aprobar un pedido que expiró). |
 | `500 Internal Server Error` | Error no controlado. Lo responde el `ExceptionMiddleware` con un mensaje genérico, sin detalles internos. |
@@ -213,7 +213,7 @@ Cualquier excepción que un controlador no maneje llega al `ExceptionMiddleware`
 }
 ```
 
-`KeyNotFoundException` → `404`, `InvalidOperationException` → `400` y cualquier otra → `500`. Detalle en [ARQUITECTURA.md](ARQUITECTURA.md#5-manejo-global-de-errores-rfc-7807).
+`ValidationException` e `InvalidOperationException` → `400`, `KeyNotFoundException` → `404`, `ConflictoException` → `409` y cualquier otra → `500`. Detalle en [ARQUITECTURA.md](ARQUITECTURA.md#5-manejo-global-de-errores-rfc-7807).
 
 ---
 
@@ -221,7 +221,7 @@ Cualquier excepción que un controlador no maneje llega al `ExceptionMiddleware`
 
 ```bash
 # 1. Iniciar sesión como gerente
-curl -X POST http://localhost:5085/auth/login \
+curl -X POST http://localhost:5085/api/auth/login \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"gerente@almacen.local\",\"password\":\"Cambiar123!\"}"
 

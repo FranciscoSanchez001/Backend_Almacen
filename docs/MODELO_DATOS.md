@@ -71,6 +71,10 @@ erDiagram
         uuid categoria_id FK
         int stock_disponible
         int stock_reservado
+        int stock_minimo "default 5"
+        int stock_maximo "default 100"
+        varchar_50 ubicacion
+        varchar_20 unidad_medida "default unidad"
         boolean activo
         uuid creado_por_id FK
         timestamptz creado_en
@@ -209,7 +213,10 @@ Además de las claves foráneas, la base de datos protege las reglas del negocio
 | :--- | :--- | :--- |
 | `productos` | `precio_usd >= 0`, `costo_usd >= 0` | No hay precios negativos. |
 | `productos` | `stock_disponible >= 0`, `stock_reservado >= 0` | El stock nunca queda negativo, incluso si dos compras llegan a la vez. |
-| `productos` | `codigo_sku` único | No se repiten códigos. |
+| `productos` | `stock_minimo >= 0`, `stock_maximo > stock_minimo` | Límites de reposición coherentes (por defecto 5 y 100). |
+| `productos` | `codigo_sku` único (`HasIndex(...).IsUnique()`) | No se repiten códigos; la búsqueda por SKU usa el índice. |
+| `productos` | `precio_usd`, `costo_usd` con `HasPrecision(18, 2)` | Montos exactos en `numeric(18,2)`, sin errores de redondeo de punto flotante. |
+| `productos → categorias` | `OnDelete(DeleteBehavior.Restrict)` | No se puede borrar una categoría que tenga productos (sin borrado en cascada). |
 | `usuarios` | `ck_usuarios_credenciales` | Un cliente debe tener `google_id`; el personal debe tener `password_hash`. |
 | `usuarios` | `email` y `google_id` únicos | Una cuenta por correo. |
 | `pedidos` | `total_usd >= 0`, `total_bs >= 0`, `tasa_cambio > 0` | Totales y tasa válidos. |
@@ -247,7 +254,7 @@ Además de las claves foráneas, la base de datos protege las reglas del negocio
 
 ## 5. Datos Semilla
 
-Incluidos en la migración inicial (`Infrastructure/Persistencia/Semillas/DatosSemilla.cs`):
+Se siembran con `ModelBuilder.HasData()` en `ApplicationDbContext.OnModelCreating` (método `SembrarDatosMaestros`), a partir de `Infrastructure/Persistencia/Semillas/DatosSemilla.cs`, así que quedan dentro de las migraciones. Cada producto trae precio, costo, stock, límites mínimo/máximo, ubicación en el almacén y unidad de medida:
 
 | Categoría | Productos (SKU) |
 | :--- | :--- |

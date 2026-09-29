@@ -52,7 +52,11 @@ La entidad `Pedido` encapsula su propia regla: todo cambio de estado pasa por `P
 
 ### Core.Application
 - `Abstracciones/`: interfaces de repositorios, `IUnitOfWork` y servicios externos.
+- `Dtos/`: DTOs de entrada (creación, edición y login): `LoginDto`, `AuthResponseDto`, `CrearProductoRequest`, `CategoriaRequest`, `CrearUsuarioRequest`, `DatosPedido`, etc.
+- `Validadores/`: un validador **FluentValidation** por cada DTO de entrada (ver sección 6).
+- `Excepciones/ConflictoException.cs`: error de negocio que el middleware traduce a `409`.
 - `Servicios/`:
+  - `IProductoService` / `ProductoService`: crear, editar y borrar (lógico) productos, con auditoría y movimiento de inventario.
   - `PedidosService`: crear, aprobar, rechazar, marcar en camino, entregar y expirar pedidos.
   - `InventarioService`: reservar, confirmar y liberar stock, y reponer productos.
   - `ReportesService`: calcula los KPIs y los datos del informe en Excel.
@@ -61,7 +65,7 @@ La entidad `Pedido` encapsula su propia regla: todo cambio de estado pasa por `P
   - `ColaWhatsapp`: cola en memoria de los mensajes pendientes por enviar.
 
 ### Infrastructure
-- `Persistencia/ApplicationDbContext.cs`: contexto de EF Core con enums nativos de PostgreSQL y nombres en `snake_case`. Configura las columnas comunes de `BaseEntity` para todas las entidades.
+- `Persistencia/ApplicationDbContext.cs`: contexto de EF Core con enums nativos de PostgreSQL y nombres en `snake_case`. Configura las columnas comunes de `BaseEntity` para todas las entidades y siembra los datos maestros con `ModelBuilder.HasData()` (`SembrarDatosMaestros`).
 - `Persistencia/Configuraciones/`: una clase `IEntityTypeConfiguration<T>` por entidad (Fluent API).
 - `Persistencia/Migraciones/`: migraciones Code-First.
 - `Persistencia/Repositorios/`: implementaciones de los repositorios; las lecturas usan `.AsNoTracking()`.
@@ -76,8 +80,10 @@ La entidad `Pedido` encapsula su propia regla: todo cambio de estado pasa por `P
 ### Presentation.API
 - `Controllers/`: un controlador por recurso (ver [API.md](API.md)). `PruebasErroresController` provoca errores a propósito para probar el middleware.
 - `Middleware/ExceptionMiddleware.cs`: manejo global de excepciones con Problem Details (RFC 7807). Ver la sección 5.
-- `Dtos/`: objetos de entrada y salida de la API; las entidades nunca se exponen directamente.
-- `Auth/`: emisión de tokens JWT, constantes de roles y extensiones para leer el usuario autenticado.
+- `Filtros/ValidacionFilter.cs`: filtro global que ejecuta FluentValidation antes de cada acción y responde `400`.
+- `Validadores/CrearPedidoFormValidator.cs`: único validador de la API; reutiliza `DatosPedidoValidator` y solo agrega la validación del archivo (`IFormFile`), que es un concepto HTTP.
+- `Dtos/`: objetos de salida de la API; las entidades nunca se exponen directamente.
+- `Auth/`: emisión de tokens JWT, constantes de roles (`Admin`, `Employee`) y extensiones para leer el usuario autenticado.
 - `Program.cs`: composición de servicios y pipeline HTTP.
 
 ---
@@ -95,9 +101,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 | :--- | :--- | :--- |
 | `ApplicationDbContext` | **Scoped** | Un contexto por petición HTTP; no es seguro compartirlo entre hilos. |
 | `IUnitOfWork` y todos los repositorios | **Scoped** | Comparten el mismo `DbContext` durante la petición, para que los cambios se guarden juntos. |
-| `PedidosService`, `InventarioService`, `ReportesService`, `AuditoriaService`, `TasaService` | **Scoped** | Dependen de repositorios Scoped. |
+| `IProductoService`, `PedidosService`, `InventarioService`, `ReportesService`, `AuditoriaService`, `TasaService` | **Scoped** | Servicios de negocio que dependen de repositorios Scoped. |
+| Validadores FluentValidation (`IValidator<T>`) | **Transient** | Objetos livianos y sin estado; se registran con `AddValidatorsFromAssembly(..., ServiceLifetime.Transient)`. |
 | `IGeneradorExcel` (ClosedXML) | **Singleton** | No guarda estado; cada llamada arma un libro nuevo. |
-| `TokenService` | **Scoped** | Se usa solo durante el inicio de sesión. |
+| `TokenService` | **Singleton** | Solo lee opciones inmutables (`JwtOptions`) y firma tokens; no guarda estado por petición. |
 | `ExceptionMiddleware` | **Transient** | Implementa `IMiddleware`, así que el contenedor lo crea en cada petición. No guarda estado entre peticiones, por lo que no hace falta compartir una instancia. |
 | `IHasherContrasenas` (BCrypt) | **Singleton** | No guarda estado; una sola instancia sirve para toda la aplicación. |
 | `IAlmacenamientoArchivos` y cliente de Cloudinary | **Singleton** | Cliente sin estado por petición; crearlo una vez evita costo repetido. |
@@ -131,9 +138,13 @@ Antes de atender peticiones, la aplicación ejecuta `InicializarBaseDatosAsync`,
 
 | Excepción | Código | `title` |
 | :--- | :---: | :--- |
-| `KeyNotFoundException` | `404` | Recurso no encontrado |
+| `ValidationException` (FluentValidation) | `400` | Uno o más datos no son válidos (con `errors` por campo) |
 | `InvalidOperationException` | `400` | Solicitud inválida |
+| `KeyNotFoundException` | `404` | Recurso no encontrado |
+| `ConflictoException` | `409` | Conflicto con el estado actual |
 | Cualquier otra | `500` | Error interno del servidor |
+
+Los `401` (sin token o token inválido) y `403` (rol sin permiso) también salen como Problem Details: los escriben los eventos `OnChallenge` y `OnForbidden` de `JwtBearer` con el mismo helper del middleware.
 
 - En los errores `404` y `400`, `detail` lleva el mensaje de la excepción, que es un mensaje de negocio pensado para el usuario.
 - En los errores `500`, `detail` es siempre un texto genérico. El mensaje original y el *stack trace* **nunca** llegan al cliente: se escriben en el log del servidor junto con el `traceId`, que también va en la respuesta para poder cruzarlos.
@@ -159,12 +170,54 @@ Para probarlo están los endpoints `GET /pruebas/errores/no-encontrado`, `/opera
 
 ---
 
-## 6. Autenticación y Autorización
+## 6. Seguridad stateless (JWT), RBAC y validación defensiva (Fase 3)
 
-- **Personal** (superadmin, ventas, repartidor): `POST /auth/login` con correo y contraseña; la contraseña se verifica contra el hash BCrypt.
-- **Clientes**: `POST /auth/google` con el *ID token* de Google, que el backend valida con `Google.Apis.Auth` contra el Client ID configurado en `Google:ClientId` (el token debe haber sido emitido para ese Client ID). Si el cliente no existe, se crea.
-- En ambos casos se devuelve un **JWT firmado con HMAC-SHA256** que incluye el rol del usuario.
-- Los endpoints se protegen con `[Authorize(Roles = ...)]`. El rol compuesto `Personal` agrupa a ventas y superadmin.
+### Autenticación JWT
+
+- **Personal** (superadmin, ventas, repartidor): `POST /api/auth/login` (también `/auth/login`) recibe un `LoginDto` (`email`, `password`). La contraseña se compara contra el hash guardado y la respuesta es un `AuthResponseDto` con `token`, `expiraEn`, `username`, `email` y `rol`.
+- **Clientes**: `POST /api/auth/google` con el *ID token* de Google, que el backend valida con `Google.Apis.Auth` contra el Client ID configurado en `Google:ClientId`. Si el cliente no existe, se crea.
+- El token es un **JWT firmado con HMAC-SHA256** (`HS256`) con los claims `sub` (id), `name`, `email`, `role`, `jti`, `iat`, `nbf` y `exp`. Vence a las `Jwt:HorasValidez` horas (8 por defecto). Se validan emisor, audiencia, firma y vencimiento, y además se rechaza el token si el usuario fue desactivado.
+- **Clave secreta**: nunca está en el código. En desarrollo va en `appsettings.Development.json`; en producción `appsettings.json` la deja vacía y se define con la variable de entorno `Jwt__Key` (o *user secrets*). La API no arranca si la clave tiene menos de 32 caracteres (256 bits).
+
+### Resguardo de contraseñas
+
+Las contraseñas se guardan con **bcrypt** (`HasherBcrypt`, factor de costo por defecto), que la consigna admite como "SHA-256 o superior": a diferencia de un SHA-256 simple, bcrypt agrega una **sal aleatoria por usuario** (dos contraseñas iguales producen hashes distintos, lo que anula las *rainbow tables*) y es **deliberadamente lento y configurable**, lo que encarece los ataques de fuerza bruta. SHA-256 está diseñado para ser rápido, que es justo lo que no se quiere al guardar contraseñas.
+
+### Matriz RBAC
+
+La consigna habla de los roles `Admin` y `Employee`; en el negocio corresponden a `superadmin` y `ventas` (constantes `Roles.Admin` y `Roles.Employee` en `Auth/Roles.cs`).
+
+| Operación | Admin (`superadmin`) | Employee (`ventas`) | Sin token |
+| :--- | :---: | :---: | :---: |
+| Consultar productos, inventario y pedidos | ✅ | ✅ | `401` |
+| Registrar y editar productos | ✅ | ✅ | `401` |
+| **Borrar productos** (`DELETE /productos/{id}`) | ✅ | `403` | `401` |
+| **Crear y editar categorías** | ✅ | `403` | `401` |
+| Usuarios, zonas, configuración, reportes, auditoría | ✅ | `403` | `401` |
+
+Todo se declara con `[Authorize(Roles = ...)]` en controladores y acciones.
+
+### Validación defensiva con FluentValidation
+
+- Cada DTO de creación y edición tiene su validador en `Core.Application/Validadores/` (desacoplado de la API y de los controladores).
+- Reglas principales: precio y costo `> 0`; stocks `>= 0`; `stockMaximo > stockMinimo`; textos obligatorios y con longitud máxima igual a la de la columna; SKU alfanumérico; correo con formato válido; contraseña de 8 a 72 caracteres; teléfono venezolano; rol de personal permitido; método de pago válido.
+- `Presentation.API/Filtros/ValidacionFilter.cs` es un filtro global: busca el `IValidator<T>` de cada argumento de la acción, lo ejecuta y, si hay errores, responde **`400 Bad Request`** con `application/problem+json` y el detalle por campo, sin llegar a ejecutar el controlador:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "Uno o más datos no son válidos.",
+  "status": 400,
+  "detail": "Revisa los campos indicados en errors.",
+  "instance": "/productos",
+  "errors": {
+    "precioUsd": ["El precio debe ser mayor que 0."],
+    "stockMaximo": ["El stock máximo debe ser mayor que el stock mínimo."]
+  }
+}
+```
+
+Las respuestas reales de los cuatro escenarios de la Fase 3 están en [evidencias/seguridad-fase3.md](evidencias/seguridad-fase3.md).
 
 ---
 

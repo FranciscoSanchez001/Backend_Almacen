@@ -1,11 +1,8 @@
-using System.ComponentModel.DataAnnotations;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
 
 namespace Presentation.API.Dtos
 {
-    public record ReponerRequest([Range(1, 1_000_000)] int Cantidad);
-
     public record InventarioItem(
         Guid ProductoId,
         string CodigoSku,
@@ -13,10 +10,15 @@ namespace Presentation.API.Dtos
         string Categoria,
         int StockDisponible,
         int StockReservado,
-        bool Agotado)
+        int StockMinimo,
+        int StockMaximo,
+        string? Ubicacion,
+        bool Agotado,
+        bool BajoStockMinimo)
     {
         public static InventarioItem De(Producto p) => new(
-            p.Id, p.CodigoSku, p.Nombre, p.Categoria.Nombre, p.StockDisponible, p.StockReservado, p.StockDisponible == 0);
+            p.Id, p.CodigoSku, p.Nombre, p.Categoria.Nombre, p.StockDisponible, p.StockReservado,
+            p.StockMinimo, p.StockMaximo, p.Ubicacion, p.StockDisponible == 0, p.StockDisponible < p.StockMinimo);
     }
 
     public record MovimientoResponse(
@@ -47,8 +49,6 @@ namespace Presentation.API.Dtos
         public static NotificacionResponse De(Notificacion n) =>
             new(n.Id, n.Tipo, n.ProductoId, n.Producto?.Nombre, n.PedidoId, n.Leida, n.CreatedAt);
     }
-
-    public record CategoriaRequest([Required, StringLength(100, MinimumLength = 1)] string Nombre);
 
     public record CategoriaResponse(Guid Id, string Nombre)
     {

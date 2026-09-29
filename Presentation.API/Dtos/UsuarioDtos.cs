@@ -1,25 +1,8 @@
-using System.ComponentModel.DataAnnotations;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
 
 namespace Presentation.API.Dtos
 {
-    // Rol: solo ventas o repartidor (el superadmin no crea otros superadmin ni clientes).
-    public record CrearUsuarioRequest(
-        [Required, StringLength(150, MinimumLength = 1)] string Nombre,
-        [Required, EmailAddress, StringLength(254)] string Email,
-        [StringLength(20)] string? Telefono,
-        RolUsuario Rol,
-        [Required, StringLength(72, MinimumLength = 8)] string Password);
-
-    // Password es opcional: si viene, reemplaza la contraseña actual.
-    public record ActualizarUsuarioRequest(
-        [Required, StringLength(150, MinimumLength = 1)] string Nombre,
-        [Required, EmailAddress, StringLength(254)] string Email,
-        [StringLength(20)] string? Telefono,
-        RolUsuario Rol,
-        [StringLength(72, MinimumLength = 8)] string? Password);
-
     public record UsuarioResponse(
         Guid Id,
         string Nombre,

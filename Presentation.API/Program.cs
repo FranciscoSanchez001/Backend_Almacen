@@ -2,10 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Core.Application;
 using Core.Application.Abstracciones;
+using FluentValidation;
 using Infrastructure;
 using Infrastructure.Archivos;
 using Infrastructure.Persistencia.Semillas;
 using Presentation.API.Auth;
+using Presentation.API.Filtros;
 using Presentation.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.FileProviders;
@@ -19,16 +21,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Autenticación con JWT. El personal lo obtiene en POST /auth/login y los clientes en
-// POST /auth/google.
+// Autenticación con JWT. El personal lo obtiene en POST /api/auth/login y los clientes en
+// POST /api/auth/google. La clave secreta nunca va en el código: en desarrollo sale de
+// appsettings.Development.json y en producción de la variable de entorno Jwt__Key.
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwt = jwtSection.Get<JwtOptions>() ?? throw new InvalidOperationException("Falta la sección Jwt en la configuración.");
-if (jwt.Key.Length < 32)
+if (string.IsNullOrEmpty(jwt.Key) || jwt.Key.Length < 32)
 {
-    throw new InvalidOperationException("Jwt:Key debe tener al menos 32 caracteres.");
+    throw new InvalidOperationException(
+        "Jwt:Key debe tener al menos 32 caracteres. En producción defínela con la variable de entorno Jwt__Key.");
 }
 builder.Services.Configure<JwtOptions>(jwtSection);
-builder.Services.AddScoped<TokenService>();
+// Singleton: solo lee opciones inmutables y firma tokens, no guarda estado por petición.
+builder.Services.AddSingleton<TokenService>();
+
+// Validadores FluentValidation propios de la API (los de negocio se registran en AddApplication).
+builder.Services.AddValidatorsFromAssemblyContaining<Program>(ServiceLifetime.Transient);
 
 // Manejo global de errores (RFC 7807). Transient: IMiddleware se resuelve del contenedor en
 // cada petición y no guarda estado entre una y otra.
@@ -58,6 +66,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     context.Fail("Usuario inexistente o desactivado.");
                 }
             },
+            // Sin token, o con uno inválido o vencido: 401 con Problem Details.
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+                context.Response.Headers.WWWAuthenticate = "Bearer";
+                await ExceptionMiddleware.EscribirAsync(context.HttpContext, StatusCodes.Status401Unauthorized,
+                    "No autenticado", "https://tools.ietf.org/html/rfc9110#section-15.5.2",
+                    context.AuthenticateFailure is null
+                        ? "Debes iniciar sesión: envía el token en el encabezado Authorization: Bearer <token>."
+                        : "El token no es válido o ya venció. Inicia sesión de nuevo.");
+            },
+            // Token válido pero el rol no tiene permiso (p. ej. ventas intentando borrar): 403.
+            OnForbidden = context => ExceptionMiddleware.EscribirAsync(context.HttpContext,
+                StatusCodes.Status403Forbidden, "Acceso denegado", "https://tools.ietf.org/html/rfc9110#section-15.5.4",
+                "Tu rol no tiene permiso para realizar esta operación."),
         };
     });
 builder.Services.AddAuthorization();
@@ -75,7 +98,14 @@ builder.Services.AddCors(options => options.AddPolicy(PoliticaFrontend, policy =
     // Para que el frontend pueda leer el nombre del archivo del informe en Excel.
     .WithExposedHeaders("Content-Disposition")));
 
-builder.Services.AddControllers()
+// ValidacionFilter ejecuta FluentValidation sobre cada cuerpo/formulario antes de la acción y
+// responde 400 con el detalle de los errores. Se desactiva el [Required] implícito de los tipos
+// de referencia no anulables para que esas reglas (y sus mensajes) las ponga FluentValidation.
+builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<ValidacionFilter>();
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(
         new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower)));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

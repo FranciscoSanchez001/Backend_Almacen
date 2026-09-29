@@ -1,29 +1,9 @@
-using System.ComponentModel.DataAnnotations;
 using Core.Application.Servicios;
 using Core.Domain.Entidades;
 
 namespace Presentation.API.Dtos
 {
-    public record CrearProductoRequest(
-        [Required, StringLength(30, MinimumLength = 1)] string CodigoSku,
-        [Required, StringLength(200, MinimumLength = 1)] string Nombre,
-        [StringLength(1000)] string? Descripcion,
-        [Range(0.01, 1_000_000)] decimal PrecioUsd,
-        [Range(0, 1_000_000)] decimal CostoUsd,
-        [Url, StringLength(500)] string? ImagenUrl,
-        Guid CategoriaId,
-        [Range(0, 1_000_000)] int StockInicial);
-
-    // StockDisponible es opcional: si viene y es distinto del actual, se registra como ajuste.
-    public record ActualizarProductoRequest(
-        [Required, StringLength(30, MinimumLength = 1)] string CodigoSku,
-        [Required, StringLength(200, MinimumLength = 1)] string Nombre,
-        [StringLength(1000)] string? Descripcion,
-        [Range(0.01, 1_000_000)] decimal PrecioUsd,
-        [Range(0, 1_000_000)] decimal CostoUsd,
-        [Url, StringLength(500)] string? ImagenUrl,
-        Guid CategoriaId,
-        [Range(0, 1_000_000)] int? StockDisponible);
+    // Los DTOs de entrada (creación/edición) están en Core.Application.Dtos junto a sus validadores.
 
     // Vista del panel de ventas / superadmin.
     public record ProductoResponse(
@@ -39,6 +19,11 @@ namespace Presentation.API.Dtos
         string Categoria,
         int StockDisponible,
         int StockReservado,
+        int StockMinimo,
+        int StockMaximo,
+        bool BajoStockMinimo,
+        string? Ubicacion,
+        string UnidadMedida,
         bool Activo,
         DateTime CreadoEn,
         DateTime? ActualizadoEn)
@@ -46,7 +31,8 @@ namespace Presentation.API.Dtos
         // El producto debe traer la categoría cargada.
         public static ProductoResponse De(Producto p, decimal? tasa) => new(
             p.Id, p.CodigoSku, p.Nombre, p.Descripcion, p.PrecioUsd, TasaService.EnBs(p.PrecioUsd, tasa), p.CostoUsd,
-            p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible, p.StockReservado, p.Activo,
+            p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible, p.StockReservado,
+            p.StockMinimo, p.StockMaximo, p.StockDisponible < p.StockMinimo, p.Ubicacion, p.UnidadMedida, p.Activo,
             p.CreatedAt, p.ActualizadoEn);
     }
 
@@ -61,11 +47,12 @@ namespace Presentation.API.Dtos
         string? ImagenUrl,
         Guid CategoriaId,
         string Categoria,
-        int StockDisponible)
+        int StockDisponible,
+        string UnidadMedida)
     {
         public static CatalogoItem De(Producto p, decimal? tasa) => new(
             p.Id, p.CodigoSku, p.Nombre, p.Descripcion, p.PrecioUsd, TasaService.EnBs(p.PrecioUsd, tasa),
-            p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible);
+            p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible, p.UnidadMedida);
     }
 
     // Inicio de la tienda. Las listas personales van vacías si no hay un cliente con sesión.
@@ -85,22 +72,5 @@ namespace Presentation.API.Dtos
     {
         public static DatosPagoResponse De(Configuracion c) =>
             new(c.TasaBsUsd, c.DatosTransferencia, c.DatosPagoMovil, c.WalletBinance, c.NumeroSoporte);
-    }
-
-    // Lo que se guarda en auditoria.datos_antes / datos_despues.
-    public record ProductoAuditoria(
-        string CodigoSku,
-        string Nombre,
-        string? Descripcion,
-        decimal PrecioUsd,
-        decimal CostoUsd,
-        string? ImagenUrl,
-        Guid CategoriaId,
-        int StockDisponible,
-        bool Activo)
-    {
-        public static ProductoAuditoria De(Producto p) =>
-            new(p.CodigoSku, p.Nombre, p.Descripcion, p.PrecioUsd, p.CostoUsd, p.ImagenUrl, p.CategoriaId,
-                p.StockDisponible, p.Activo);
     }
 }
