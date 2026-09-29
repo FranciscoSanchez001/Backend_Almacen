@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b1f9de8d-bc4c-5bbf-9e45-5644869ae123",
     "name": "Backend_Almacen",
-    "description": "API ASP.NET Core del almacén. Ejecuta primero **Auth > Login del personal** para guardar `token`. Los enums van en snake_case (p. ej. `pago_movil`, `en_camino`). Propiedades JSON en camelCase.",
+    "description": "API ASP.NET Core del almacén. Ejecuta primero la carpeta **Auth**: *Login del personal* guarda `token` (gerente, el que usa casi toda la colección) y los demás logins guardan `tokenVentas`, `tokenRepartidor` y `tokenCliente` sin pisarlo. Las carpetas *Repartidor* y *Pedidos (cliente)* usan su propio token. Los enums van en snake_case (p. ej. `pago_movil`, `en_camino`). Propiedades JSON en camelCase.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -91,7 +91,7 @@
                 "login"
               ]
             },
-            "description": "Público. Login de un vendedor del sembrador demo (ventas1..2@almacen.local / Demo1234!). Reemplaza `token` por el de rol ventas.",
+            "description": "Público. Login de un vendedor del sembrador demo (ventas1..2@almacen.local / Demo1234!). Guarda el token en `tokenVentas` (no toca `token`, que sigue siendo el del gerente).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"ventas1@almacen.local\",\n  \"password\": \"Demo1234!\"\n}",
@@ -115,8 +115,7 @@
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
                   "const json = pm.response.json();",
                   "pm.test('Respuesta trae token', () => pm.expect(json.token).to.be.a('string').and.not.empty);",
-                  "pm.collectionVariables.set('token', json.token);",
-                  "if (json.usuario) { pm.collectionVariables.set('usuarioId', json.usuario.id); }"
+                  "pm.collectionVariables.set('tokenVentas', json.token);"
                 ]
               }
             }
@@ -142,7 +141,7 @@
                 "login"
               ]
             },
-            "description": "Público. Login de un repartidor del sembrador demo (repartidor1..3@almacen.local / Demo1234!). Reemplaza `token` por el de rol repartidor.",
+            "description": "Público. Login de un repartidor del sembrador demo (repartidor1..3@almacen.local / Demo1234!). Guarda el token en `tokenRepartidor`, que usa la carpeta Repartidor.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"repartidor1@almacen.local\",\n  \"password\": \"Demo1234!\"\n}",
@@ -166,8 +165,7 @@
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
                   "const json = pm.response.json();",
                   "pm.test('Respuesta trae token', () => pm.expect(json.token).to.be.a('string').and.not.empty);",
-                  "pm.collectionVariables.set('token', json.token);",
-                  "if (json.usuario) { pm.collectionVariables.set('usuarioId', json.usuario.id); }"
+                  "pm.collectionVariables.set('tokenRepartidor', json.token);"
                 ]
               }
             }
@@ -193,7 +191,7 @@
                 "google"
               ]
             },
-            "description": "Público. Login de clientes con el ID token de Google Identity Services. Crea el cliente si no existe. 503 si falta Google:ClientId. Guarda `token` si responde 200.",
+            "description": "Público. Login de clientes con el ID token de Google Identity Services. Crea el cliente si no existe. 503 si falta Google:ClientId. Si responde 200 guarda el token en `tokenCliente`, que usa la carpeta Pedidos (cliente).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idToken\": \"<ID token de Google>\"\n}",
@@ -216,7 +214,7 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const json = pm.response.json();",
-                  "    pm.collectionVariables.set('token', json.token);",
+                  "    pm.collectionVariables.set('tokenCliente', json.token);",
                   "}"
                 ]
               }
@@ -552,10 +550,10 @@
                 "productos"
               ]
             },
-            "description": "Rol: ventas o superadmin. 409 si el SKU ya existe; 400 si la categoría no existe. Guarda el nuevo `productoId`.",
+            "description": "Rol: ventas o superadmin. 409 si el SKU ya existe; 400 si la categoría no existe. El SKU (`skuNuevo`) se genera en el pre-request para que no choque con el catálogo sembrado ni con corridas anteriores. Guarda el nuevo `productoId`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"codigoSku\": \"VIV-0005\",\n  \"nombre\": \"Azúcar refinada 1 kg\",\n  \"descripcion\": \"Paquete de 1 kg\",\n  \"precioUsd\": 1.45,\n  \"costoUsd\": 1.1,\n  \"imagenUrl\": null,\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"stockInicial\": 100\n}",
+              "raw": "{\n  \"codigoSku\": \"{{skuNuevo}}\",\n  \"nombre\": \"Azúcar refinada 1 kg ({{skuNuevo}})\",\n  \"descripcion\": \"Paquete de 1 kg\",\n  \"precioUsd\": 1.45,\n  \"costoUsd\": 1.1,\n  \"imagenUrl\": null,\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"stockInicial\": 100\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -565,6 +563,15 @@
           },
           "response": [],
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('skuNuevo', 'PM-' + Date.now().toString().slice(-8));"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -693,10 +700,10 @@
                 "categorias"
               ]
             },
-            "description": "Rol: ventas o superadmin. 409 si el nombre ya existe. Guarda el nuevo `categoriaId`.",
+            "description": "Rol: solo superadmin (Admin); ventas recibe 403. 409 si el nombre ya existe. Lleva `sufijo` (generado en el pre-request) para poder repetir la corrida. Guarda el nuevo `categoriaId`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Charcutería\"\n}",
+              "raw": "{\n  \"nombre\": \"Charcutería {{sufijo}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -706,6 +713,15 @@
           },
           "response": [],
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('sufijo', Date.now().toString().slice(-6));"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -742,7 +758,7 @@
             "description": "Rol: ventas o superadmin. 409 si el nombre ya existe.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Charcutería y embutidos\"\n}",
+              "raw": "{\n  \"nombre\": \"Charcutería y embutidos {{sufijo}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -812,10 +828,10 @@
                 "zonas"
               ]
             },
-            "description": "Rol: solo superadmin. 409 si el nombre ya existe. Guarda el nuevo `zonaId`.",
+            "description": "Rol: solo superadmin. 409 si el nombre ya existe. Lleva `sufijo` (generado en el pre-request) para poder repetir la corrida. Guarda el nuevo `zonaId`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Zona Norte\"\n}",
+              "raw": "{\n  \"nombre\": \"Zona Norte {{sufijo}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -825,6 +841,15 @@
           },
           "response": [],
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('sufijo', Date.now().toString().slice(-6));"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -861,7 +886,7 @@
             "description": "Rol: solo superadmin. Cambia el nombre o `activa` (las zonas no se borran).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Zona Norte\",\n  \"activa\": true\n}",
+              "raw": "{\n  \"nombre\": \"Zona Norte {{sufijo}}\",\n  \"activa\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -996,7 +1021,31 @@
     },
     {
       "name": "Pedidos (cliente)",
-      "description": "Requieren un token de rol cliente (obtenido con POST /auth/google).",
+      "description": "Requieren un token de rol cliente: usan `tokenCliente`, que guarda Auth > Login con Google (cliente). Sin ese token las peticiones de esta carpeta se omiten. Crear pedido necesita además seleccionar la captura en Postman.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenCliente}}",
+            "type": "string"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('tokenCliente')) {",
+              "    console.log('Sin tokenCliente (requiere login con Google): se omite', pm.info.requestName);",
+              "    pm.execution.skipRequest();",
+              "}"
+            ]
+          }
+        }
+      ],
       "item": [
         {
           "name": "Crear pedido (multipart)",
@@ -1355,7 +1404,17 @@
     },
     {
       "name": "Repartidor",
-      "description": "Panel del repartidor.",
+      "description": "Panel del repartidor. Usa `tokenRepartidor`, que guarda Auth > Login repartidor (demo).",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{tokenRepartidor}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Mis pedidos por entregar",
@@ -1584,10 +1643,10 @@
                 "usuarios"
               ]
             },
-            "description": "Rol: solo superadmin. `rol` solo ventas o repartidor; password de 8 a 72 caracteres. Guarda el nuevo `usuarioId`.",
+            "description": "Rol: solo superadmin. `rol` solo ventas o repartidor; password de 8 a 72 caracteres. Lleva `sufijo` (generado en el pre-request) para poder repetir la corrida. Guarda el nuevo `usuarioId`.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Carlos Pérez\",\n  \"email\": \"carlos.perez@almacen.local\",\n  \"telefono\": \"+58 414 555 1234\",\n  \"rol\": \"repartidor\",\n  \"password\": \"Cambiar123!\"\n}",
+              "raw": "{\n  \"nombre\": \"Carlos Pérez\",\n  \"email\": \"carlos.perez.{{sufijo}}@almacen.local\",\n  \"telefono\": \"+58 414 555 1234\",\n  \"rol\": \"repartidor\",\n  \"password\": \"Cambiar123!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1597,6 +1656,15 @@
           },
           "response": [],
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('sufijo', Date.now().toString().slice(-6));"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -1633,7 +1701,7 @@
             "description": "Rol: solo superadmin. `password` es opcional (si viene, reemplaza la actual).",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Carlos Pérez\",\n  \"email\": \"carlos.perez@almacen.local\",\n  \"telefono\": \"+58 414 555 1234\",\n  \"rol\": \"repartidor\",\n  \"password\": null\n}",
+              "raw": "{\n  \"nombre\": \"Carlos Pérez\",\n  \"email\": \"carlos.perez.{{sufijo}}@almacen.local\",\n  \"telefono\": \"+58 414 555 1234\",\n  \"rol\": \"repartidor\",\n  \"password\": null\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3087,6 +3155,31 @@
     },
     {
       "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenVentas",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenRepartidor",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenCliente",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sufijo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "skuNuevo",
       "value": "",
       "type": "string"
     },
