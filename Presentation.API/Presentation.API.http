@@ -11,8 +11,9 @@ Content-Type: application/json
 
 { "email": "gerente@almacen.local", "password": "Cambiar123!" }
 
-### Diagnóstico de la base de datos
+### Diagnóstico de la base de datos (solo superadmin)
 GET {{Backend_Almacen_HostAddress}}/DbTest
+Authorization: Bearer {{token}}
 
 ### Catálogo público
 GET {{Backend_Almacen_HostAddress}}/catalogo?q=harina&pagina=1
@@ -68,11 +69,14 @@ Authorization: Bearer {{token}}
 GET {{Backend_Almacen_HostAddress}}/pedidos?estado=pendiente
 Authorization: Bearer {{token}}
 
-### Errores RFC 7807 (ExceptionMiddleware): 404, 400 y 500 en application/problem+json
+### Errores RFC 7807 (ExceptionMiddleware): 404, 400 y 500 en application/problem+json (solo superadmin)
 GET {{Backend_Almacen_HostAddress}}/pruebas/errores/no-encontrado
+Authorization: Bearer {{token}}
 
 ###
 GET {{Backend_Almacen_HostAddress}}/pruebas/errores/operacion-invalida
+Authorization: Bearer {{token}}
 
 ###
 GET {{Backend_Almacen_HostAddress}}/pruebas/errores/interno
+Authorization: Bearer {{token}}

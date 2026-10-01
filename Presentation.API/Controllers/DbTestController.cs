@@ -1,11 +1,15 @@
 using Core.Application.Abstracciones;
+using Presentation.API.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.API.Controllers
 {
-    // Endpoint de prueba para verificar la conexión con la base de datos.
+    // Endpoint de prueba para verificar la conexión con la base de datos. Solo Admin: expone la
+    // configuración del negocio y el estado de las migraciones.
     [ApiController]
     [Route("[controller]")]
+    [Authorize(Roles = Roles.Admin)]
     public class DbTestController(
         IDiagnosticoBaseDatos diagnostico,
         IConfiguracionRepository configuracion,

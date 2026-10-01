@@ -2272,10 +2272,7 @@
                 "DbTest"
               ]
             },
-            "description": "Público (sin [Authorize]). Conexión a PostgreSQL, migraciones, configuración y totales. 503 si no conecta.",
-            "auth": {
-              "type": "noauth"
-            }
+            "description": "Solo Admin (superadmin): usa el `token` del gerente. Conexión a PostgreSQL, migraciones, configuración y totales. 503 si no conecta."
           },
           "response": [],
           "event": [
@@ -2295,7 +2292,7 @@
     },
     {
       "name": "Errores RFC 7807",
-      "description": "Endpoints de prueba del manejador global de excepciones (ProblemDetails, RFC 7807/9457). Anónimos.",
+      "description": "Endpoints de prueba del manejador global de excepciones (ProblemDetails, RFC 7807/9457). Solo Admin: usan el `token` del gerente.",
       "item": [
         {
           "name": "404 No encontrado",
@@ -2313,10 +2310,7 @@
                 "no-encontrado"
               ]
             },
-            "description": "Público. Lanza una excepción de 'no encontrado'; espera 404 con ProblemDetails.",
-            "auth": {
-              "type": "noauth"
-            }
+            "description": "Solo Admin. Lanza una excepción de 'no encontrado'; espera 404 con ProblemDetails."
           },
           "response": [
             {
@@ -2387,10 +2381,7 @@
                 "operacion-invalida"
               ]
             },
-            "description": "Público. Lanza una operación inválida; espera 400 con ProblemDetails.",
-            "auth": {
-              "type": "noauth"
-            }
+            "description": "Solo Admin. Lanza una operación inválida; espera 400 con ProblemDetails."
           },
           "response": [
             {
@@ -2461,10 +2452,7 @@
                 "interno"
               ]
             },
-            "description": "Público. Lanza una excepción no controlada; espera 500 sin stack trace en `detail`.",
-            "auth": {
-              "type": "noauth"
-            }
+            "description": "Solo Admin. Lanza una excepción no controlada; espera 500 sin stack trace en `detail`."
           },
           "response": [
             {

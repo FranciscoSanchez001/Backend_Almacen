@@ -171,7 +171,7 @@ Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los d
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/DbTest` | 🌐 | Verifica la conexión a PostgreSQL y devuelve las migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
+| `GET` | `/DbTest` | 👔 | Verifica la conexión a PostgreSQL y devuelve las migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
 
 ## 16. Pruebas del manejo de errores — `/pruebas/errores`
 
@@ -179,9 +179,9 @@ Provocan una excepción a propósito para comprobar el `ExceptionMiddleware`. To
 
 | Método | Ruta | Acceso | Excepción | Respuesta |
 | :--- | :--- | :---: | :--- | :---: |
-| `GET` | `/pruebas/errores/no-encontrado` | 🌐 | `KeyNotFoundException` | `404` |
-| `GET` | `/pruebas/errores/operacion-invalida` | 🌐 | `InvalidOperationException` | `400` |
-| `GET` | `/pruebas/errores/interno` | 🌐 | `NullReferenceException` | `500`, sin detalles internos |
+| `GET` | `/pruebas/errores/no-encontrado` | 👔 | `KeyNotFoundException` | `404` |
+| `GET` | `/pruebas/errores/operacion-invalida` | 👔 | `InvalidOperationException` | `400` |
+| `GET` | `/pruebas/errores/interno` | 👔 | `NullReferenceException` | `500`, sin detalles internos |
 
 ---
 

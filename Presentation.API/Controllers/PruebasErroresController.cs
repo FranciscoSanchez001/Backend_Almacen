@@ -1,11 +1,14 @@
+using Presentation.API.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.API.Controllers
 {
     // Endpoint que provoca errores a propósito para probar el ExceptionMiddleware (RFC 7807).
-    // Cada ruta lanza una excepción distinta; la respuesta la arma el middleware.
+    // Cada ruta lanza una excepción distinta; la respuesta la arma el middleware. Solo Admin.
     [ApiController]
     [Route("pruebas/errores")]
+    [Authorize(Roles = Roles.Admin)]
     public class PruebasErroresController : ControllerBase
     {
         // 404: KeyNotFoundException.
