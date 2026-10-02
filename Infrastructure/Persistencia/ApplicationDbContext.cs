@@ -24,6 +24,7 @@ namespace Infrastructure.Persistencia
         public DbSet<MensajeWhatsapp> MensajesWhatsapp => Set<MensajeWhatsapp>();
         public DbSet<Configuracion> Configuracion => Set<Configuracion>();
         public DbSet<HistorialTasa> HistorialTasas => Set<HistorialTasa>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         // Enums nativos de PostgreSQL; se registra en UseNpgsql (DependencyInjection.cs).
         public static void ConfigurarNpgsql(NpgsqlDbContextOptionsBuilder npgsql)

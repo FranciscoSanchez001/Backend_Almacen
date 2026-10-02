@@ -24,4 +24,14 @@ namespace Core.Application.Validadores
             RuleFor(x => x.IdToken).NotEmpty().WithMessage("El ID token de Google es obligatorio.");
         }
     }
+
+    public class RefreshTokenValidator : AbstractValidator<RefreshTokenDto>
+    {
+        public RefreshTokenValidator()
+        {
+            RuleFor(x => x.RefreshToken)
+                .NotEmpty().WithMessage("El refresh token es obligatorio.")
+                .MaximumLength(200).WithMessage("El refresh token no es válido.");
+        }
+    }
 }

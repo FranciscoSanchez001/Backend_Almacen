@@ -24,6 +24,7 @@ namespace Infrastructure
             // Repositorios y unidad de trabajo: comparten el DbContext de la petición.
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<ICategoriaRepository, CategoriaRepository>();
             services.AddScoped<IZonaRepository, ZonaRepository>();
             services.AddScoped<IProductoRepository, ProductoRepository>();

@@ -33,6 +33,24 @@ namespace Core.Application.Abstracciones
         void Agregar(Usuario usuario);
     }
 
+    public interface IRefreshTokenRepository
+    {
+        // Con seguimiento. Si el token está activo trae también el usuario (carga explícita).
+        Task<RefreshToken?> ObtenerPorHashParaEditarAsync(string tokenHash, DateTime ahora, CancellationToken ct = default);
+
+        // Revoca el token solo si sigue activo, en un único UPDATE condicional: de dos peticiones
+        // que rotan el mismo token a la vez, solo una gana. Devuelve false si ya no estaba activo.
+        Task<bool> RevocarSiActivoAsync(Guid id, DateTime ahora, Guid? reemplazadoPorId, CancellationToken ct = default);
+
+        // Cierra todas las sesiones del usuario (reutilización detectada).
+        Task RevocarTodosDeUsuarioAsync(Guid usuarioId, DateTime ahora, CancellationToken ct = default);
+
+        // Limpieza: borra los tokens del usuario que vencieron hace más de `margen`.
+        Task EliminarVencidosDeUsuarioAsync(Guid usuarioId, DateTime ahora, TimeSpan margen, CancellationToken ct = default);
+
+        void Agregar(RefreshToken token);
+    }
+
     public interface ICategoriaRepository
     {
         Task<List<Categoria>> ListarAsync(CancellationToken ct = default);
