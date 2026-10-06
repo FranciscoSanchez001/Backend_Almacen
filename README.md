@@ -422,6 +422,22 @@ dotnet run --project Presentation.API -- --SiembraDemo:Habilitada=true
 
 ## 11. Pruebas de la API
 
+### Pruebas unitarias (xUnit + Moq)
+
+El proyecto [`tests/UnitTests`](tests/UnitTests) prueba `ProductoService` sin base de datos: `IProductoRepository`, `ICategoriaRepository`, `IUnitOfWork` y los repositorios de inventario, notificaciones y auditoría se simulan con Moq.
+
+```bash
+dotnet test
+```
+
+| Caso de uso | Qué se comprueba |
+| :--- | :--- |
+| `CrearAsync` | Normalización del SKU, el nombre y la unidad; redondeo de precios; transacción confirmada; movimiento de stock inicial; auditoría; `409` si el SKU está en uso y `400` si la categoría no existe |
+| `ActualizarAsync` | `404` si no existe; `409` si el SKU es de otro producto; auditoría con el antes y el después; sin cambios no guarda; ajuste de stock con su movimiento, aviso de agotado y resolución del aviso; `409` si el stock cambió mientras se editaba |
+| `BorrarAsync` | Borrado lógico auditado y `404` si no existe |
+
+Resultado: **17 pruebas, 0 fallos**.
+
 ### Colección de Postman
 
 [`docs/postman/Backend_Almacen.postman_collection.json`](docs/postman/Backend_Almacen.postman_collection.json) contiene 62 peticiones organizadas por área funcional. Es compatible con Postman y con Bruno (*Import Collection → Postman Collection*).
@@ -520,6 +536,8 @@ Backend_Almacen/
 │   └── Seguridad/              Hash de contraseñas (BCrypt)
 ├── Presentation.API/           Controladores, DTOs, autenticación, middleware y Program.cs
 │   └── Middleware/             ExceptionMiddleware (RFC 7807)
+├── tests/
+│   └── UnitTests/              Pruebas unitarias con xUnit y Moq (ProductoService)
 ├── database/
 │   └── InitialCreate.sql       Script SQL generado desde las migraciones
 ├── docs/                       Documentación técnica
