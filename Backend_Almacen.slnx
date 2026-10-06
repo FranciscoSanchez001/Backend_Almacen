@@ -1,6 +1,8 @@
 <Solution>
   <Project Path="Core.Domain/Core.Domain.csproj" />
   <Folder Name="/tests/">
+    <Project Path="tests/ArchitectureTests/ArchitectureTests.csproj" />
+    <Project Path="tests/IntegrationTests/IntegrationTests.csproj" />
     <Project Path="tests/UnitTests/UnitTests.csproj" />
   </Folder>
   <Project Path="Core.Application/Core.Application.csproj" />

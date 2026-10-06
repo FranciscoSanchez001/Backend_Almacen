@@ -427,7 +427,7 @@ dotnet run --project Presentation.API -- --SiembraDemo:Habilitada=true
 El proyecto [`tests/UnitTests`](tests/UnitTests) prueba `ProductoService` sin base de datos: `IProductoRepository`, `ICategoriaRepository`, `IUnitOfWork` y los repositorios de inventario, notificaciones y auditoría se simulan con Moq.
 
 ```bash
-dotnet test
+dotnet test     # todas las pruebas de la solución (las de integración necesitan Docker)
 ```
 
 | Caso de uso | Qué se comprueba |
@@ -437,6 +437,34 @@ dotnet test
 | `BorrarAsync` | Borrado lógico auditado y `404` si no existe |
 
 Resultado: **17 pruebas, 0 fallos**.
+
+### Pruebas de arquitectura (NetArchTest.Rules)
+
+[`tests/ArchitectureTests`](tests/ArchitectureTests) inspecciona los ensamblados compilados y falla si se rompe la regla de dependencia (`Presentation.API → Infrastructure → Core.Application → Core.Domain`) o alguna convención:
+
+| Regla | Qué se comprueba |
+| :--- | :--- |
+| Dependencias entre capas | Domain no depende de ninguna otra capa ni de EF Core, Npgsql, ASP.NET Core o FluentValidation; Application no depende de Infrastructure, Presentation, EF Core ni ASP.NET Core; Infrastructure no depende de Presentation; los controladores no usan Infrastructure ni EF Core |
+| Convenciones | Las entidades heredan de `BaseEntity`; los contratos `*Repository` son interfaces en `Core.Application.Abstracciones` y sus implementaciones, clases en `Infrastructure.Persistencia.Repositorios`; las interfaces empiezan con `I`; los validadores terminan en `Validator`; los controladores terminan en `Controller`, heredan de `ControllerBase` y están en `Presentation.API.Controllers` |
+
+Resultado: **13 pruebas, 0 fallos**.
+
+### Pruebas de integración (WebApplicationFactory + Testcontainers)
+
+[`tests/IntegrationTests`](tests/IntegrationTests) levanta la API completa en memoria (middleware, JWT, filtros, EF Core) contra un **PostgreSQL 16 real en Docker**, con las migraciones aplicadas. No se usa el proveedor InMemory porque el esquema depende de enums nativos de PostgreSQL y de `UPDATE` condicionales y `SELECT ... FOR UPDATE`. **Requiere Docker en ejecución**.
+
+| Área | Escenarios |
+| :--- | :--- |
+| Autenticación | Login del superadmin inicial; contraseña incorrecta → `401`; `GET /auth/yo`; rotación del refresh token y cierre de todas las sesiones al reutilizar uno ya usado |
+| Seguridad (RBAC) | Sin token o con un token inválido → `401`; listado público de categorías; Employee consulta productos, pero recibe `403` al borrar productos, crear categorías o gestionar usuarios; un usuario desactivado pierde el acceso aunque su JWT siga vigente |
+| Productos | Alta → `201` con `Location`, movimiento de stock y auditoría en la base; SKU repetido → `409`; precio negativo → `400` con `errors.precioUsd`; categoría inexistente → `400`; edición con ajuste de stock registrado; `404` al editar uno inexistente; borrado lógico que lo saca del catálogo; el catálogo no muestra productos sin stock |
+
+Resultado: **20 pruebas, 0 fallos**. Para ejecutar solo las que no necesitan Docker:
+
+```bash
+dotnet test tests/UnitTests
+dotnet test tests/ArchitectureTests
+```
 
 ### Colección de Postman
 
@@ -537,7 +565,9 @@ Backend_Almacen/
 ├── Presentation.API/           Controladores, DTOs, autenticación, middleware y Program.cs
 │   └── Middleware/             ExceptionMiddleware (RFC 7807)
 ├── tests/
-│   └── UnitTests/              Pruebas unitarias con xUnit y Moq (ProductoService)
+│   ├── UnitTests/              Pruebas unitarias con xUnit y Moq (ProductoService)
+│   ├── ArchitectureTests/      Reglas de dependencia entre capas y convenciones (NetArchTest.Rules)
+│   └── IntegrationTests/       API completa contra PostgreSQL en Docker (Testcontainers)
 ├── database/
 │   └── InitialCreate.sql       Script SQL generado desde las migraciones
 ├── docs/                       Documentación técnica
