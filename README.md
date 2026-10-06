@@ -59,7 +59,7 @@ inventario con reserva de stock, logística de entrega, notificaciones por Whats
 | | |
 | :--- | :--- |
 | **Asignatura** | Desarrollo de Aplicaciones Web (Código 0423807T) |
-| **Facilitador** | M.Sc. Ing. Gabriel Alexis Ramírez Sánchez · gramirezs@unet.edu.ve |
+| **Facilitador** | M.Sc. Ing. Gabriel Alexis Ramírez Sánchez · <gramirezs@unet.edu.ve> |
 | **Institución** | Universidad Nacional Experimental del Táchira (UNET) |
 | **Período académico** | Septiembre 2026 |
 | **Ubicación** | San Cristóbal, Estado Táchira, Venezuela |
@@ -364,9 +364,9 @@ dotnet run --project Presentation.API
 
 | Recurso | Dirección |
 | :--- | :--- |
-| API REST | http://localhost:5085 |
-| Documento OpenAPI | http://localhost:5085/openapi/v1.json |
-| Diagnóstico de la base de datos (requiere token de superadmin) | http://localhost:5085/DbTest |
+| API REST | <http://localhost:5085> |
+| Documento OpenAPI | <http://localhost:5085/openapi/v1.json> |
+| Diagnóstico de la base de datos (requiere token de superadmin) | <http://localhost:5085/DbTest> |
 | PostgreSQL | `localhost:5432` (`midatabase`) |
 
 ### 9.5 Comandos de referencia
@@ -377,6 +377,10 @@ dotnet ef migrations add <Nombre> --project Infrastructure --startup-project Pre
 
 # Regenerar el script SQL de la base de datos
 dotnet ef migrations script --project Infrastructure --startup-project Presentation.API --idempotent -o database/InitialCreate.sql
+
+# Exportar el volcado de la base (esquema + datos sembrados)
+docker exec postgres_db pg_dump -U miusuario -d midatabase --no-owner --no-privileges --column-inserts \
+  | sed '/^[\]restrict /d;/^[\]unrestrict /d' > database/midatabase_dump.sql
 
 # Construir la imagen Docker de la API
 docker build -f Presentation.API/Dockerfile -t backend-almacen .
@@ -395,6 +399,7 @@ Al arrancar, la API crea el usuario gerente si no existe:
 Los usuarios de **ventas** y **repartidor** los crea el gerente; los **clientes** se registran solos al iniciar sesión con Google.
 
 La migración siembra además:
+
 - **4 categorías:** Víveres, Lácteos y huevos, Bebidas, Limpieza del hogar.
 - **11 productos** con SKU, precio, costo y stock.
 - **5 zonas de entrega** de San Cristóbal: Centro, Barrio Obrero, Pueblo Nuevo, La Concordia y Santa Teresa.
@@ -476,6 +481,23 @@ dotnet test tests/ArchitectureTests
 | Autenticación | La petición *Login del personal* guarda el JWT en `token` automáticamente |
 | Encadenamiento | Los listados guardan el primer identificador para las peticiones de detalle |
 | Pruebas automáticas | La carpeta *Errores RFC 7807* verifica el código HTTP, el `Content-Type`, la estructura del Problem Details y que el error 500 no exponga detalles internos |
+
+### Colección de escenarios de seguridad
+
+[`docs/postman/Seguridad_Escenarios.postman_collection.json`](docs/postman/Seguridad_Escenarios.postman_collection.json) es una colección autocontenida con los cuatro escenarios de seguridad comprobados (Admin = `superadmin`, Employee = `ventas`):
+
+| # | Escenario | Respuesta esperada |
+| :---: | :--- | :--- |
+| 1 | Login exitoso con rol Admin y con rol Employee | `200 OK` con JWT y rol |
+| 2 | `GET /productos` sin token | `401 Unauthorized` |
+| 3 | `DELETE /productos/{id}` con token de Employee | `403 Forbidden` (y el producto sigue activo) |
+| 4 | `POST /productos` con precio negativo | `400 Bad Request` con `errors.precioUsd = ["El precio debe ser mayor que 0."]` |
+
+```bash
+npx newman run docs/postman/Seguridad_Escenarios.postman_collection.json --env-var "baseUrl=http://localhost:5085"
+```
+
+Resultado: **7 peticiones, 21 aserciones, 0 fallos**. Se puede repetir: el alta del Employee de prueba acepta `201` o `409` si ya existe. Las peticiones y respuestas reales de cada escenario están en [`docs/evidencias/escenarios-seguridad.md`](docs/evidencias/escenarios-seguridad.md).
 
 ### Endpoints de prueba de errores
 
@@ -569,10 +591,12 @@ Backend_Almacen/
 │   ├── ArchitectureTests/      Reglas de dependencia entre capas y convenciones (NetArchTest.Rules)
 │   └── IntegrationTests/       API completa contra PostgreSQL en Docker (Testcontainers)
 ├── database/
-│   └── InitialCreate.sql       Script SQL generado desde las migraciones
+│   ├── InitialCreate.sql       Script SQL generado desde las migraciones
+│   ├── midatabase_dump.sql     Volcado pg_dump: tablas, restricciones y datos sembrados
+│   └── consultas_verificacion.sql  Consultas que evidencian el esquema y la siembra
 ├── docs/                       Documentación técnica
-│   ├── postman/                Colección de Postman
-│   └── evidencias/             Respuestas de error en formato RFC 7807
+│   ├── postman/                Colecciones de Postman (general y escenarios de seguridad)
+│   └── evidencias/             Evidencias de errores RFC 7807, seguridad y base de datos
 ├── docker-compose.yml          PostgreSQL en contenedor
 ├── dotnet-tools.json           Herramienta dotnet-ef
 ├── Backend_Almacen.slnx        Solución de .NET
@@ -591,7 +615,10 @@ Backend_Almacen/
 | [`docs/REGLAS_NEGOCIO.md`](docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
 | [`docs/GESTION_PROYECTO.md`](docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
 | [`docs/postman/`](docs/postman/Backend_Almacen.postman_collection.json) | Colección de Postman con pruebas automáticas |
+| [`docs/postman/Seguridad_Escenarios.postman_collection.json`](docs/postman/Seguridad_Escenarios.postman_collection.json) | Los 4 escenarios de seguridad: login Admin/Employee, 401, 403 y 400 por validación |
 | [`docs/evidencias/errores-rfc7807.md`](docs/evidencias/errores-rfc7807.md) | Respuestas reales de error en formato Problem Details |
+| [`docs/evidencias/escenarios-seguridad.md`](docs/evidencias/escenarios-seguridad.md) | Petición, respuesta y aserciones de los 4 escenarios de seguridad (200, 401, 403, 400) |
+| [`docs/evidencias/base-datos.md`](docs/evidencias/base-datos.md) | Tablas, restricciones y datos sembrados en PostgreSQL, con el volcado [`database/midatabase_dump.sql`](database/midatabase_dump.sql) |
 
 ---
 
