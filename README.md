@@ -464,7 +464,7 @@ Resultado: **13 pruebas, 0 fallos**.
 | Seguridad (RBAC) | Sin token o con un token inválido → `401`; listado público de categorías; Employee consulta productos, pero recibe `403` al borrar productos, crear categorías o gestionar usuarios; un usuario desactivado pierde el acceso aunque su JWT siga vigente |
 | Productos | Alta → `201` con `Location`, movimiento de stock y auditoría en la base; SKU repetido → `409`; precio negativo → `400` con `errors.precioUsd`; categoría inexistente → `400`; edición con ajuste de stock registrado; `404` al editar uno inexistente; borrado lógico que lo saca del catálogo; el catálogo no muestra productos sin stock |
 
-Resultado: **20 pruebas, 0 fallos**. Para ejecutar solo las que no necesitan Docker:
+Resultado: **20 pruebas, 0 fallos**. El reporte de ejecución del Test Runner de xUnit, con las 50 pruebas en estado *Passed*, está en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md). Para ejecutar solo las que no necesitan Docker:
 
 ```bash
 dotnet test tests/UnitTests
@@ -618,6 +618,7 @@ Backend_Almacen/
 | [`docs/postman/Seguridad_Escenarios.postman_collection.json`](docs/postman/Seguridad_Escenarios.postman_collection.json) | Los 4 escenarios de seguridad: login Admin/Employee, 401, 403 y 400 por validación |
 | [`docs/evidencias/errores-rfc7807.md`](docs/evidencias/errores-rfc7807.md) | Respuestas reales de error en formato Problem Details |
 | [`docs/evidencias/escenarios-seguridad.md`](docs/evidencias/escenarios-seguridad.md) | Petición, respuesta y aserciones de los 4 escenarios de seguridad (200, 401, 403, 400) |
+| [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md) | Reporte del Test Runner de xUnit: 50 pruebas (unitarias, de arquitectura y de integración) en estado *Passed*, con la consola y los `.trx` en [`docs/evidencias/pruebas/`](docs/evidencias/pruebas/) |
 | [`docs/evidencias/base-datos.md`](docs/evidencias/base-datos.md) | Tablas, restricciones y datos sembrados en PostgreSQL, con el volcado [`database/midatabase_dump.sql`](database/midatabase_dump.sql) |
 
 ---

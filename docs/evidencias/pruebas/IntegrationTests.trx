@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010" id="e02a5972-1e0f-4779-9367-fa0ac5d9251f" name="Grego@DESKTOP-TUIF5RT 2026-10-06 20:06:48" runUser="DESKTOP-TUIF5RT\Grego">
+  <Times creation="2026-10-06T20:06:48.4756837-04:00" queuing="2026-10-06T20:06:48.4756843-04:00" start="2026-10-06T20:04:39.3448977-04:00" finish="2026-10-06T20:07:53.4838831-04:00" />
+  <TestSettings name="default" id="b0d3f6ca-82fe-4ba2-aa5f-fe16e1a5e689">
+    <Deployment runDeploymentRoot="Grego_DESKTOP-TUIF5RT_2026-10-06_20_06_48" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="1379b749-fe82-49f0-bfb2-e0cbe6847352" testId="73d976f5-0966-031a-0887-9443c14b87bf" testName="IntegrationTests.SeguridadTests.Productos_TokenInvalido_Devuelve401" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0567800" startTime="2026-10-06T20:07:20.1041555-04:00" endTime="2026-10-06T20:07:20.1687871-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1379b749-fe82-49f0-bfb2-e0cbe6847352" />
+    <UnitTestResult executionId="07b398dc-53fb-44db-90d6-73493b5825d3" testId="45635158-74c0-bbda-64ea-18cff3f29efa" testName="IntegrationTests.ProductosTests.Crear_Devuelve201ConLocationYGuardaMovimientoYAuditoria" computerName="DESKTOP-TUIF5RT" duration="00:00:01.8517693" startTime="2026-10-06T20:07:34.3136936-04:00" endTime="2026-10-06T20:07:36.1872262-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="07b398dc-53fb-44db-90d6-73493b5825d3" />
+    <UnitTestResult executionId="92d1b23b-eeec-4b6a-b064-5d1c4efb63d0" testId="f97193f6-3df2-fe50-e1b4-45699585f649" testName="IntegrationTests.AutenticacionTests.Login_ContrasenaIncorrecta_Devuelve401ConProblemDetails" computerName="DESKTOP-TUIF5RT" duration="00:00:01.4399842" startTime="2026-10-06T20:07:48.7613185-04:00" endTime="2026-10-06T20:07:50.2035398-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="92d1b23b-eeec-4b6a-b064-5d1c4efb63d0" />
+    <UnitTestResult executionId="744630ab-357b-4c7f-a77b-33be4bf490c1" testId="8d14c88d-8ff0-40f8-cb5b-86f89f0fadff" testName="IntegrationTests.SeguridadTests.Ventas_NoPuedeGestionarUsuarios_Devuelve403" computerName="DESKTOP-TUIF5RT" duration="00:00:04.7579180" startTime="2026-10-06T20:07:15.3284636-04:00" endTime="2026-10-06T20:07:20.0990998-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="744630ab-357b-4c7f-a77b-33be4bf490c1" />
+    <UnitTestResult executionId="0bd28a46-5f7a-4931-b3df-78ec40afb584" testId="0e4d5f5b-b2f4-6d1f-0988-bfc335a61d18" testName="IntegrationTests.SeguridadTests.Productos_SinToken_Devuelve401ConEncabezadoBearer" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0776931" startTime="2026-10-06T20:07:20.1703538-04:00" endTime="2026-10-06T20:07:20.2886200-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0bd28a46-5f7a-4931-b3df-78ec40afb584" />
+    <UnitTestResult executionId="cc7b7bad-5cfa-4e78-9688-ba7c7655ef9e" testId="67bd0011-a364-81f3-f465-b9450db2dd23" testName="IntegrationTests.ProductosTests.Catalogo_SinStock_NoMuestraElProducto" computerName="DESKTOP-TUIF5RT" duration="00:00:02.2403512" startTime="2026-10-06T20:07:38.6111899-04:00" endTime="2026-10-06T20:07:40.8846755-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cc7b7bad-5cfa-4e78-9688-ba7c7655ef9e" />
+    <UnitTestResult executionId="c4feb2c6-f994-44f1-bd4f-f87688de6724" testId="1d237c17-d4bd-8911-516d-24fb6d902658" testName="IntegrationTests.SeguridadTests.Ventas_NoPuedeBorrarProductos_Devuelve403YElProductoSigueActivo" computerName="DESKTOP-TUIF5RT" duration="00:00:15.9358922" startTime="2026-10-06T20:06:48.3232921-04:00" endTime="2026-10-06T20:07:04.1215208-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c4feb2c6-f994-44f1-bd4f-f87688de6724" />
+    <UnitTestResult executionId="b206e629-688e-4677-a517-89953d6bc31b" testId="86d8ba83-27fe-1edf-ffd1-e3cb024625d9" testName="IntegrationTests.ProductosTests.Actualizar_ProductoInexistente_Devuelve404" computerName="DESKTOP-TUIF5RT" duration="00:00:04.6914045" startTime="2026-10-06T20:07:26.6698156-04:00" endTime="2026-10-06T20:07:31.3777824-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b206e629-688e-4677-a517-89953d6bc31b" />
+    <UnitTestResult executionId="606c2be5-37bc-4908-ad2a-d6e2fb6f7553" testId="016d61e5-7b65-1d19-6796-93cfb066ce9c" testName="IntegrationTests.ProductosTests.Actualizar_ConOtroStock_RegistraUnAjusteEnElInventario" computerName="DESKTOP-TUIF5RT" duration="00:00:02.9257221" startTime="2026-10-06T20:07:31.3919080-04:00" endTime="2026-10-06T20:07:34.3116451-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="606c2be5-37bc-4908-ad2a-d6e2fb6f7553" />
+    <UnitTestResult executionId="e8e365e2-c6f0-4b94-85af-42ad015cb598" testId="37ab0cca-7ca7-3644-3b70-ac7114fcff1b" testName="IntegrationTests.AutenticacionTests.Yo_ConToken_DevuelveElUsuarioDeLaSesion" computerName="DESKTOP-TUIF5RT" duration="00:00:01.4604164" startTime="2026-10-06T20:07:44.6472119-04:00" endTime="2026-10-06T20:07:46.1133881-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e8e365e2-c6f0-4b94-85af-42ad015cb598" />
+    <UnitTestResult executionId="d3eb2d27-549c-4ff1-9da4-0f2831da5e85" testId="e3fd19e3-333e-3c21-e0dd-7bcb7aeeb990" testName="IntegrationTests.ProductosTests.Crear_PrecioNegativo_Devuelve400ConElErrorDelCampo" computerName="DESKTOP-TUIF5RT" duration="00:00:02.0567079" startTime="2026-10-06T20:07:24.6002270-04:00" endTime="2026-10-06T20:07:26.6688454-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d3eb2d27-549c-4ff1-9da4-0f2831da5e85" />
+    <UnitTestResult executionId="cc7756c2-721e-4a51-87aa-db5f55cf6d37" testId="f20f5489-6050-b14f-a47e-fd1d484f09f2" testName="IntegrationTests.AutenticacionTests.Login_SuperadminInicial_DevuelveJwtYRefreshToken" computerName="DESKTOP-TUIF5RT" duration="00:00:01.0440221" startTime="2026-10-06T20:07:46.1142044-04:00" endTime="2026-10-06T20:07:47.1633013-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cc7756c2-721e-4a51-87aa-db5f55cf6d37" />
+    <UnitTestResult executionId="c5de615a-a25d-4679-98f4-1cfb38ce12a2" testId="de861c1d-1740-66da-7cfd-3da78e800105" testName="IntegrationTests.ProductosTests.Borrar_ComoAdmin_EsUnBorradoLogicoQueLoSacaDeLaTienda" computerName="DESKTOP-TUIF5RT" duration="00:00:03.7478466" startTime="2026-10-06T20:07:40.8866477-04:00" endTime="2026-10-06T20:07:44.6446535-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c5de615a-a25d-4679-98f4-1cfb38ce12a2" />
+    <UnitTestResult executionId="13db7c6f-2f87-473c-89ec-590c5f2a6682" testId="ff082e41-173d-fccb-9df1-496b965f0b01" testName="IntegrationTests.SeguridadTests.UsuarioDesactivado_PierdeElAccesoConSuTokenVigente" computerName="DESKTOP-TUIF5RT" duration="00:00:52.4246454" startTime="2026-10-06T20:05:55.0136979-04:00" endTime="2026-10-06T20:06:48.1189546-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="13db7c6f-2f87-473c-89ec-590c5f2a6682" />
+    <UnitTestResult executionId="0f39e42f-9ee4-4e69-8572-47f48469ca57" testId="8b149ca3-bbe7-22b4-fdaa-f8b9bfc4ce35" testName="IntegrationTests.SeguridadTests.Categorias_ListadoPublico_NoExigeToken" computerName="DESKTOP-TUIF5RT" duration="00:00:00.3385612" startTime="2026-10-06T20:07:24.2163614-04:00" endTime="2026-10-06T20:07:24.5642215-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0f39e42f-9ee4-4e69-8572-47f48469ca57" />
+    <UnitTestResult executionId="3be9309c-2cd3-435d-b890-2bd770784a71" testId="6bc8efec-dcc9-1a6a-8963-01fe71f029f6" testName="IntegrationTests.ProductosTests.Crear_SkuRepetido_Devuelve409" computerName="DESKTOP-TUIF5RT" duration="00:00:01.1675498" startTime="2026-10-06T20:07:37.4078214-04:00" endTime="2026-10-06T20:07:38.6102896-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3be9309c-2cd3-435d-b890-2bd770784a71" />
+    <UnitTestResult executionId="9c378113-d74a-47b5-9168-6029cb15403a" testId="b614e9e5-4a9e-0662-689c-21ad73b7cf65" testName="IntegrationTests.SeguridadTests.Ventas_NoPuedeCrearCategorias_Devuelve403" computerName="DESKTOP-TUIF5RT" duration="00:00:03.9116187" startTime="2026-10-06T20:07:20.2900207-04:00" endTime="2026-10-06T20:07:24.2145750-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9c378113-d74a-47b5-9168-6029cb15403a" />
+    <UnitTestResult executionId="579f7e3e-4911-4dfb-ab2d-9b3e38070f91" testId="740c01b6-41e5-69eb-60fb-885f992715bc" testName="IntegrationTests.ProductosTests.Crear_CategoriaInexistente_Devuelve400" computerName="DESKTOP-TUIF5RT" duration="00:00:01.2134642" startTime="2026-10-06T20:07:36.1902587-04:00" endTime="2026-10-06T20:07:37.4069641-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="579f7e3e-4911-4dfb-ab2d-9b3e38070f91" />
+    <UnitTestResult executionId="f183cbb9-e240-4070-a04a-649e64e6acbe" testId="6a6a65fd-2d7b-fadf-f4c6-0f64b6d27e82" testName="IntegrationTests.AutenticacionTests.Refresh_RotaElTokenYRechazaReutilizarElAnterior" computerName="DESKTOP-TUIF5RT" duration="00:00:01.5938156" startTime="2026-10-06T20:07:47.1648861-04:00" endTime="2026-10-06T20:07:48.7607211-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f183cbb9-e240-4070-a04a-649e64e6acbe" />
+    <UnitTestResult executionId="27cd4db7-18d2-4061-9721-880cb5e66a6f" testId="eb402399-3aac-ef1c-3002-52afeb323bb2" testName="IntegrationTests.SeguridadTests.Ventas_PuedeConsultarProductos" computerName="DESKTOP-TUIF5RT" duration="00:00:11.2020804" startTime="2026-10-06T20:07:04.1376678-04:00" endTime="2026-10-06T20:07:15.3259660-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="27cd4db7-18d2-4061-9721-880cb5e66a6f" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="IntegrationTests.AutenticacionTests.Yo_ConToken_DevuelveElUsuarioDeLaSesion" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="37ab0cca-7ca7-3644-3b70-ac7114fcff1b">
+      <Execution id="e8e365e2-c6f0-4b94-85af-42ad015cb598" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.AutenticacionTests" name="Yo_ConToken_DevuelveElUsuarioDeLaSesion" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Borrar_ComoAdmin_EsUnBorradoLogicoQueLoSacaDeLaTienda" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="de861c1d-1740-66da-7cfd-3da78e800105">
+      <Execution id="c5de615a-a25d-4679-98f4-1cfb38ce12a2" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Borrar_ComoAdmin_EsUnBorradoLogicoQueLoSacaDeLaTienda" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Catalogo_SinStock_NoMuestraElProducto" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="67bd0011-a364-81f3-f465-b9450db2dd23">
+      <Execution id="cc7b7bad-5cfa-4e78-9688-ba7c7655ef9e" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Catalogo_SinStock_NoMuestraElProducto" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.Productos_SinToken_Devuelve401ConEncabezadoBearer" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="0e4d5f5b-b2f4-6d1f-0988-bfc335a61d18">
+      <Execution id="0bd28a46-5f7a-4931-b3df-78ec40afb584" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="Productos_SinToken_Devuelve401ConEncabezadoBearer" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.Ventas_NoPuedeCrearCategorias_Devuelve403" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="b614e9e5-4a9e-0662-689c-21ad73b7cf65">
+      <Execution id="9c378113-d74a-47b5-9168-6029cb15403a" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="Ventas_NoPuedeCrearCategorias_Devuelve403" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Actualizar_ConOtroStock_RegistraUnAjusteEnElInventario" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="016d61e5-7b65-1d19-6796-93cfb066ce9c">
+      <Execution id="606c2be5-37bc-4908-ad2a-d6e2fb6f7553" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Actualizar_ConOtroStock_RegistraUnAjusteEnElInventario" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Crear_Devuelve201ConLocationYGuardaMovimientoYAuditoria" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="45635158-74c0-bbda-64ea-18cff3f29efa">
+      <Execution id="07b398dc-53fb-44db-90d6-73493b5825d3" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Crear_Devuelve201ConLocationYGuardaMovimientoYAuditoria" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.AutenticacionTests.Login_SuperadminInicial_DevuelveJwtYRefreshToken" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="f20f5489-6050-b14f-a47e-fd1d484f09f2">
+      <Execution id="cc7756c2-721e-4a51-87aa-db5f55cf6d37" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.AutenticacionTests" name="Login_SuperadminInicial_DevuelveJwtYRefreshToken" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Crear_PrecioNegativo_Devuelve400ConElErrorDelCampo" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="e3fd19e3-333e-3c21-e0dd-7bcb7aeeb990">
+      <Execution id="d3eb2d27-549c-4ff1-9da4-0f2831da5e85" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Crear_PrecioNegativo_Devuelve400ConElErrorDelCampo" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.AutenticacionTests.Refresh_RotaElTokenYRechazaReutilizarElAnterior" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="6a6a65fd-2d7b-fadf-f4c6-0f64b6d27e82">
+      <Execution id="f183cbb9-e240-4070-a04a-649e64e6acbe" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.AutenticacionTests" name="Refresh_RotaElTokenYRechazaReutilizarElAnterior" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.Categorias_ListadoPublico_NoExigeToken" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="8b149ca3-bbe7-22b4-fdaa-f8b9bfc4ce35">
+      <Execution id="0f39e42f-9ee4-4e69-8572-47f48469ca57" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="Categorias_ListadoPublico_NoExigeToken" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.Ventas_NoPuedeGestionarUsuarios_Devuelve403" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="8d14c88d-8ff0-40f8-cb5b-86f89f0fadff">
+      <Execution id="744630ab-357b-4c7f-a77b-33be4bf490c1" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="Ventas_NoPuedeGestionarUsuarios_Devuelve403" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Crear_SkuRepetido_Devuelve409" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="6bc8efec-dcc9-1a6a-8963-01fe71f029f6">
+      <Execution id="3be9309c-2cd3-435d-b890-2bd770784a71" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Crear_SkuRepetido_Devuelve409" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.UsuarioDesactivado_PierdeElAccesoConSuTokenVigente" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="ff082e41-173d-fccb-9df1-496b965f0b01">
+      <Execution id="13db7c6f-2f87-473c-89ec-590c5f2a6682" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="UsuarioDesactivado_PierdeElAccesoConSuTokenVigente" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.Ventas_PuedeConsultarProductos" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="eb402399-3aac-ef1c-3002-52afeb323bb2">
+      <Execution id="27cd4db7-18d2-4061-9721-880cb5e66a6f" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="Ventas_PuedeConsultarProductos" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Actualizar_ProductoInexistente_Devuelve404" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="86d8ba83-27fe-1edf-ffd1-e3cb024625d9">
+      <Execution id="b206e629-688e-4677-a517-89953d6bc31b" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Actualizar_ProductoInexistente_Devuelve404" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.AutenticacionTests.Login_ContrasenaIncorrecta_Devuelve401ConProblemDetails" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="f97193f6-3df2-fe50-e1b4-45699585f649">
+      <Execution id="92d1b23b-eeec-4b6a-b064-5d1c4efb63d0" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.AutenticacionTests" name="Login_ContrasenaIncorrecta_Devuelve401ConProblemDetails" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.Ventas_NoPuedeBorrarProductos_Devuelve403YElProductoSigueActivo" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="1d237c17-d4bd-8911-516d-24fb6d902658">
+      <Execution id="c4feb2c6-f994-44f1-bd4f-f87688de6724" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="Ventas_NoPuedeBorrarProductos_Devuelve403YElProductoSigueActivo" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.ProductosTests.Crear_CategoriaInexistente_Devuelve400" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="740c01b6-41e5-69eb-60fb-885f992715bc">
+      <Execution id="579f7e3e-4911-4dfb-ab2d-9b3e38070f91" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.ProductosTests" name="Crear_CategoriaInexistente_Devuelve400" />
+    </UnitTest>
+    <UnitTest name="IntegrationTests.SeguridadTests.Productos_TokenInvalido_Devuelve401" storage="tests\integrationtests\bin\debug\net10.0\integrationtests.dll" id="73d976f5-0966-031a-0887-9443c14b87bf">
+      <Execution id="1379b749-fe82-49f0-bfb2-e0cbe6847352" />
+      <TestMethod codeBase="tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="IntegrationTests.SeguridadTests" name="Productos_TokenInvalido_Devuelve401" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="73d976f5-0966-031a-0887-9443c14b87bf" executionId="1379b749-fe82-49f0-bfb2-e0cbe6847352" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45635158-74c0-bbda-64ea-18cff3f29efa" executionId="07b398dc-53fb-44db-90d6-73493b5825d3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f97193f6-3df2-fe50-e1b4-45699585f649" executionId="92d1b23b-eeec-4b6a-b064-5d1c4efb63d0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8d14c88d-8ff0-40f8-cb5b-86f89f0fadff" executionId="744630ab-357b-4c7f-a77b-33be4bf490c1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0e4d5f5b-b2f4-6d1f-0988-bfc335a61d18" executionId="0bd28a46-5f7a-4931-b3df-78ec40afb584" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="67bd0011-a364-81f3-f465-b9450db2dd23" executionId="cc7b7bad-5cfa-4e78-9688-ba7c7655ef9e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1d237c17-d4bd-8911-516d-24fb6d902658" executionId="c4feb2c6-f994-44f1-bd4f-f87688de6724" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86d8ba83-27fe-1edf-ffd1-e3cb024625d9" executionId="b206e629-688e-4677-a517-89953d6bc31b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="016d61e5-7b65-1d19-6796-93cfb066ce9c" executionId="606c2be5-37bc-4908-ad2a-d6e2fb6f7553" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="37ab0cca-7ca7-3644-3b70-ac7114fcff1b" executionId="e8e365e2-c6f0-4b94-85af-42ad015cb598" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e3fd19e3-333e-3c21-e0dd-7bcb7aeeb990" executionId="d3eb2d27-549c-4ff1-9da4-0f2831da5e85" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f20f5489-6050-b14f-a47e-fd1d484f09f2" executionId="cc7756c2-721e-4a51-87aa-db5f55cf6d37" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="de861c1d-1740-66da-7cfd-3da78e800105" executionId="c5de615a-a25d-4679-98f4-1cfb38ce12a2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ff082e41-173d-fccb-9df1-496b965f0b01" executionId="13db7c6f-2f87-473c-89ec-590c5f2a6682" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8b149ca3-bbe7-22b4-fdaa-f8b9bfc4ce35" executionId="0f39e42f-9ee4-4e69-8572-47f48469ca57" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6bc8efec-dcc9-1a6a-8963-01fe71f029f6" executionId="3be9309c-2cd3-435d-b890-2bd770784a71" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b614e9e5-4a9e-0662-689c-21ad73b7cf65" executionId="9c378113-d74a-47b5-9168-6029cb15403a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="740c01b6-41e5-69eb-60fb-885f992715bc" executionId="579f7e3e-4911-4dfb-ab2d-9b3e38070f91" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6a6a65fd-2d7b-fadf-f4c6-0f64b6d27e82" executionId="f183cbb9-e240-4070-a04a-649e64e6acbe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="eb402399-3aac-ef1c-3002-52afeb323bb2" executionId="27cd4db7-18d2-4061-9721-880cb5e66a6f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="20" executed="20" passed="20" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    </ResultSummary>
+</TestRun>
