@@ -59,7 +59,7 @@ inventario con reserva de stock, logística de entrega, notificaciones por Whats
 | | |
 | :--- | :--- |
 | **Asignatura** | Desarrollo de Aplicaciones Web (Código 0423807T) |
-| **Facilitador** | M.Sc. Ing. Gabriel Alexis Ramírez Sánchez · gramirezs@unet.edu.ve |
+| **Facilitador** | M.Sc. Ing. Gabriel Alexis Ramírez Sánchez · <gramirezs@unet.edu.ve> |
 | **Institución** | Universidad Nacional Experimental del Táchira (UNET) |
 | **Período académico** | Septiembre 2026 |
 | **Ubicación** | San Cristóbal, Estado Táchira, Venezuela |
@@ -364,9 +364,9 @@ dotnet run --project Presentation.API
 
 | Recurso | Dirección |
 | :--- | :--- |
-| API REST | http://localhost:5085 |
-| Documento OpenAPI | http://localhost:5085/openapi/v1.json |
-| Diagnóstico de la base de datos (requiere token de superadmin) | http://localhost:5085/DbTest |
+| API REST | <http://localhost:5085> |
+| Documento OpenAPI | <http://localhost:5085/openapi/v1.json> |
+| Diagnóstico de la base de datos (requiere token de superadmin) | <http://localhost:5085/DbTest> |
 | PostgreSQL | `localhost:5432` (`midatabase`) |
 
 ### 9.5 Comandos de referencia
@@ -377,6 +377,10 @@ dotnet ef migrations add <Nombre> --project Infrastructure --startup-project Pre
 
 # Regenerar el script SQL de la base de datos
 dotnet ef migrations script --project Infrastructure --startup-project Presentation.API --idempotent -o database/InitialCreate.sql
+
+# Exportar el volcado de la base (esquema + datos sembrados)
+docker exec postgres_db pg_dump -U miusuario -d midatabase --no-owner --no-privileges --column-inserts \
+  | sed '/^[\]restrict /d;/^[\]unrestrict /d' > database/midatabase_dump.sql
 
 # Construir la imagen Docker de la API
 docker build -f Presentation.API/Dockerfile -t backend-almacen .
@@ -395,6 +399,7 @@ Al arrancar, la API crea el usuario gerente si no existe:
 Los usuarios de **ventas** y **repartidor** los crea el gerente; los **clientes** se registran solos al iniciar sesión con Google.
 
 La migración siembra además:
+
 - **4 categorías:** Víveres, Lácteos y huevos, Bebidas, Limpieza del hogar.
 - **11 productos** con SKU, precio, costo y stock.
 - **5 zonas de entrega** de San Cristóbal: Centro, Barrio Obrero, Pueblo Nuevo, La Concordia y Santa Teresa.
@@ -422,6 +427,50 @@ dotnet run --project Presentation.API -- --SiembraDemo:Habilitada=true
 
 ## 11. Pruebas de la API
 
+### Pruebas unitarias (xUnit + Moq)
+
+El proyecto [`tests/UnitTests`](tests/UnitTests) prueba `ProductoService` sin base de datos: `IProductoRepository`, `ICategoriaRepository`, `IUnitOfWork` y los repositorios de inventario, notificaciones y auditoría se simulan con Moq.
+
+```bash
+dotnet test     # todas las pruebas de la solución (las de integración necesitan Docker)
+```
+
+| Caso de uso | Qué se comprueba |
+| :--- | :--- |
+| `CrearAsync` | Normalización del SKU, el nombre y la unidad; redondeo de precios; transacción confirmada; movimiento de stock inicial; auditoría; `409` si el SKU está en uso y `400` si la categoría no existe |
+| `ActualizarAsync` | `404` si no existe; `409` si el SKU es de otro producto; auditoría con el antes y el después; sin cambios no guarda; ajuste de stock con su movimiento, aviso de agotado y resolución del aviso; `409` si el stock cambió mientras se editaba |
+| `BorrarAsync` | Borrado lógico auditado y `404` si no existe |
+
+Resultado: **17 pruebas, 0 fallos**.
+
+### Pruebas de arquitectura (NetArchTest.Rules)
+
+[`tests/ArchitectureTests`](tests/ArchitectureTests) inspecciona los ensamblados compilados y falla si se rompe la regla de dependencia (`Presentation.API → Infrastructure → Core.Application → Core.Domain`) o alguna convención:
+
+| Regla | Qué se comprueba |
+| :--- | :--- |
+| Dependencias entre capas | Domain no depende de ninguna otra capa ni de EF Core, Npgsql, ASP.NET Core o FluentValidation; Application no depende de Infrastructure, Presentation, EF Core ni ASP.NET Core; Infrastructure no depende de Presentation; los controladores no usan Infrastructure ni EF Core |
+| Convenciones | Las entidades heredan de `BaseEntity`; los contratos `*Repository` son interfaces en `Core.Application.Abstracciones` y sus implementaciones, clases en `Infrastructure.Persistencia.Repositorios`; las interfaces empiezan con `I`; los validadores terminan en `Validator`; los controladores terminan en `Controller`, heredan de `ControllerBase` y están en `Presentation.API.Controllers` |
+
+Resultado: **13 pruebas, 0 fallos**.
+
+### Pruebas de integración (WebApplicationFactory + Testcontainers)
+
+[`tests/IntegrationTests`](tests/IntegrationTests) levanta la API completa en memoria (middleware, JWT, filtros, EF Core) contra un **PostgreSQL 16 real en Docker**, con las migraciones aplicadas. No se usa el proveedor InMemory porque el esquema depende de enums nativos de PostgreSQL y de `UPDATE` condicionales y `SELECT ... FOR UPDATE`. **Requiere Docker en ejecución**.
+
+| Área | Escenarios |
+| :--- | :--- |
+| Autenticación | Login del superadmin inicial; contraseña incorrecta → `401`; `GET /auth/yo`; rotación del refresh token y cierre de todas las sesiones al reutilizar uno ya usado |
+| Seguridad (RBAC) | Sin token o con un token inválido → `401`; listado público de categorías; Employee consulta productos, pero recibe `403` al borrar productos, crear categorías o gestionar usuarios; un usuario desactivado pierde el acceso aunque su JWT siga vigente |
+| Productos | Alta → `201` con `Location`, movimiento de stock y auditoría en la base; SKU repetido → `409`; precio negativo → `400` con `errors.precioUsd`; categoría inexistente → `400`; edición con ajuste de stock registrado; `404` al editar uno inexistente; borrado lógico que lo saca del catálogo; el catálogo no muestra productos sin stock |
+
+Resultado: **20 pruebas, 0 fallos**. El reporte de ejecución del Test Runner de xUnit, con las 50 pruebas en estado *Passed*, está en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md). Para ejecutar solo las que no necesitan Docker:
+
+```bash
+dotnet test tests/UnitTests
+dotnet test tests/ArchitectureTests
+```
+
 ### Colección de Postman
 
 [`docs/postman/Backend_Almacen.postman_collection.json`](docs/postman/Backend_Almacen.postman_collection.json) contiene 62 peticiones organizadas por área funcional. Es compatible con Postman y con Bruno (*Import Collection → Postman Collection*).
@@ -432,6 +481,23 @@ dotnet run --project Presentation.API -- --SiembraDemo:Habilitada=true
 | Autenticación | La petición *Login del personal* guarda el JWT en `token` automáticamente |
 | Encadenamiento | Los listados guardan el primer identificador para las peticiones de detalle |
 | Pruebas automáticas | La carpeta *Errores RFC 7807* verifica el código HTTP, el `Content-Type`, la estructura del Problem Details y que el error 500 no exponga detalles internos |
+
+### Colección de escenarios de seguridad
+
+[`docs/postman/Seguridad_Escenarios.postman_collection.json`](docs/postman/Seguridad_Escenarios.postman_collection.json) es una colección autocontenida con los cuatro escenarios de seguridad comprobados (Admin = `superadmin`, Employee = `ventas`):
+
+| # | Escenario | Respuesta esperada |
+| :---: | :--- | :--- |
+| 1 | Login exitoso con rol Admin y con rol Employee | `200 OK` con JWT y rol |
+| 2 | `GET /productos` sin token | `401 Unauthorized` |
+| 3 | `DELETE /productos/{id}` con token de Employee | `403 Forbidden` (y el producto sigue activo) |
+| 4 | `POST /productos` con precio negativo | `400 Bad Request` con `errors.precioUsd = ["El precio debe ser mayor que 0."]` |
+
+```bash
+npx newman run docs/postman/Seguridad_Escenarios.postman_collection.json --env-var "baseUrl=http://localhost:5085"
+```
+
+Resultado: **7 peticiones, 21 aserciones, 0 fallos**. Se puede repetir: el alta del Employee de prueba acepta `201` o `409` si ya existe. Las peticiones y respuestas reales de cada escenario están en [`docs/evidencias/escenarios-seguridad.md`](docs/evidencias/escenarios-seguridad.md).
 
 ### Endpoints de prueba de errores
 
@@ -520,11 +586,17 @@ Backend_Almacen/
 │   └── Seguridad/              Hash de contraseñas (BCrypt)
 ├── Presentation.API/           Controladores, DTOs, autenticación, middleware y Program.cs
 │   └── Middleware/             ExceptionMiddleware (RFC 7807)
+├── tests/
+│   ├── UnitTests/              Pruebas unitarias con xUnit y Moq (ProductoService)
+│   ├── ArchitectureTests/      Reglas de dependencia entre capas y convenciones (NetArchTest.Rules)
+│   └── IntegrationTests/       API completa contra PostgreSQL en Docker (Testcontainers)
 ├── database/
-│   └── InitialCreate.sql       Script SQL generado desde las migraciones
+│   ├── InitialCreate.sql       Script SQL generado desde las migraciones
+│   ├── midatabase_dump.sql     Volcado pg_dump: tablas, restricciones y datos sembrados
+│   └── consultas_verificacion.sql  Consultas que evidencian el esquema y la siembra
 ├── docs/                       Documentación técnica
-│   ├── postman/                Colección de Postman
-│   └── evidencias/             Respuestas de error en formato RFC 7807
+│   ├── postman/                Colecciones de Postman (general y escenarios de seguridad)
+│   └── evidencias/             Evidencias de errores RFC 7807, seguridad y base de datos
 ├── docker-compose.yml          PostgreSQL en contenedor
 ├── dotnet-tools.json           Herramienta dotnet-ef
 ├── Backend_Almacen.slnx        Solución de .NET
@@ -543,7 +615,11 @@ Backend_Almacen/
 | [`docs/REGLAS_NEGOCIO.md`](docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
 | [`docs/GESTION_PROYECTO.md`](docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
 | [`docs/postman/`](docs/postman/Backend_Almacen.postman_collection.json) | Colección de Postman con pruebas automáticas |
+| [`docs/postman/Seguridad_Escenarios.postman_collection.json`](docs/postman/Seguridad_Escenarios.postman_collection.json) | Los 4 escenarios de seguridad: login Admin/Employee, 401, 403 y 400 por validación |
 | [`docs/evidencias/errores-rfc7807.md`](docs/evidencias/errores-rfc7807.md) | Respuestas reales de error en formato Problem Details |
+| [`docs/evidencias/escenarios-seguridad.md`](docs/evidencias/escenarios-seguridad.md) | Petición, respuesta y aserciones de los 4 escenarios de seguridad (200, 401, 403, 400) |
+| [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md) | Reporte del Test Runner de xUnit: 50 pruebas (unitarias, de arquitectura y de integración) en estado *Passed*, con la consola y los `.trx` en [`docs/evidencias/pruebas/`](docs/evidencias/pruebas/) |
+| [`docs/evidencias/base-datos.md`](docs/evidencias/base-datos.md) | Tablas, restricciones y datos sembrados en PostgreSQL, con el volcado [`database/midatabase_dump.sql`](database/midatabase_dump.sql) |
 
 ---
 

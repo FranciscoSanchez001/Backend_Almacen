@@ -1,0 +1,423 @@
+{
+  "info": {
+    "_postman_id": "190426b9-6710-5c9e-aead-a44b5b40d4b3",
+    "name": "Backend_Almacen — Escenarios de seguridad",
+    "description": "Colección autocontenida con los 4 escenarios de seguridad comprobados. Ejecútala completa y en orden con el *Collection Runner* o con Newman:\n\n```\nnpx newman run docs/postman/Seguridad_Escenarios.postman_collection.json --env-var \"baseUrl=http://localhost:5085\"\n```\n\nRoles: **Admin** = `superadmin`; **Employee** = `ventas`.\n\n1. Login exitoso con rol Admin y Employee (200).\n2. Endpoint protegido sin token (401 Unauthorized).\n3. Eliminación de producto con token de Employee (403 Forbidden).\n4. Producto con precio negativo (400 Bad Request con mensaje de validación).\n\nRequisitos: API en ejecución con las migraciones aplicadas (siembra el producto VIV-0001 y el superadmin `gerente@almacen.local` / `Cambiar123!`).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login exitoso (Admin y Employee)",
+      "description": "Obtiene los tokens que usan los demás escenarios.",
+      "item": [
+        {
+          "name": "1a. Login Admin (superadmin) — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Respuesta con token, username, email y rol superadmin', () => {",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.username).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.email).to.eql('gerente@almacen.local');",
+                  "    pm.expect(json.rol).to.eql('superadmin');",
+                  "});",
+                  "const partes = json.token.split('.');",
+                  "const b64 = s => JSON.parse(Buffer.from(s, 'base64').toString());",
+                  "pm.test('JWT HS256 con claim role = superadmin y exp futura', () => {",
+                  "    pm.expect(partes).to.have.lengthOf(3);",
+                  "    pm.expect(b64(partes[0]).alg).to.eql('HS256');",
+                  "    const payload = b64(partes[1]);",
+                  "    pm.expect(payload.role).to.eql('superadmin');",
+                  "    pm.expect(payload.exp * 1000).to.be.above(Date.now());",
+                  "});",
+                  "pm.collectionVariables.set('tokenAdmin', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. Superadmin sembrado al arrancar la API (sección `SuperadminInicial`). Guarda `tokenAdmin`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"gerente@almacen.local\",\n  \"password\": \"Cambiar123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Preparar: Admin crea el Employee de prueba — 201 / 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created o 409 si ya existía', () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Solo Admin. Crea un usuario con rol `ventas` (Employee). Si ya existe de una ejecución anterior responde 409, que también es válido.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Empleado Pruebas\",\n  \"email\": \"empleado.pruebas@almacen.local\",\n  \"telefono\": null,\n  \"rol\": \"ventas\",\n  \"password\": \"Empleado123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1b. Login Employee (ventas) — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Respuesta con token y rol ventas (Employee)', () => {",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.email).to.eql('empleado.pruebas@almacen.local');",
+                  "    pm.expect(json.rol).to.eql('ventas');",
+                  "});",
+                  "const payload = JSON.parse(Buffer.from(json.token.split('.')[1], 'base64').toString());",
+                  "pm.test('Claim role = ventas', () => pm.expect(payload.role).to.eql('ventas'));",
+                  "pm.collectionVariables.set('tokenEmpleado', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Público. Login del Employee creado en el paso anterior. Guarda `tokenEmpleado`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"empleado.pruebas@almacen.local\",\n  \"password\": \"Empleado123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Sin token (401)",
+      "description": "Petición a un endpoint protegido sin `Authorization`.",
+      "item": [
+        {
+          "name": "2. GET /productos sin token — 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('WWW-Authenticate: Bearer', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.include('Bearer'));",
+                  "pm.test('application/problem+json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "pm.test('status 401 en el cuerpo', () => pm.expect(pm.response.json().status).to.eql(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "Endpoint protegido (`[Authorize]`, solo personal) llamado sin encabezado `Authorization`.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Employee borra producto (403)",
+      "description": "RBAC: el borrado de productos es exclusivo del Admin.",
+      "item": [
+        {
+          "name": "3. Employee intenta DELETE /productos/{id} — 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 Forbidden', () => pm.response.to.have.status(403));",
+                  "pm.test('application/problem+json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "pm.test('status 403 en el cuerpo', () => pm.expect(pm.response.json().status).to.eql(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/a1000000-0000-4000-8000-000000000001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "a1000000-0000-4000-8000-000000000001"
+              ]
+            },
+            "description": "El borrado es solo para Admin (`[Authorize(Roles = Roles.Admin)]`). Con token de Employee: 403 Forbidden. El producto es VIV-0001, sembrado por la migración.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmpleado}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3b. Admin comprueba que el producto sigue activo — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('El producto sigue activo', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.codigoSku).to.eql('VIV-0001');",
+                  "    pm.expect(json.activo).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/productos/a1000000-0000-4000-8000-000000000001",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos",
+                "a1000000-0000-4000-8000-000000000001"
+              ]
+            },
+            "description": "Confirma que el 403 anterior no borró nada.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Precio negativo (400)",
+      "description": "Validación de entrada con FluentValidation.",
+      "item": [
+        {
+          "name": "4. POST /productos con precio negativo — 400",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('skuPrueba', 'NEG-' + Date.now().toString().slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('application/problem+json', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));",
+                  "const json = pm.response.json();",
+                  "pm.test('status 400 en el cuerpo', () => pm.expect(json.status).to.eql(400));",
+                  "pm.test('Mensaje de validación en precioUsd', () => {",
+                  "    pm.expect(json.errors).to.have.property('precioUsd');",
+                  "    pm.expect(json.errors.precioUsd).to.include('El precio debe ser mayor que 0.');",
+                  "});",
+                  "pm.test('Solo falla el precio', () => pm.expect(Object.keys(json.errors)).to.eql(['precioUsd']));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "productos"
+              ]
+            },
+            "description": "Cuerpo válido salvo `precioUsd = -5`. FluentValidation (`CrearProductoValidator`) lo rechaza antes de llegar al controlador: 400 con Problem Details y el mensaje de validación del campo.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmpleado}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoSku\": \"{{skuPrueba}}\",\n  \"nombre\": \"Producto con precio negativo\",\n  \"descripcion\": null,\n  \"precioUsd\": -5,\n  \"costoUsd\": 1.0,\n  \"imagenUrl\": null,\n  \"categoriaId\": \"c1000000-0000-4000-8000-000000000001\",\n  \"stockInicial\": 10,\n  \"stockMinimo\": 2,\n  \"stockMaximo\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5085",
+      "type": "string"
+    },
+    {
+      "key": "tokenAdmin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenEmpleado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "skuPrueba",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

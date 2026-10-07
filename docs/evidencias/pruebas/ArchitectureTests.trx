@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010" id="1b8ec29b-b4b3-4120-a673-cd67ed4d34a4" name="Grego@DESKTOP-TUIF5RT 2026-10-06 20:04:45" runUser="DESKTOP-TUIF5RT\Grego">
+  <Times creation="2026-10-06T20:04:45.3419206-04:00" queuing="2026-10-06T20:04:45.3419211-04:00" start="2026-10-06T20:04:29.1565774-04:00" finish="2026-10-06T20:04:46.9812646-04:00" />
+  <TestSettings name="default" id="9ea9a5bb-1a75-4d59-8c3e-5de6ebba9ffc">
+    <Deployment runDeploymentRoot="Grego_DESKTOP-TUIF5RT_2026-10-06_20_04_45" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="59532e97-cba1-4b3a-914b-6140bf656997" testId="a3a10e45-c15f-e786-43f6-7eb3b37caeb8" testName="ArchitectureTests.ConvencionesTests.Entidades_HeredanDeBaseEntity" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0066170" startTime="2026-10-06T20:04:46.3733223-04:00" endTime="2026-10-06T20:04:46.3738179-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="59532e97-cba1-4b3a-914b-6140bf656997" />
+    <UnitTestResult executionId="94679bae-7dc7-4d7f-b91e-3bbeacc6fb0b" testId="1edbcf9b-ff09-917d-bfe5-5b6b733db104" testName="ArchitectureTests.DependenciasEntreCapasTests.Aplicacion_NoDependeDeInfraestructuraNiDePresentacion" computerName="DESKTOP-TUIF5RT" duration="00:00:00.4018240" startTime="2026-10-06T20:04:45.2768270-04:00" endTime="2026-10-06T20:04:45.6263596-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="94679bae-7dc7-4d7f-b91e-3bbeacc6fb0b" />
+    <UnitTestResult executionId="2120aa77-8ac9-4eb8-9c12-f621880d8493" testId="2d3a052a-046d-4d27-0ea9-94c9f639b504" testName="ArchitectureTests.ConvencionesTests.Repositorios_EstanEnPersistenciaYSonClasesConcretas" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0084158" startTime="2026-10-06T20:04:45.7546144-04:00" endTime="2026-10-06T20:04:45.7621134-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2120aa77-8ac9-4eb8-9c12-f621880d8493" />
+    <UnitTestResult executionId="2d4bef21-80b0-4fb8-817d-332d80b28052" testId="e47f2847-4bb4-ffa9-55a5-f4631241ba94" testName="ArchitectureTests.DependenciasEntreCapasTests.Controladores_NoDependenDeInfraestructuraNiDeEfCore" computerName="DESKTOP-TUIF5RT" duration="00:00:00.1533422" startTime="2026-10-06T20:04:45.6272498-04:00" endTime="2026-10-06T20:04:45.7799521-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2d4bef21-80b0-4fb8-817d-332d80b28052" />
+    <UnitTestResult executionId="9efd4d34-5f20-4b51-9ef2-6d89d73a11b5" testId="28dd81a8-d5c6-a72f-534c-22cf0c271415" testName="ArchitectureTests.ConvencionesTests.Validadores_TerminanEnValidator" computerName="DESKTOP-TUIF5RT" duration="00:00:00.6431997" startTime="2026-10-06T20:04:45.2573216-04:00" endTime="2026-10-06T20:04:45.7441631-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9efd4d34-5f20-4b51-9ef2-6d89d73a11b5" />
+    <UnitTestResult executionId="42249f64-e57e-4b93-b5fe-d02e1e8d6f41" testId="821a3585-7332-8935-6e10-2bb821ab326f" testName="ArchitectureTests.ConvencionesTests.Controladores_SoloEstanEnSuEspacioDeNombres" computerName="DESKTOP-TUIF5RT" duration="00:00:00.6032298" startTime="2026-10-06T20:04:45.7629946-04:00" endTime="2026-10-06T20:04:46.3658253-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="42249f64-e57e-4b93-b5fe-d02e1e8d6f41" />
+    <UnitTestResult executionId="a67172c5-4e3e-4b20-8c9f-bbb0115bc5ab" testId="45778cea-06a1-e259-2421-1d4111221ed1" testName="ArchitectureTests.ConvencionesTests.Controladores_TerminanEnControllerYHeredanDeControllerBase" computerName="DESKTOP-TUIF5RT" duration="00:00:03.8920383" startTime="2026-10-06T20:04:41.3075491-04:00" endTime="2026-10-06T20:04:45.0953686-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a67172c5-4e3e-4b20-8c9f-bbb0115bc5ab" />
+    <UnitTestResult executionId="831321b3-2991-473b-a256-dd8cb8b3e566" testId="83448352-fb75-de90-6038-b15693c0fc5b" testName="ArchitectureTests.DependenciasEntreCapasTests.Infraestructura_NoDependeDePresentacion" computerName="DESKTOP-TUIF5RT" duration="00:00:00.7030089" startTime="2026-10-06T20:04:45.7809815-04:00" endTime="2026-10-06T20:04:46.4831800-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="831321b3-2991-473b-a256-dd8cb8b3e566" />
+    <UnitTestResult executionId="0e085d2c-dc97-4437-840d-3e7176be8c43" testId="fd7ef221-e79b-aee8-f915-9c9337dd513e" testName="ArchitectureTests.DependenciasEntreCapasTests.Dominio_NoDependeDeNingunaOtraCapa" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0332794" startTime="2026-10-06T20:04:46.4848702-04:00" endTime="2026-10-06T20:04:46.5175624-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0e085d2c-dc97-4437-840d-3e7176be8c43" />
+    <UnitTestResult executionId="d75a3470-16fe-4b44-a738-58b835601b92" testId="aa674019-0cfc-36f5-7a46-caa638477448" testName="ArchitectureTests.ConvencionesTests.InterfacesDeAplicacion_EmpiezanConI" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0089030" startTime="2026-10-06T20:04:45.7467119-04:00" endTime="2026-10-06T20:04:45.7532036-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d75a3470-16fe-4b44-a738-58b835601b92" />
+    <UnitTestResult executionId="56c63d30-566f-41f2-9959-17e94d45224d" testId="63e641ab-1036-cb88-bbb0-7b88d8ddb7eb" testName="ArchitectureTests.ConvencionesTests.ContratosDeRepositorio_SonInterfacesDeAplicacion" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0067015" startTime="2026-10-06T20:04:46.3747309-04:00" endTime="2026-10-06T20:04:46.3797116-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="56c63d30-566f-41f2-9959-17e94d45224d" />
+    <UnitTestResult executionId="b2aeea62-1f8f-48ee-9ec5-7a24d2f16396" testId="1bceddc9-303f-799b-1dce-be5e78e8b395" testName="ArchitectureTests.DependenciasEntreCapasTests.Dominio_NoDependeDeFrameworksExternos" computerName="DESKTOP-TUIF5RT" duration="00:00:00.0725226" startTime="2026-10-06T20:04:45.2628351-04:00" endTime="2026-10-06T20:04:45.2633086-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b2aeea62-1f8f-48ee-9ec5-7a24d2f16396" />
+    <UnitTestResult executionId="dd5beb36-16f7-4b7f-a154-8fbb8a85f688" testId="28f9a190-c867-70f8-f13a-c8d6dfa585a9" testName="ArchitectureTests.DependenciasEntreCapasTests.Aplicacion_NoDependeDeEfCoreNiDeAspNetCore" computerName="DESKTOP-TUIF5RT" duration="00:00:03.9719945" startTime="2026-10-06T20:04:41.3177058-04:00" endTime="2026-10-06T20:04:45.2581861-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dd5beb36-16f7-4b7f-a154-8fbb8a85f688" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="ArchitectureTests.DependenciasEntreCapasTests.Dominio_NoDependeDeNingunaOtraCapa" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="fd7ef221-e79b-aee8-f915-9c9337dd513e">
+      <Execution id="0e085d2c-dc97-4437-840d-3e7176be8c43" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.DependenciasEntreCapasTests" name="Dominio_NoDependeDeNingunaOtraCapa" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.ConvencionesTests.Controladores_TerminanEnControllerYHeredanDeControllerBase" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="45778cea-06a1-e259-2421-1d4111221ed1">
+      <Execution id="a67172c5-4e3e-4b20-8c9f-bbb0115bc5ab" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.ConvencionesTests" name="Controladores_TerminanEnControllerYHeredanDeControllerBase" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.ConvencionesTests.Entidades_HeredanDeBaseEntity" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="a3a10e45-c15f-e786-43f6-7eb3b37caeb8">
+      <Execution id="59532e97-cba1-4b3a-914b-6140bf656997" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.ConvencionesTests" name="Entidades_HeredanDeBaseEntity" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.DependenciasEntreCapasTests.Infraestructura_NoDependeDePresentacion" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="83448352-fb75-de90-6038-b15693c0fc5b">
+      <Execution id="831321b3-2991-473b-a256-dd8cb8b3e566" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.DependenciasEntreCapasTests" name="Infraestructura_NoDependeDePresentacion" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.ConvencionesTests.ContratosDeRepositorio_SonInterfacesDeAplicacion" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="63e641ab-1036-cb88-bbb0-7b88d8ddb7eb">
+      <Execution id="56c63d30-566f-41f2-9959-17e94d45224d" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.ConvencionesTests" name="ContratosDeRepositorio_SonInterfacesDeAplicacion" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.DependenciasEntreCapasTests.Dominio_NoDependeDeFrameworksExternos" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="1bceddc9-303f-799b-1dce-be5e78e8b395">
+      <Execution id="b2aeea62-1f8f-48ee-9ec5-7a24d2f16396" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.DependenciasEntreCapasTests" name="Dominio_NoDependeDeFrameworksExternos" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.DependenciasEntreCapasTests.Controladores_NoDependenDeInfraestructuraNiDeEfCore" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="e47f2847-4bb4-ffa9-55a5-f4631241ba94">
+      <Execution id="2d4bef21-80b0-4fb8-817d-332d80b28052" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.DependenciasEntreCapasTests" name="Controladores_NoDependenDeInfraestructuraNiDeEfCore" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.ConvencionesTests.Repositorios_EstanEnPersistenciaYSonClasesConcretas" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="2d3a052a-046d-4d27-0ea9-94c9f639b504">
+      <Execution id="2120aa77-8ac9-4eb8-9c12-f621880d8493" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.ConvencionesTests" name="Repositorios_EstanEnPersistenciaYSonClasesConcretas" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.DependenciasEntreCapasTests.Aplicacion_NoDependeDeInfraestructuraNiDePresentacion" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="1edbcf9b-ff09-917d-bfe5-5b6b733db104">
+      <Execution id="94679bae-7dc7-4d7f-b91e-3bbeacc6fb0b" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.DependenciasEntreCapasTests" name="Aplicacion_NoDependeDeInfraestructuraNiDePresentacion" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.ConvencionesTests.Controladores_SoloEstanEnSuEspacioDeNombres" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="821a3585-7332-8935-6e10-2bb821ab326f">
+      <Execution id="42249f64-e57e-4b93-b5fe-d02e1e8d6f41" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.ConvencionesTests" name="Controladores_SoloEstanEnSuEspacioDeNombres" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.ConvencionesTests.InterfacesDeAplicacion_EmpiezanConI" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="aa674019-0cfc-36f5-7a46-caa638477448">
+      <Execution id="d75a3470-16fe-4b44-a738-58b835601b92" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.ConvencionesTests" name="InterfacesDeAplicacion_EmpiezanConI" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.ConvencionesTests.Validadores_TerminanEnValidator" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="28dd81a8-d5c6-a72f-534c-22cf0c271415">
+      <Execution id="9efd4d34-5f20-4b51-9ef2-6d89d73a11b5" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.ConvencionesTests" name="Validadores_TerminanEnValidator" />
+    </UnitTest>
+    <UnitTest name="ArchitectureTests.DependenciasEntreCapasTests.Aplicacion_NoDependeDeEfCoreNiDeAspNetCore" storage="tests\architecturetests\bin\debug\net10.0\architecturetests.dll" id="28f9a190-c867-70f8-f13a-c8d6dfa585a9">
+      <Execution id="dd5beb36-16f7-4b7f-a154-8fbb8a85f688" />
+      <TestMethod codeBase="tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="ArchitectureTests.DependenciasEntreCapasTests" name="Aplicacion_NoDependeDeEfCoreNiDeAspNetCore" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="a3a10e45-c15f-e786-43f6-7eb3b37caeb8" executionId="59532e97-cba1-4b3a-914b-6140bf656997" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1edbcf9b-ff09-917d-bfe5-5b6b733db104" executionId="94679bae-7dc7-4d7f-b91e-3bbeacc6fb0b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2d3a052a-046d-4d27-0ea9-94c9f639b504" executionId="2120aa77-8ac9-4eb8-9c12-f621880d8493" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e47f2847-4bb4-ffa9-55a5-f4631241ba94" executionId="2d4bef21-80b0-4fb8-817d-332d80b28052" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="28dd81a8-d5c6-a72f-534c-22cf0c271415" executionId="9efd4d34-5f20-4b51-9ef2-6d89d73a11b5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="821a3585-7332-8935-6e10-2bb821ab326f" executionId="42249f64-e57e-4b93-b5fe-d02e1e8d6f41" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45778cea-06a1-e259-2421-1d4111221ed1" executionId="a67172c5-4e3e-4b20-8c9f-bbb0115bc5ab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="83448352-fb75-de90-6038-b15693c0fc5b" executionId="831321b3-2991-473b-a256-dd8cb8b3e566" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fd7ef221-e79b-aee8-f915-9c9337dd513e" executionId="0e085d2c-dc97-4437-840d-3e7176be8c43" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aa674019-0cfc-36f5-7a46-caa638477448" executionId="d75a3470-16fe-4b44-a738-58b835601b92" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="63e641ab-1036-cb88-bbb0-7b88d8ddb7eb" executionId="56c63d30-566f-41f2-9959-17e94d45224d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1bceddc9-303f-799b-1dce-be5e78e8b395" executionId="b2aeea62-1f8f-48ee-9ec5-7a24d2f16396" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="28f9a190-c867-70f8-f13a-c8d6dfa585a9" executionId="dd5beb36-16f7-4b7f-a154-8fbb8a85f688" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="13" executed="13" passed="13" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    </ResultSummary>
+</TestRun>

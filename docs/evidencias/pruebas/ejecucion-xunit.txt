@@ -1,0 +1,87 @@
+Test run for tests\UnitTests\bin\Debug\net10.0\UnitTests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.01] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.12)
+[xUnit.net 00:00:05.96]   Discovering: UnitTests
+[xUnit.net 00:00:06.44]   Discovered:  UnitTests
+[xUnit.net 00:00:06.61]   Starting:    UnitTests
+  Passed UnitTests.Servicios.ProductoServiceTests.CrearAsync_CategoriaInexistente_LanzaInvalidOperationSinGuardarNada [5 s]
+  Passed UnitTests.Servicios.ProductoServiceTests.BorrarAsync_ProductoExistente_LoDesactivaYAuditaElBorrado [547 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.CrearAsync_SkuEnUso_LanzaConflictoSinGuardarNada [67 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_ConCambios_ActualizaGuardaYAuditaElAntesYDespues [159 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.CrearAsync_DatosValidos_GuardaElProductoNormalizadoDentroDeUnaTransaccion [76 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_StockACero_AvisaQueElProductoSeAgoto [67 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_StockReponeUnProductoAgotado_ResuelveElAviso [41 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_ProductoInexistente_LanzaKeyNotFound [28 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_StockCambioMientrasSeEditaba_LanzaConflictoSinGuardar [58 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.CrearAsync_ConStockInicial_RegistraUnaReposicionDesdeCero [50 ms]
+[xUnit.net 00:00:13.70]   Finished:    UnitTests
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_StockIgualAlActual_NoAjustaElInventario [53 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.CrearAsync_RegistraAuditoriaDeCreacionSinDatosAnteriores [25 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_StockDistinto_AjustaElInventarioYRegistraElMovimiento [34 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_SkuDeOtroProducto_LanzaConflictoExcluyendoAlPropioProducto [37 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.BorrarAsync_ProductoInexistente_LanzaKeyNotFound [25 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.ActualizarAsync_SinCambios_NoGuardaNiAudita [21 ms]
+  Passed UnitTests.Servicios.ProductoServiceTests.CrearAsync_SinStockInicial_NoRegistraMovimientos [16 ms]
+Test Run Successful.
+Total tests: 17
+     Passed: 17
+ Total time: 23.3135 Seconds
+Results File: docs\evidencias\pruebas\UnitTests.trx
+Test run for tests\ArchitectureTests\bin\Debug\net10.0\ArchitectureTests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Test run for tests\IntegrationTests\bin\Debug\net10.0\IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+[xUnit.net 00:00:00.02] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.12)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:02.20]   Discovering: ArchitectureTests
+[xUnit.net 00:00:02.76]   Discovered:  ArchitectureTests
+[xUnit.net 00:00:03.10]   Starting:    ArchitectureTests
+  Passed ArchitectureTests.ConvencionesTests.Controladores_TerminanEnControllerYHeredanDeControllerBase [3 s]
+  Passed ArchitectureTests.DependenciasEntreCapasTests.Aplicacion_NoDependeDeEfCoreNiDeAspNetCore [3 s]
+  Passed ArchitectureTests.DependenciasEntreCapasTests.Dominio_NoDependeDeFrameworksExternos [72 ms]
+  Passed ArchitectureTests.DependenciasEntreCapasTests.Aplicacion_NoDependeDeInfraestructuraNiDePresentacion [401 ms]
+  Passed ArchitectureTests.ConvencionesTests.Validadores_TerminanEnValidator [643 ms]
+  Passed ArchitectureTests.ConvencionesTests.InterfacesDeAplicacion_EmpiezanConI [8 ms]
+  Passed ArchitectureTests.ConvencionesTests.Repositorios_EstanEnPersistenciaYSonClasesConcretas [8 ms]
+  Passed ArchitectureTests.DependenciasEntreCapasTests.Controladores_NoDependenDeInfraestructuraNiDeEfCore [153 ms]
+  Passed ArchitectureTests.ConvencionesTests.Controladores_SoloEstanEnSuEspacioDeNombres [603 ms]
+[xUnit.net 00:00:08.68]   Finished:    ArchitectureTests
+  Passed ArchitectureTests.ConvencionesTests.Entidades_HeredanDeBaseEntity [6 ms]
+  Passed ArchitectureTests.ConvencionesTests.ContratosDeRepositorio_SonInterfacesDeAplicacion [6 ms]
+  Passed ArchitectureTests.DependenciasEntreCapasTests.Infraestructura_NoDependeDePresentacion [703 ms]
+  Passed ArchitectureTests.DependenciasEntreCapasTests.Dominio_NoDependeDeNingunaOtraCapa [33 ms]
+Test Run Successful.
+Total tests: 13
+     Passed: 13
+ Total time: 17.7330 Seconds
+Results File: docs\evidencias\pruebas\ArchitectureTests.trx
+[xUnit.net 00:00:00.02] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.12)
+[xUnit.net 00:00:03.78]   Discovering: IntegrationTests
+[xUnit.net 00:00:04.11]   Discovered:  IntegrationTests
+[xUnit.net 00:00:04.30]   Starting:    IntegrationTests
+      Failed to determine the https port for redirect.
+  Passed IntegrationTests.SeguridadTests.UsuarioDesactivado_PierdeElAccesoConSuTokenVigente [52 s]
+  Passed IntegrationTests.SeguridadTests.Ventas_NoPuedeBorrarProductos_Devuelve403YElProductoSigueActivo [15 s]
+  Passed IntegrationTests.SeguridadTests.Ventas_PuedeConsultarProductos [11 s]
+  Passed IntegrationTests.SeguridadTests.Ventas_NoPuedeGestionarUsuarios_Devuelve403 [4 s]
+  Passed IntegrationTests.SeguridadTests.Productos_TokenInvalido_Devuelve401 [56 ms]
+  Passed IntegrationTests.SeguridadTests.Productos_SinToken_Devuelve401ConEncabezadoBearer [77 ms]
+  Passed IntegrationTests.SeguridadTests.Ventas_NoPuedeCrearCategorias_Devuelve403 [3 s]
+  Passed IntegrationTests.SeguridadTests.Categorias_ListadoPublico_NoExigeToken [338 ms]
+  Passed IntegrationTests.ProductosTests.Crear_PrecioNegativo_Devuelve400ConElErrorDelCampo [2 s]
+  Passed IntegrationTests.ProductosTests.Actualizar_ProductoInexistente_Devuelve404 [4 s]
+  Passed IntegrationTests.ProductosTests.Actualizar_ConOtroStock_RegistraUnAjusteEnElInventario [2 s]
+  Passed IntegrationTests.ProductosTests.Crear_Devuelve201ConLocationYGuardaMovimientoYAuditoria [1 s]
+  Passed IntegrationTests.ProductosTests.Crear_CategoriaInexistente_Devuelve400 [1 s]
+  Passed IntegrationTests.ProductosTests.Crear_SkuRepetido_Devuelve409 [1 s]
+  Passed IntegrationTests.ProductosTests.Catalogo_SinStock_NoMuestraElProducto [2 s]
+  Passed IntegrationTests.ProductosTests.Borrar_ComoAdmin_EsUnBorradoLogicoQueLoSacaDeLaTienda [3 s]
+  Passed IntegrationTests.AutenticacionTests.Yo_ConToken_DevuelveElUsuarioDeLaSesion [1 s]
+  Passed IntegrationTests.AutenticacionTests.Login_SuperadminInicial_DevuelveJwtYRefreshToken [1 s]
+  Passed IntegrationTests.AutenticacionTests.Refresh_RotaElTokenYRechazaReutilizarElAnterior [1 s]
+  Passed IntegrationTests.AutenticacionTests.Login_ContrasenaIncorrecta_Devuelve401ConProblemDetails [1 s]
+[xUnit.net 00:03:04.81]   Finished:    IntegrationTests
+Test Run Successful.
+Total tests: 20
+     Passed: 20
+ Total time: 3.2327 Minutes
+Results File: docs\evidencias\pruebas\IntegrationTests.trx
