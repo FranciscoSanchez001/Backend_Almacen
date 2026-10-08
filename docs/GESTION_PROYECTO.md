@@ -52,7 +52,7 @@ Para que el equipo avance en paralelo sin bloquearse, el trabajo se divide en tr
 - Si los cambios traen una migración nueva, actualizar la base de datos local:
 
 ```bash
-dotnet ef database update --project Infrastructure --startup-project Presentation.API
+dotnet ef database update --project src/backend/Infrastructure --startup-project src/backend/Presentation.API
 ```
 
 ### Convención de commits (recomendada)

@@ -20,10 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core.Domain\Core.Domain.csproj" />
-    <ProjectReference Include="..\..\Core.Application\Core.Application.csproj" />
-    <ProjectReference Include="..\..\Infrastructure\Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Presentation.API\Presentation.API.csproj" />
+    <ProjectReference Include="..\..\src\backend\Core.Domain\Core.Domain.csproj" />
+    <ProjectReference Include="..\..\src\backend\Core.Application\Core.Application.csproj" />
+    <ProjectReference Include="..\..\src\backend\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\backend\Presentation.API\Presentation.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>

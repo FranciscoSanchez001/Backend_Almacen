@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* Modo oscuro por clase: ThemeContext pone `dark` en <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tema institucional: Azul UNET (#003366 = marca-700) y superficie de tarjetas. */
+@theme {
+  --color-marca-50: #eef4fa;
+  --color-marca-100: #d6e3f0;
+  --color-marca-200: #adc6e0;
+  --color-marca-500: #1f5a94;
+  --color-marca-600: #0d4377;
+  --color-marca-700: #003366;
+  --color-marca-800: #00264d;
+  --color-superficie: #ffffff;
+}
+
+/* Modo oscuro. Los grises y la superficie se redefinen aquí, en un solo lugar,
+   así que todas las pantallas cambian sin tocar sus clases. Los colores de
+   alertas y de marca llevan su variante `dark:` en cada componente. */
+.dark {
+  color-scheme: dark;
+  --color-superficie: #162032;
+  --color-slate-50: #0d1424;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #2a3850;
+  --color-slate-300: #3b4a61;
+  --color-slate-400: #6b7a90;
+  --color-slate-500: #9aa8bb;
+  --color-slate-600: #b4c0cf;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+}

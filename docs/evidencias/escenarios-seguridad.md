@@ -1,6 +1,6 @@
 # Evidencias — Escenarios de seguridad (Postman)
 
-[← Volver al README](../../README.md#11-pruebas-de-la-api)
+[← Volver al README](../../src/backend/README.md#11-pruebas-de-la-api)
 
 Resultado real de ejecutar, petición por petición, la colección [`Seguridad_Escenarios.postman_collection.json`](../postman/Seguridad_Escenarios.postman_collection.json) contra la API en desarrollo (`http://localhost:5085`), con PostgreSQL 16 recién migrado. Comando:
 

@@ -236,4 +236,4 @@ curl -X POST http://localhost:5085/inventario/a1000000-0000-4000-8000-0000000000
   -d "{\"cantidad\":20}"
 ```
 
-Más peticiones de ejemplo en [`Presentation.API/Presentation.API.http`](../Presentation.API/Presentation.API.http) y en la [colección de Postman](postman/Backend_Almacen.postman_collection.json).
+Más peticiones de ejemplo en [`src/backend/Presentation.API/Presentation.API.http`](../src/backend/Presentation.API/Presentation.API.http) y en la [colección de Postman](postman/Backend_Almacen.postman_collection.json).

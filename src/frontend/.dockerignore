@@ -1,0 +1,19 @@
+# Nunca copiar estas carpetas/archivos al contexto de build.
+node_modules
+dist
+dist-ssr
+.git
+.gitignore
+
+# El VITE_API_URL se define por build-arg en el Dockerfile / docker-compose,
+# así el build es reproducible y no depende del .env local.
+.env
+.env.*
+!.env.example
+
+# Logs y basura
+*.log
+npm-debug.log*
+.DS_Store
+.vscode
+.idea
