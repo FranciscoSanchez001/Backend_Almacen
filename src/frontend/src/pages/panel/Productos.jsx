@@ -12,6 +12,7 @@ import { Aviso, EncabezadoPagina, EstadoCarga, Paginacion } from '../../componen
 import { claseBoton, claseInput } from '../../utils/panel'
 import { formatoUsd } from '../../utils/formato'
 import FormularioProducto from './FormularioProducto'
+import Icono from '../../components/Icono'
 
 // Gestión del catálogo: ventas crea y edita productos; solo el gerente (superadmin)
 // puede borrarlos (borrado lógico) y crear o renombrar categorías. Para ventas esas
@@ -254,7 +255,7 @@ export default function Productos() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-100 text-lg">
-                        {p.imagenUrl ? <img src={p.imagenUrl} alt="" className="h-full w-full object-contain" /> : <span aria-hidden>🛍️</span>}
+                        {p.imagenUrl ? <img src={p.imagenUrl} alt="" className="h-full w-full object-contain" /> : <Icono nombre="bolsa" className="h-5 w-5 text-slate-400" />}
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-slate-900">

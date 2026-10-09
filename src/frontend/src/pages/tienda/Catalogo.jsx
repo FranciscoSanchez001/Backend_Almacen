@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { listarCatalogo } from '../../api/catalogo'
 import TarjetaProducto from '../../components/TarjetaProducto'
+import Icono from '../../components/Icono'
 
 const TAMANO_PAGINA = 24
 
@@ -85,9 +86,7 @@ export default function Catalogo() {
         </Grilla>
       ) : resultado.items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-superficie p-10 text-center">
-          <p className="text-4xl" aria-hidden>
-            🔎
-          </p>
+          <Icono nombre="buscar" className="mx-auto block h-10 w-10 text-slate-400" />
           <p className="mt-2 font-semibold text-slate-800">No encontramos productos</p>
           <p className="text-sm text-slate-500">Prueba con otra palabra o revisa otra categoría.</p>
         </div>
@@ -148,8 +147,8 @@ function Bienvenida() {
         <h2 className="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl">Haz tu compra y te la llevamos</h2>
         <p className="mt-3 text-emerald-50">Precios en dólares y en bolívares a la tasa del día.</p>
       </div>
-      <div aria-hidden className="absolute -right-6 -bottom-10 select-none text-[9rem] leading-none opacity-30 sm:right-10 sm:opacity-90">
-        🥑🍞
+      <div aria-hidden className="absolute -right-6 -bottom-10 select-none opacity-30 sm:right-10 sm:opacity-60">
+        <Icono nombre="canasta" className="h-40 w-40 sm:h-48 sm:w-48" grosor={1.2} />
       </div>
     </section>
   )
