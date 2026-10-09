@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useCarrito } from '../context/CarritoContext'
 import { formatoBs, formatoUsd } from '../utils/formato'
+import Icono from './Icono'
 
 // Tarjeta de un producto del catálogo: imagen, nombre, precio en USD (y Bs debajo)
 // y el botón para agregarlo al carrito, que se vuelve un selector de cantidad.
@@ -14,8 +15,8 @@ export default function TarjetaProducto({ producto }) {
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-superficie transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="relative aspect-square bg-slate-50">
         {sinImagen ? (
-          <div className="grid h-full place-items-center text-5xl text-slate-300" aria-hidden>
-            🛍️
+          <div className="grid h-full place-items-center text-slate-300">
+            <Icono nombre="bolsa" className="h-16 w-16" grosor={1.4} />
           </div>
         ) : (
           <img

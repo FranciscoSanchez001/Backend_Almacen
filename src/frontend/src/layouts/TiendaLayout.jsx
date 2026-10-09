@@ -4,6 +4,7 @@ import { listarCategorias } from '../api/catalogo'
 import { useCarrito } from '../context/CarritoContext'
 import BotonTema from '../components/BotonTema'
 import { formatoUsd } from '../utils/formato'
+import Icono from '../components/Icono'
 
 // Layout de la tienda al estilo de un supermercado en línea: franja de avisos,
 // encabezado con logo + buscador + carrito, y la barra de categorías.
@@ -32,7 +33,9 @@ export default function TiendaLayout() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="bg-emerald-800 text-xs text-emerald-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-1.5">
-          <span>🚚 Entregas a domicilio en tu zona</span>
+          <span className="flex items-center gap-1.5">
+            <Icono nombre="camion" /> Entregas a domicilio en tu zona
+          </span>
           <span className="hidden sm:inline">Paga con transferencia, pago móvil o Binance</span>
         </div>
       </div>
@@ -40,7 +43,9 @@ export default function TiendaLayout() {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-superficie shadow-sm">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-xl">🛒</span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-white">
+              <Icono nombre="carrito" className="h-6 w-6" />
+            </span>
             <span className="leading-tight">
               <span className="block text-lg font-extrabold text-emerald-700 dark:text-emerald-300">Almacén</span>
               <span className="block text-xs text-slate-500">Supermercado en línea</span>
@@ -75,7 +80,7 @@ export default function TiendaLayout() {
               className="relative flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
               aria-label={`Carrito: ${totalUnidades} productos`}
             >
-              <span aria-hidden>🧺</span>
+              <Icono nombre="canasta" className="h-5 w-5" />
               <span>{formatoUsd(totalUsd)}</span>
               {totalUnidades > 0 && (
                 <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1 text-xs text-white">

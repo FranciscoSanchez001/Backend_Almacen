@@ -2,6 +2,7 @@ import { urlArchivo } from '../api/cliente'
 import { formatoBs, formatoFechaHora, formatoUsd } from '../utils/formato'
 import { EtiquetaEstado } from './ui'
 import { ESTADOS_PEDIDO, METODOS_PAGO } from '../utils/panel'
+import Icono from './Icono'
 
 // Todo lo que el personal necesita ver de un pedido: productos, totales con la
 // tasa congelada, pago (captura y referencia), entrega (zona, dirección, mapa,
@@ -101,7 +102,7 @@ export default function DetallePedido({ pedido, children }) {
                 rel="noreferrer"
                 className="mt-1 inline-block text-xs font-medium text-marca-700 dark:text-marca-200 hover:underline"
               >
-                Abrir en Google Maps ↗
+                Abrir en Google Maps <Icono nombre="externo" className="h-3 w-3 align-[-1px]" />
               </a>
             </>
           )}

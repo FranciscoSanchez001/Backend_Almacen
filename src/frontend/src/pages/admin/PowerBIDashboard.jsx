@@ -11,6 +11,7 @@ import { METODOS_PAGO, claseBoton, claseInput } from '../../utils/panel'
 import { BarrasHorizontales, Dona, GraficoLinea, MapaCalor, TarjetaGrafico, TarjetaKpi } from '../../components/dashboard/Graficos'
 import { formatoBs, formatoDia, formatoMinutos, formatoNumero, formatoPct, formatoUsd, hoyIso } from '../../utils/formato'
 import { alertaStock } from '../../utils/stock'
+import Icono from '../../components/Icono'
 
 // Dashboard KPI del gerente (superadmin). Todos los indicadores de la especificación
 // salen de GET /kpis, con el filtro de período (hoy, semana, mes o rango). Se le suman:
@@ -82,20 +83,20 @@ function AvisosDelDia({ inventario }) {
   return (
     <nav aria-label="Avisos del día" className="flex flex-wrap items-center gap-2">
       <Link to="/panel/pedidos" className={chip}>
-        <span aria-hidden>🧾</span>
+        <Icono nombre="recibo" tono />
         <strong className="text-slate-900">{datos.pendientes.total}</strong> por revisar
         {urgente && <ContadorExpiracion expiraEn={urgente.expiraEn} />}
       </Link>
       <Link to="/panel/inventario" className={chip}>
-        <span aria-hidden>⛔</span>
+        <Icono nombre="agotado" tono />
         <strong className={agotados > 0 ? 'text-red-700 dark:text-red-300' : 'text-slate-900'}>{agotados}</strong> agotados
       </Link>
       <Link to="/panel/inventario" className={chip}>
-        <span aria-hidden>⚠️</span>
+        <Icono nombre="alerta" tono />
         <strong className="text-slate-900">{bajos}</strong> bajo el mínimo
       </Link>
       <Link to="/panel#avisos" className={chip}>
-        <span aria-hidden>🔔</span>
+        <Icono nombre="campana" tono />
         <strong className="text-slate-900">{datos.avisos.total}</strong> avisos sin leer
       </Link>
     </nav>
@@ -218,7 +219,14 @@ export default function PowerBIDashboard() {
           <div className="flex items-center gap-2 lg:ml-auto">
             {cargando && kpis && <span className="text-xs text-slate-500">Actualizando…</span>}
             <button type="button" onClick={alDescargar} disabled={descargando || rangoInvalido} className={claseBoton.primario}>
-              {descargando ? 'Generando…' : '⬇ Descargar Excel'}
+              {descargando ? (
+                'Generando…'
+              ) : (
+                <>
+                  <Icono nombre="descargar" className="mr-1.5 h-4 w-4 align-[-3px]" />
+                  Descargar Excel
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -415,7 +423,7 @@ export default function PowerBIDashboard() {
                               </td>
                               <td className="py-2 pl-3">
                                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${p.alerta.clase}`}>
-                                  <span aria-hidden>{p.alerta.icono}</span> {p.alerta.texto}
+                                  <Icono nombre={p.alerta.icono} className="h-3.5 w-3.5" /> {p.alerta.texto}
                                 </span>
                               </td>
                             </tr>
@@ -443,7 +451,7 @@ export default function PowerBIDashboard() {
                         {rotacion.map((p) => (
                           <tr key={p.productoId}>
                             <td className="py-2">
-                              {p.producto} {p.agotado && <span className="text-xs font-semibold text-red-700 dark:text-red-300">⛔ agotado</span>}
+                              {p.producto} {p.agotado && <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-300"><Icono nombre="agotado" className="h-3.5 w-3.5" /> agotado</span>}
                             </td>
                             <td className="py-2 text-slate-600">{p.categoria}</td>
                             <td className="py-2 text-right">{p.unidadesVendidas}</td>

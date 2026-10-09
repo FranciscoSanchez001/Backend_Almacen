@@ -5,6 +5,7 @@ import { Aviso, Campo, EncabezadoPagina, EstadoCarga, Paginacion, Selector } fro
 import { claseBoton, claseInput } from '../../utils/panel'
 import { formatoFechaHora } from '../../utils/formato'
 import { alertaStock } from '../../utils/stock'
+import Icono from '../../components/Icono'
 
 // Inventario: stock disponible y reservado de cada producto, con alertas según los
 // umbrales del producto (stock mínimo y máximo). "Reponer" suma lo que llegó y el
@@ -188,15 +189,15 @@ export default function Inventario() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-superficie p-4">
-          <p className="text-sm text-slate-500">⛔ Agotados</p>
+          <p className="flex items-center gap-1.5 text-sm text-slate-500"><Icono nombre="agotado" tono /> Agotados</p>
           <p className="text-2xl font-bold text-slate-900">{conteo.agotados}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-superficie p-4">
-          <p className="text-sm text-slate-500">⚠️ Bajo el mínimo</p>
+          <p className="flex items-center gap-1.5 text-sm text-slate-500"><Icono nombre="alerta" tono /> Bajo el mínimo</p>
           <p className="text-2xl font-bold text-slate-900">{conteo.bajos}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-superficie p-4">
-          <p className="text-sm text-slate-500">📦 Sobre el máximo</p>
+          <p className="flex items-center gap-1.5 text-sm text-slate-500"><Icono nombre="caja" tono /> Sobre el máximo</p>
           <p className="text-2xl font-bold text-slate-900">{conteo.sobre}</p>
         </div>
       </div>
@@ -240,7 +241,7 @@ export default function Inventario() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${alerta.clase}`}>
-                        <span aria-hidden>{alerta.icono}</span> {alerta.texto}
+                        <Icono nombre={alerta.icono} className="h-3.5 w-3.5" /> {alerta.texto}
                       </span>
                     </td>
                     <td className="px-4 py-3">

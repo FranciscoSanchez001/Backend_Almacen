@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Icono from './Icono'
 
 // Tiempo que le queda a un pedido pendiente antes de expirar (5 h por defecto).
 // Se pone ámbar en la última hora y rojo en los últimos 30 minutos.
@@ -21,7 +22,7 @@ export default function ContadorExpiracion({ expiraEn }) {
 
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${clase}`}>
-      <span aria-hidden>⏱</span> Vence en {texto}
+      <Icono nombre="reloj" className="h-3.5 w-3.5" /> Vence en {texto}
     </span>
   )
 }
