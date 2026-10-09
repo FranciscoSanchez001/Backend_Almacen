@@ -23,8 +23,8 @@ El volcado usa `INSERT` en lugar de `COPY ... FROM stdin`, por lo que también s
 **Regenerar el volcado.** Sobre una base vacía (por ejemplo, la de `docker compose up -d db`), aplicar las migraciones, arrancar la API una vez con la siembra de demostración y exportar:
 
 ```bash
-dotnet ef database update --project Infrastructure --startup-project Presentation.API
-dotnet run --project Presentation.API -- --SiembraDemo:Habilitada=true   # Ctrl+C al terminar la siembra
+dotnet ef database update --project src/backend/Infrastructure --startup-project src/backend/Presentation.API
+dotnet run --project src/backend/Presentation.API -- --SiembraDemo:Habilitada=true   # Ctrl+C al terminar la siembra
 docker exec postgres_db pg_dump -U miusuario -d midatabase --no-owner --no-privileges --column-inserts \
   | sed '/^[\]restrict /d;/^[\]unrestrict /d' > database/midatabase_dump.sql
 ```
@@ -166,8 +166,8 @@ Todas usan `ON DELETE RESTRICT` (los productos se desactivan con borrado lógico
 | Origen | Datos |
 | :--- | :--- |
 | Migración (`HasData`) | 4 categorías, 11 productos base y 5 zonas de entrega |
-| Arranque de la API ([`InicializadorBaseDatos`](../../Infrastructure/Persistencia/Semillas/InicializadorBaseDatos.cs)) | Fila de configuración y superadmin `gerente@almacen.local` |
-| Siembra de demostración ([`SembradorDemo`](../../Infrastructure/Persistencia/Semillas/SembradorDemo.cs)) | 5 empleados, 60 clientes, 25 productos extra, 91 tasas, 609 pedidos con 1.850 ítems, 3.737 movimientos de inventario, 663 notificaciones y 63 registros de auditoría |
+| Arranque de la API ([`InicializadorBaseDatos`](../../src/backend/Infrastructure/Persistencia/Semillas/InicializadorBaseDatos.cs)) | Fila de configuración y superadmin `gerente@almacen.local` |
+| Siembra de demostración ([`SembradorDemo`](../../src/backend/Infrastructure/Persistencia/Semillas/SembradorDemo.cs)) | 5 empleados, 60 clientes, 25 productos extra, 91 tasas, 609 pedidos con 1.850 ítems, 3.737 movimientos de inventario, 663 notificaciones y 63 registros de auditoría |
 
 Los nombres, correos y teléfonos de clientes y empleados son ficticios (generados con Bogus).
 

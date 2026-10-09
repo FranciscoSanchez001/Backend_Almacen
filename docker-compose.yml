@@ -1,7 +1,25 @@
+# ============================================================================
+# Backend_Almacen · docker-compose de toda la aplicación
+#   db          PostgreSQL 16
+#   migraciones Aplica las migraciones de EF Core y termina
+#   api         ASP.NET Core 10 Web API      -> http://localhost:5085
+#   spa         React + Vite servido por Nginx -> http://localhost:8080
+#   postgrest   API REST automática sobre la base -> http://localhost:3000
+#
+# Uso (desde la raíz del repositorio):  docker compose up -d --build
+# ============================================================================
+
+# Nombre fijo del proyecto: así los volúmenes no dependen del nombre de la carpeta.
+name: backend_almacen
+
 services:
+  # -------------------------------------------------------------
+  # Base de datos relacional (PostgreSQL)
+  # -------------------------------------------------------------
   db:
     image: postgres:16
     container_name: postgres_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: midatabase
       POSTGRES_USER: miusuario
@@ -10,7 +28,81 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miusuario -d midatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
+  # -------------------------------------------------------------
+  # Migraciones de EF Core (se ejecuta una vez y termina)
+  # -------------------------------------------------------------
+  migraciones:
+    build:
+      context: src/backend
+      dockerfile_inline: |
+        FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+        WORKDIR /src
+        RUN dotnet tool install --global dotnet-ef --version 10.0.12
+        ENV PATH="$${PATH}:/root/.dotnet/tools"
+        COPY . .
+        RUN dotnet restore Presentation.API/Presentation.API.csproj
+        RUN dotnet ef migrations bundle --project Infrastructure --startup-project Presentation.API -o /app/efbundle
+
+        FROM mcr.microsoft.com/dotnet/aspnet:10.0
+        WORKDIR /app
+        COPY --from=build /app/efbundle .
+        COPY --from=build /src/Presentation.API/appsettings*.json ./
+        ENTRYPOINT ["./efbundle"]
+    container_name: almacen_migraciones
+    command: ["--connection", "Host=db;Port=5432;Database=midatabase;Username=miusuario;Password=mipassword"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # -------------------------------------------------------------
+  # Backend ASP.NET Core 10 Web API
+  # -------------------------------------------------------------
+  api:
+    build:
+      context: src/backend
+      dockerfile: Presentation.API/Dockerfile
+    container_name: almacen_api
+    restart: unless-stopped
+    ports:
+      # host:contenedor -> la API queda en http://localhost:5085
+      - "5085:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Almacen: Host=db;Port=5432;Database=midatabase;Username=miusuario;Password=mipassword
+    depends_on:
+      migraciones:
+        condition: service_completed_successfully
+
+  # -------------------------------------------------------------
+  # Frontend React + Vite + Nginx (SPA)
+  # -------------------------------------------------------------
+  spa:
+    build:
+      context: src/frontend
+      dockerfile: Dockerfile
+      args:
+        # Dirección de la API tal como la ve el NAVEGADOR (tu máquina).
+        VITE_API_URL: http://localhost:5085
+        VITE_GOOGLE_CLIENT_ID: ""
+    container_name: almacen_spa
+    restart: unless-stopped
+    ports:
+      # host:contenedor -> la app queda en http://localhost:8080
+      - "8080:80"
+    depends_on:
+      - api
+
+  # -------------------------------------------------------------
+  # PostgREST (API REST automática sobre la base de datos)
+  # -------------------------------------------------------------
   postgrest:
     image: postgrest/postgrest
     container_name: postgrest_api
@@ -22,7 +114,8 @@ services:
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: miusuario
     depends_on:
-      - db
+      migraciones:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:

@@ -1,11 +1,11 @@
 # Evidencias — Reporte de ejecución del Test Runner de xUnit
 
-[← Volver al README](../../README.md#11-pruebas-de-la-api)
+[← Volver al README](../../src/backend/README.md#11-pruebas-de-la-api)
 
 Resultado real de ejecutar todas las pruebas de la solución con el Test Runner de xUnit (`xunit.runner.visualstudio` sobre VSTest) desde la línea de comandos. Comando:
 
 ```bash
-dotnet test Backend_Almacen.slnx --logger "console;verbosity=detailed" --logger "trx;LogFilePrefix=resultados" --results-directory docs/evidencias/pruebas
+dotnet test src/backend/Backend_Almacen.slnx --logger "console;verbosity=detailed" --logger "trx;LogFilePrefix=resultados" --results-directory docs/evidencias/pruebas
 ```
 
 Fecha de ejecución: **2026-10-07 00:03 UTC**. Entorno: .NET 10.0.12, xUnit 2.9.3, xUnit.net VSTest Adapter 3.1.4, Moq 4.20.72, NetArchTest.Rules 1.3.2, Testcontainers 4.15.0 (PostgreSQL 16 en Docker).
