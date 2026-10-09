@@ -38,13 +38,16 @@ desarrolladas con xUnit sobre .NET 10.
 9. [Resultados y evidencias](#9-resultados-y-evidencias)
 10. [Convenciones](#10-convenciones)
 11. [Estructura de la carpeta](#11-estructura-de-la-carpeta)
-12. [Documentación relacionada](#12-documentación-relacionada)
+12. [Pruebas del frontend](#12-pruebas-del-frontend)
+13. [Documentación relacionada](#13-documentación-relacionada)
 
 ---
 
 ## 1. Descripción general
 
 Esta carpeta (`tests/`) contiene los tres proyectos de prueba de la API REST ubicada en [`src/backend/`](../src/backend/README.md). Los tres forman parte de la solución `src/backend/Backend_Almacen.slnx`, de modo que se compilan y ejecutan junto con el backend.
+
+Las pruebas del frontend no están en esta carpeta: se ubican junto al código de la SPA, en `src/frontend/src/`, y se ejecutan con Vitest. Ver la [sección 12](#12-pruebas-del-frontend).
 
 | Proyecto | Tipo | Qué verifica | Pruebas | Requiere Docker |
 | :--- | :--- | :--- | :---: | :---: |
@@ -370,12 +373,34 @@ tests/
 
 ---
 
-## 12. Documentación relacionada
+## 12. Pruebas del frontend
+
+La SPA tiene su propio conjunto de pruebas unitarias con **Vitest** y **React Testing Library** (jsdom), ubicadas junto al código que prueban (`*.test.js` y `*.test.jsx`). No requieren la API ni Docker.
+
+| Área | Archivos | Pruebas |
+| :--- | :--- | :---: |
+| Utilidades | `utils/formato`, `utils/stock`, `utils/panel` | 23 |
+| Cliente HTTP y autenticación | `api/cliente`, `api/auth` | 25 |
+| Sesión y control de acceso | `context/AuthContext`, `routes/RutaProtegida` | 19 |
+| Carrito de compras | `context/CarritoContext` | 8 |
+| **Total** | | **75** |
+
+```bash
+cd src/frontend
+npm test
+```
+
+El detalle de cada archivo, la configuración y los pasos pendientes están en la sección [Pruebas](../src/frontend/README.md#13-pruebas) del README del frontend.
+
+---
+
+## 13. Documentación relacionada
 
 | Documento | Contenido |
 | :--- | :--- |
 | [README principal](../README.md) | Visión general del proyecto y de todo el repositorio |
 | [`src/backend/README.md`](../src/backend/README.md) | API REST bajo prueba: arquitectura, seguridad, instalación y configuración |
+| [`src/frontend/README.md`](../src/frontend/README.md#13-pruebas) | Pruebas del frontend con Vitest y React Testing Library |
 | [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md) | Capas y regla de dependencia que verifican las pruebas de arquitectura |
 | [`docs/API.md`](../docs/API.md) | Endpoints y roles que ejercitan las pruebas de integración |
 | [`docs/evidencias/escenarios-seguridad.md`](../docs/evidencias/escenarios-seguridad.md) | Escenarios de seguridad complementarios ejecutados con Postman |

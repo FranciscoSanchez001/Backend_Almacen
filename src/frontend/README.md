@@ -28,6 +28,7 @@ tienda en línea, panel de ventas, administración con indicadores de negocio y 
 ![Autenticación](https://img.shields.io/badge/Autenticación-JWT-informational?style=flat-square)
 ![Errores](https://img.shields.io/badge/Errores-RFC_7807-informational?style=flat-square)
 ![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-75_Passed-6E9F18?style=flat-square&logo=vitest&logoColor=white)
 ![Metodología](https://img.shields.io/badge/Metodología-Scrum-informational?style=flat-square)
 
 </div>
@@ -48,8 +49,9 @@ tienda en línea, panel de ventas, administración con indicadores de negocio y 
 10. [Instalación y ejecución](#10-instalación-y-ejecución)
 11. [Credenciales de prueba](#11-credenciales-de-prueba)
 12. [Configuración](#12-configuración)
-13. [Estructura de la carpeta](#13-estructura-de-la-carpeta)
-14. [Documentación relacionada](#14-documentación-relacionada)
+13. [Pruebas](#13-pruebas)
+14. [Estructura de la carpeta](#14-estructura-de-la-carpeta)
+15. [Documentación relacionada](#15-documentación-relacionada)
 
 ---
 
@@ -107,6 +109,8 @@ Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma.
 | Enrutamiento | React Router | 6.30 | Rutas anidadas, layouts por área y rutas protegidas por rol |
 | Gráficos | Recharts | 3.10 | Visualizaciones del dashboard de indicadores |
 | Calidad de código | ESLint (`react-hooks`, `react-refresh`) | 9 | Análisis estático |
+| Pruebas | Vitest | 4.1 | Ejecución de las pruebas unitarias |
+| Pruebas | React Testing Library / jsdom | 16.3 / 26.1 | Renderizado de componentes en un navegador simulado |
 | Compilación en contenedor | Node.js | 20 LTS | Etapa de construcción de la imagen Docker |
 | Servidor web | Nginx | Alpine | Publicación de los archivos estáticos con *fallback* de rutas |
 | Contenedores | Docker / Docker Compose | — | Imagen multietapa del frontend |
@@ -277,6 +281,7 @@ La aplicación queda disponible en <http://localhost:5173>, con recarga en calie
 | `npm run build` | Compilación de producción en `dist/` |
 | `npm run preview` | Servidor local para revisar la compilación de producción |
 | `npm run lint` | Análisis estático con ESLint |
+| `npm test` | Pruebas unitarias con Vitest (ver [Pruebas](#13-pruebas)) |
 
 ---
 
@@ -314,7 +319,48 @@ Variables de entorno (archivo `.env`, a partir de `.env.example`):
 
 ---
 
-## 13. Estructura de la carpeta
+## 13. Pruebas
+
+Las pruebas unitarias del frontend usan **Vitest** con **React Testing Library** sobre un navegador simulado (jsdom). No requieren la API ni Docker: las llamadas de red se simulan reemplazando `fetch`.
+
+### 13.1 Configuración
+
+- `vite.config.js` define el bloque `test`: entorno `jsdom`, archivo de preparación `src/test/setup.js` y una `VITE_API_URL` fija (`http://api.pruebas`), para que las pruebas no dependan del `.env` de cada equipo.
+- `src/test/setup.js` registra los *matchers* de DOM (`toBeInTheDocument`, `toHaveTextContent`, ...) y, después de cada prueba, limpia el DOM, el `localStorage`, los *mocks* y los temporizadores simulados.
+- `src/test/jwt.js` genera tokens JWT de prueba con el rol, el nombre y la vigencia que necesita cada caso.
+- Cada archivo de pruebas (`*.test.js` o `*.test.jsx`) se ubica junto al código que prueba. Vite no los incluye en la compilación de producción.
+
+### 13.2 Cobertura actual
+
+| Archivo | Qué verifica | Pruebas |
+| :--- | :--- | :---: |
+| `utils/formato.test.js` | Formato de montos en USD y Bs, números, porcentajes, días, duraciones y fecha local | 12 |
+| `utils/stock.test.js` | Alerta de stock (agotado, bajo mínimo, normal y sobre máximo), siempre acompañada de un ícono | 6 |
+| `utils/panel.test.js` | Conversión de errores de validación por campo, estilo de los campos con error y estados del pedido | 5 |
+| `api/cliente.test.js` | URL y filtros, token Bearer, cuerpo JSON y `FormData`, respuestas `204` y archivos, mensajes de error, error de red y sesión vencida (`401`) | 20 |
+| `api/auth.test.js` | Inicio de sesión (correo normalizado, token y *refresh token*) y cierre de sesión con revocación, incluso si la API no responde | 5 |
+| `context/AuthContext.test.jsx` | Lectura del JWT guardado, tokens vencidos o malformados, evento `sesion-expirada`, cierre al vencer el token, login y logout | 8 |
+| `routes/RutaProtegida.test.jsx` | Redirección al login sin sesión y acceso o redirección según el rol en `/panel`, `/admin` y `/repartidor` | 11 |
+| `context/CarritoContext.test.jsx` | Cantidades, tope por stock disponible, total en USD, eliminación de productos y persistencia en el navegador | 8 |
+| **Total** | | **75** |
+
+### 13.3 Ejecución
+
+```bash
+cd src/frontend
+npm test                                      # Ejecuta todas las pruebas una vez
+npm run test:watch                            # Modo observación: repite las pruebas al guardar
+npx vitest run src/api/cliente.test.js        # Un archivo concreto
+npx vitest run -t "sesión vencida"            # Pruebas cuyo nombre contiene un texto
+```
+
+### 13.4 Pendiente
+
+Las vistas (`pages/`) y los componentes visuales todavía no tienen pruebas propias. Los siguientes pasos son las pruebas de componentes de las vistas principales (login interno, catálogo y bandeja de pedidos) con la capa `api/` simulada, y pruebas de extremo a extremo con Playwright sobre el entorno de Docker Compose.
+
+---
+
+## 14. Estructura de la carpeta
 
 ```
 src/frontend/
@@ -339,27 +385,30 @@ src/frontend/
 │   │   ├── repartidor/         Área de entregas
 │   │   └── NoEncontrada.jsx
 │   ├── routes/                 RutaProtegida (control de acceso por rol)
+│   ├── test/                   Preparación de las pruebas (setup.js) y generador de JWT de prueba
 │   ├── utils/                  Formato de montos y fechas, constantes del panel y reglas de stock
 │   ├── App.jsx                 Definición de rutas
 │   ├── main.jsx                Punto de entrada y proveedores de contexto
-│   └── index.css               Tailwind CSS, paleta institucional y modo oscuro
+│   ├── index.css               Tailwind CSS, paleta institucional y modo oscuro
+│   └── **/*.test.{js,jsx}      Pruebas unitarias, junto al código que prueban
 ├── .env.example                Variables de entorno de ejemplo
 ├── Dockerfile                  Imagen multietapa (Node.js 20 + Nginx)
 ├── nginx.conf                  Servidor web con fallback de rutas para la SPA
 ├── eslint.config.js
-├── vite.config.js
+├── vite.config.js              Configuración de Vite y de Vitest
 ├── index.html
 └── package.json
 ```
 
 ---
 
-## 14. Documentación relacionada
+## 15. Documentación relacionada
 
 | Documento | Contenido |
 | :--- | :--- |
 | [README principal](../../README.md) | Visión general del proyecto, equipo y arquitectura del sistema |
 | [`src/backend/README.md`](../backend/README.md) | API REST: arquitectura, modelo de datos, seguridad, instalación y pruebas |
+| [`tests/README.md`](../../tests/README.md) | Pruebas automatizadas del backend y resumen de las del frontend |
 | [`docs/API.md`](../../docs/API.md) | Endpoints, roles requeridos, códigos de respuesta y ejemplos |
 | [`docs/REGLAS_NEGOCIO.md`](../../docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
 | [`docs/GESTION_PROYECTO.md`](../../docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
