@@ -1,192 +1,373 @@
-# Sistema E-commerce para Supermercado · Frontend
+<div align="center">
 
-### **Asignatura: Desarrollo de Aplicaciones Web (Código: 0423807T)**
+# Sistema E-commerce para Supermercado
 
-**Facilitador:** M.Sc. Ing. Gabriel Alexis Ramírez Sánchez  
-**Email:** gramirezs@unet.edu.ve  
-**Período Académico:** Septiembre, 2026  
-**San Cristóbal, Estado Táchira, Venezuela**
+### Aplicación web · Frontend
 
-**Integrantes del equipo:**
+Aplicación de página única (SPA) de la plataforma de comercio electrónico del supermercado:
+tienda en línea, panel de ventas, administración con indicadores de negocio y área de entregas.
 
-| Integrante | Rol en el proyecto |
+<br>
+
+<img src="https://skillicons.dev/icons?i=react,vite,tailwind,js,nodejs,nginx,docker,git,github&perline=9" alt="Stack tecnológico" />
+
+<br><br>
+
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router-6-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)
+![Recharts](https://img.shields.io/badge/Recharts-3-22B5BF?style=for-the-badge)
+
+![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Node.js](https://img.shields.io/badge/Node.js-20_LTS-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-Alpine-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
+![Tipo](https://img.shields.io/badge/Tipo-SPA-informational?style=flat-square)
+![Autenticación](https://img.shields.io/badge/Autenticación-JWT-informational?style=flat-square)
+![Errores](https://img.shields.io/badge/Errores-RFC_7807-informational?style=flat-square)
+![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+![Metodología](https://img.shields.io/badge/Metodología-Scrum-informational?style=flat-square)
+
+</div>
+
+---
+
+## Tabla de contenidos
+
+1. [Información académica](#1-información-académica)
+2. [Descripción general](#2-descripción-general)
+3. [Stack tecnológico](#3-stack-tecnológico)
+4. [Arquitectura](#4-arquitectura)
+5. [Mapa de vistas](#5-mapa-de-vistas)
+6. [Autenticación y control de acceso](#6-autenticación-y-control-de-acceso)
+7. [Dashboard de indicadores](#7-dashboard-de-indicadores)
+8. [Tema institucional y modo oscuro](#8-tema-institucional-y-modo-oscuro)
+9. [Requisitos previos](#9-requisitos-previos)
+10. [Instalación y ejecución](#10-instalación-y-ejecución)
+11. [Credenciales de prueba](#11-credenciales-de-prueba)
+12. [Configuración](#12-configuración)
+13. [Estructura de la carpeta](#13-estructura-de-la-carpeta)
+14. [Documentación relacionada](#14-documentación-relacionada)
+
+---
+
+## 1. Información académica
+
+| | |
 | :--- | :--- |
-| María Fernanda Cachopo Rojas | Desarrollo frontend |
+| **Asignatura** | Desarrollo de Aplicaciones Web (Código 0423807T) |
+| **Facilitador** | M.Sc. Ing. Gabriel Alexis Ramírez Sánchez · <gramirezs@unet.edu.ve> |
+| **Institución** | Universidad Nacional Experimental del Táchira (UNET) |
+| **Período académico** | Septiembre 2026 |
+| **Ubicación** | San Cristóbal, Estado Táchira, Venezuela |
+
+**Equipo de desarrollo**
+
+| Integrante | Rol |
+| :--- | :--- |
+| María Fernanda Cachopo Rojas | Desarrollo frontend, gestión del proyecto (Scrum) y documentación |
 | Gregorio Briceño | Desarrollo backend |
 | Francisco Sánchez | Desarrollo backend |
 
 ---
 
-## 📌 Descripción General
+## 2. Descripción general
 
-Esta carpeta (`src/frontend/`) contiene la **aplicación web (frontend)** de la plataforma de comercio electrónico del supermercado. Es una aplicación de página única (**SPA**) construida con **React 19**, **Vite** y **Tailwind CSS** que consume la API REST del backend ([`src/backend/`](../backend/README.md)) mediante HTTP/JSON, sin recargar la página.
+Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma. Es una SPA construida con **React 19**, **Vite** y **Tailwind CSS** que consume la API REST del backend ([`src/backend/`](../backend/README.md)) mediante HTTP/JSON, sin recargar la página. La visión general del proyecto está en el [README principal](../../README.md).
 
-La visión general del proyecto y la puesta en marcha con Docker están en el [README principal](../../README.md).
+**Capacidades principales**
 
-La aplicación reúne en un solo proyecto las áreas de los cuatro tipos de usuario:
+- Catálogo público con búsqueda, filtro por categoría, precios en USD y en bolívares y carrito de compras.
+- Bandeja de pedidos para el área de ventas: aprobación con asignación de repartidor, rechazo con motivo y contador de expiración.
+- Gestión de productos, categorías e inventario, con alertas de stock agotado o por debajo del mínimo.
+- Consulta de clientes y de su historial de pedidos.
+- Dashboard de indicadores (KPIs) con gráficos y descarga del informe en Excel.
+- Administración del personal, registro de auditoría y configuración del sistema (tasa del día, zonas de entrega, datos de pago y expiración).
 
-| Área | Ruta | Usuario | Qué puede hacer | Estado |
-| :--- | :--- | :--- | :--- | :---: |
-| **Tienda** | `/` | Cliente | Ver el catálogo con precios en USD y Bs y armar el carrito. | Catálogo listo · login con Google en construcción |
-| **Panel de ventas** | `/panel` | Ventas y gerente | Revisar la bandeja de pedidos, aprobarlos asignando repartidor o rechazarlos, gestionar productos, categorías e inventario, y ver notificaciones. | ✅ |
-| **Administración** | `/admin` | Gerente | Dashboard de KPIs, informe en Excel, gestión del personal, auditoría y configuración (tasa del día, zonas). | ✅ |
-| **Entregas** | `/repartidor` | Repartidor | Ver sus pedidos asignados y marcarlos "en camino" y "entregado". | En construcción |
+**Áreas por perfil de usuario**
+
+| Área | Ruta | Perfil | Estado |
+| :--- | :--- | :--- | :--- |
+| Tienda | `/` | Cliente (público) | Catálogo y carrito disponibles; inicio de sesión con Google y checkout en desarrollo |
+| Panel de ventas | `/panel` | `ventas`, `superadmin` | Disponible |
+| Administración | `/admin` | `superadmin` | Disponible |
+| Entregas | `/repartidor` | `repartidor`, `superadmin` | En desarrollo (maqueta de las secciones previstas) |
 
 ---
 
-## 🏛️ Arquitectura
+## 3. Stack tecnológico
+
+| Área | Tecnología | Versión | Uso en el proyecto |
+| :--- | :--- | :---: | :--- |
+| Biblioteca de UI | React | 19.3 | Componentes, hooks y Context API |
+| Herramienta de construcción | Vite | 6.4 | Servidor de desarrollo con HMR y compilación de producción |
+| Estilos | Tailwind CSS (`@tailwindcss/vite`) | 4.3 | Utilidades CSS, paleta institucional y modo oscuro por clase |
+| Enrutamiento | React Router | 6.30 | Rutas anidadas, layouts por área y rutas protegidas por rol |
+| Gráficos | Recharts | 3.10 | Visualizaciones del dashboard de indicadores |
+| Calidad de código | ESLint (`react-hooks`, `react-refresh`) | 9 | Análisis estático |
+| Compilación en contenedor | Node.js | 20 LTS | Etapa de construcción de la imagen Docker |
+| Servidor web | Nginx | Alpine | Publicación de los archivos estáticos con *fallback* de rutas |
+| Contenedores | Docker / Docker Compose | — | Imagen multietapa del frontend |
+
+---
+
+## 4. Arquitectura
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                  Frontend (src/frontend)               │
-│         React + Vite + Tailwind CSS + React Router     │
-│   Tienda · Panel de ventas · Administración · Entregas │
+│                 Frontend (src/frontend)                │
+│                                                        │
+│  pages/        Vistas por área (tienda, panel, admin,  │
+│                repartidor, login)                      │
+│  layouts/      Estructura común de cada área           │
+│  components/   Componentes reutilizables               │
+│  routes/       RutaProtegida (control de acceso)       │
+│  context/      AuthContext · ThemeContext · Carrito    │
+│  api/          cliente.js + servicios por recurso      │
 └──────────────────────────┬─────────────────────────────┘
-                           │ HTTP / JSON  (token JWT)
+                           │ HTTP / JSON (Bearer JWT)
 ┌──────────────────────────▼─────────────────────────────┐
 │                 API REST (src/backend)                 │
 │        .NET 10 · Onion Architecture · PostgreSQL       │
 └────────────────────────────────────────────────────────┘
 ```
 
-### Componentes Clave:
-1. **Cliente HTTP centralizado** (`src/api/cliente.js`): único punto que habla con la API. Agrega el token JWT a cada petición, interpreta los errores *Problem Details* (RFC 7807) y avisa a la sesión cuando la API responde `401`.
-2. **Estado global con Context API** (`src/context/`):
-   - `AuthContext.jsx`: sesión del personal. Decodifica el JWT (claims `sub`, `name`, `email`, `role`, `exp`), lo persiste en el navegador y cierra la sesión sola cuando el token vence.
-   - `ThemeContext.jsx`: tema institucional claro (**Azul UNET `#003366`**) u **oscuro**, persistido en `localStorage`.
-   - `CarritoContext.jsx`: carrito de compras de la tienda.
-3. **Rutas protegidas por rol** (`src/routes/RutaProtegida.jsx`): cada usuario solo entra a su área; la API vuelve a validar el rol en cada endpoint.
-4. **Páginas por área** (`src/pages/`), **layouts** (`src/layouts/`) y **componentes reutilizables** (`src/components/`). Las pantallas del personal se cargan bajo demanda (`React.lazy`).
+### Componentes principales
+
+1. **Cliente HTTP centralizado** (`src/api/cliente.js`). Es el único punto de comunicación con la API: añade el token JWT a cada petición, serializa el cuerpo como JSON o `FormData`, transforma las respuestas de error *Problem Details* (RFC 7807) en mensajes legibles y emite el evento `sesion-expirada` cuando la API responde `401`. Las respuestas que no son JSON (por ejemplo, el informe en Excel) se devuelven como archivo.
+2. **Servicios por recurso** (`src/api/*.js`). Encapsulan los endpoints de cada recurso: autenticación, catálogo, pedidos, productos, inventario, clientes, usuarios, notificaciones, reportes, auditoría y configuración.
+3. **Estado global con Context API** (`src/context/`):
+   - `AuthContext`: sesión del personal. Decodifica el JWT (claims `sub`, `name`, `email`, `role`, `exp`), lo persiste en el navegador y cierra la sesión al vencer el token o al recibir un `401`.
+   - `ThemeContext`: tema claro u oscuro, persistido en `localStorage`.
+   - `CarritoContext`: carrito de compras de la tienda.
+4. **Rutas protegidas** (`src/routes/RutaProtegida.jsx`). Restringen cada área a los roles autorizados.
+5. **Carga diferida.** Las vistas del personal se cargan bajo demanda con `React.lazy`, de modo que la tienda no descarga el código del panel ni de los gráficos.
 
 ---
 
-## 🎨 Tema institucional y Modo Oscuro
+## 5. Mapa de vistas
 
-- La paleta `marca` se define en `src/index.css` con el Azul UNET `#003366` como color principal (`marca-700`).
-- El modo oscuro funciona por clase: `ThemeContext` pone `dark` en `<html>` y los componentes usan las variantes `dark:` de Tailwind.
-- La elección se guarda en `localStorage` (`almacen.tema`). `index.html` la aplica antes de pintar la página, así no parpadea en claro al recargar.
-- El botón de tema (`components/BotonTema.jsx`) está en la barra superior de todas las áreas.
+Las rutas se definen en `src/App.jsx`.
+
+```
+/                          Tienda                       TiendaLayout · público
+└── (inicio)               Catálogo: búsqueda, filtro por categoría (?categoria=id) y carrito
+
+/internal-login            Inicio de sesión del personal (correo y contraseña)
+
+/panel                     Panel de ventas              PanelLayout · ventas, superadmin
+├── (inicio)               Resumen: pedidos por revisar, productos agotados, bajo el mínimo y avisos
+├── /pedidos               Bandeja de pedidos: detalle, aprobación, rechazo y expiración
+├── /productos             Productos y categorías (alta, edición y eliminación)
+├── /inventario            Stock disponible y reservado; reposición
+└── /clientes              Clientes y su historial de pedidos
+
+/admin                     Administración               PanelLayout · superadmin
+├── (inicio)               Dashboard de indicadores y descarga del informe en Excel
+├── /personal              Alta, edición y desactivación de cuentas del personal
+├── /auditoria             Registro de acciones
+└── /configuracion         Tasa Bs/USD, zonas de entrega, datos de pago, soporte y expiración
+
+/repartidor                Entregas                     Layout · repartidor, superadmin
+└── (inicio)               En desarrollo
+
+*                          Página no encontrada
+```
+
+Los formularios de producto (`FormularioProducto`) y de usuario (`FormularioUsuario`) no tienen ruta propia: se abren dentro de las vistas de Productos y Personal.
 
 ---
 
-## 📊 Dashboard de KPIs (`pages/admin/PowerBIDashboard.jsx`)
+## 6. Autenticación y control de acceso
 
-Exclusivo del gerente (superadmin). Consume `/kpis`, `/productos`, `/inventario`, `/pedidos` y `/notificaciones`:
+**Flujo de sesión del personal**
 
-| Indicador | Detalle |
-| :--- | :--- |
-| Valorización del almacén | Valor del stock a **costo** vs. a **precio de venta** y margen potencial, total y por categoría |
-| Rotación de stock | Global y por producto (unidades vendidas ÷ stock promedio) |
-| Alertas de stock crítico | Productos agotados o por debajo del **stock mínimo**, y por encima del **stock máximo** |
-| Ventas y pedidos | Ventas por período, por método de pago y por zona; tiempos de aprobación y entrega |
+1. El usuario ingresa por `/internal-login` y el frontend llama a `POST /auth/login`.
+2. La API devuelve el token de acceso (JWT) y un *refresh token*; ambos se guardan en `localStorage`.
+3. El usuario es redirigido al inicio correspondiente a su rol: `superadmin` → `/admin`, `ventas` → `/panel`, `repartidor` → `/repartidor`. Si intentaba acceder a una ruta concreta de su área, se le devuelve a ella.
+4. Al cerrar sesión se llama a `POST /auth/logout` para revocar el *refresh token* y se elimina la sesión del navegador.
+5. Si el token vence o la API responde `401`, la sesión se cierra y el usuario debe autenticarse de nuevo. La renovación automática mediante `POST /auth/refresh` aún no está integrada en el frontend.
 
-Los gráficos (Recharts) y las tablas van dentro de contenedores con `overflow-x-auto`, así no se desbordan en pantallas pequeñas.
+**Control de acceso por rol (RBAC en el cliente)**
 
----
+`RutaProtegida` redirige al login a los usuarios sin sesión y al inicio de su propia área a los usuarios con un rol no autorizado. Dentro de cada vista, las acciones restringidas se ocultan según el rol. Este control solo organiza la interfaz: la API valida nuevamente el rol en cada endpoint.
 
-## 🔐 Control de acceso por rol (RBAC en el cliente)
-
-El rol sale del token JWT. En la rúbrica del curso, **Admin** corresponde a `superadmin` y **Employee** a `ventas`.
+En la rúbrica del curso, **Admin** corresponde a `superadmin` y **Employee** a `ventas`.
 
 | Acción | `superadmin` (Admin) | `ventas` (Employee) |
 | :--- | :---: | :---: |
-| Ver y gestionar pedidos | ✅ | ✅ |
-| Crear y editar productos | ✅ | ✅ |
-| Eliminar productos | ✅ | Oculto |
-| Crear y renombrar categorías | ✅ | Oculto |
-| Dashboard de KPIs y administración (`/admin`) | ✅ | Oculto (ruta protegida) |
+| Consultar y gestionar pedidos | Sí | Sí |
+| Crear y editar productos | Sí | Sí |
+| Eliminar productos | Sí | No (acción oculta) |
+| Crear y renombrar categorías | Sí | No (acción oculta) |
+| Dashboard de indicadores y administración (`/admin`) | Sí | No (ruta protegida) |
 
 ---
 
-## 🚀 Tecnologías Empleadas
+## 7. Dashboard de indicadores
 
-- **Framework:** React 19, Vite 6.
-- **Estilos:** Tailwind CSS 4 (plugin `@tailwindcss/vite`).
-- **Navegación:** React Router 6.
-- **Gráficos:** Recharts.
-- **Autenticación:** JWT emitido por la API.
-- **Producción:** imagen Docker multi-etapa (Node 20 → Nginx Alpine) con *fallback* de rutas para la SPA.
+Vista exclusiva del gerente (`pages/admin/PowerBIDashboard.jsx`). Los indicadores provienen de `GET /kpis` filtrados por período (hoy, semana, mes o rango personalizado) y se complementan con `/productos`, `/inventario`, `/pedidos` y `/notificaciones`.
 
----
+| Indicador | Detalle |
+| :--- | :--- |
+| Valorización del almacén | Valor del stock a costo y a precio de venta, y margen potencial, total y por categoría |
+| Rotación de stock | Global y por producto (unidades vendidas / stock promedio) |
+| Alertas de stock crítico | Productos agotados, por debajo del stock mínimo o por encima del stock máximo |
+| Ventas y pedidos | Ventas por período, método de pago y zona; tiempos de aprobación y de entrega |
 
-## 🛠️ Requisitos Previos
-
-- [Node.js 20 LTS o superior](https://nodejs.org/)
-- La API del backend corriendo (por defecto en `http://localhost:5085`). Ver [`src/backend/README.md`](../backend/README.md).
+El botón **Descargar Excel** obtiene el informe del mismo período desde `GET /reportes/excel`, por lo que sus cifras coinciden con las de la pantalla. Los gráficos y tablas se ubican en contenedores con desplazamiento horizontal para mantener la legibilidad en pantallas pequeñas.
 
 ---
 
-## 📦 Puesta en Marcha
+## 8. Tema institucional y modo oscuro
 
-### Con Docker (toda la aplicación)
+- La paleta `marca` se define en `src/index.css`, con el Azul UNET `#003366` como color principal (`marca-700`).
+- El modo oscuro funciona por clase: `ThemeContext` añade `dark` al elemento `<html>` y los componentes utilizan las variantes `dark:` de Tailwind.
+- La preferencia se guarda en `localStorage` (`almacen.tema`). `index.html` la aplica antes del primer pintado para evitar el parpadeo al recargar.
+- El selector de tema (`components/BotonTema.jsx`) está disponible en la barra superior de todas las áreas.
 
-Desde la raíz del repositorio:
+---
+
+## 9. Requisitos previos
+
+| Herramienta | Versión | Obligatoria |
+| :--- | :---: | :---: |
+| [Node.js](https://nodejs.org/) (incluye npm) | 20 LTS o superior | Sí, salvo que se use Docker |
+| API del backend en ejecución | — | Sí (ver [`src/backend/README.md`](../backend/README.md)) |
+| [Git](https://git-scm.com/) | — | Sí |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | — | Opcional |
+
+---
+
+## 10. Instalación y ejecución
+
+### 10.1 Levantar todo con Docker
+
+El `docker-compose.yml` de la raíz construye y publica el frontend junto con el resto de la aplicación (PostgreSQL, migraciones, API y PostgREST). Desde la raíz del repositorio:
 
 ```bash
 docker compose up -d --build
 ```
 
-El frontend queda en [http://localhost:8080](http://localhost:8080).
+| Servicio | Dirección |
+| :--- | :--- |
+| Frontend (React + Nginx) | <http://localhost:8080> |
+| API REST | <http://localhost:5085> |
 
-### En modo desarrollo
+La imagen se construye en dos etapas: Node.js 20 compila la aplicación y Nginx publica el contenido de `dist/`. Las variables `VITE_*` se incorporan al código durante la compilación, por lo que se definen como argumentos de construcción en el `docker-compose.yml`.
+
+### 10.2 Ejecutar en modo desarrollo
 
 ```bash
 cd src/frontend
 npm install
-cp .env.example .env    # y completar los valores
+cp .env.example .env
 npm run dev
 ```
 
-La aplicación queda en [http://localhost:5173](http://localhost:5173).
+La aplicación queda disponible en <http://localhost:5173>, con recarga en caliente. El origen `http://localhost:5173` ya está autorizado en la configuración CORS de la API en desarrollo.
 
-| Variable | Para qué sirve | Ejemplo |
-| :--- | :--- | :--- |
-| `VITE_API_URL` | Dirección de la API del backend | `http://localhost:5085` |
-| `VITE_GOOGLE_CLIENT_ID` | Client ID de Google para el futuro inicio de sesión de clientes (el mismo del backend) | `xxxx.apps.googleusercontent.com` |
+### 10.3 Comandos de referencia
 
-### Otros comandos
-
-```bash
-npm run build     # Compilar para producción (carpeta dist/)
-npm run preview   # Probar la versión compilada
-npm run lint      # Revisar el código con ESLint
-```
+| Comando | Descripción |
+| :--- | :--- |
+| `npm run dev` | Servidor de desarrollo de Vite |
+| `npm run build` | Compilación de producción en `dist/` |
+| `npm run preview` | Servidor local para revisar la compilación de producción |
+| `npm run lint` | Análisis estático con ESLint |
 
 ---
 
-## 👤 Credenciales de Prueba
+## 11. Credenciales de prueba
 
-El personal entra por [`/internal-login`](http://localhost:8080/internal-login). Las cuentas las crea el backend:
+El personal accede por [`/internal-login`](http://localhost:8080/internal-login). Las cuentas las crea el backend:
 
 | Rol | Correo | Contraseña |
 | :--- | :--- | :--- |
-| **Gerente (superadmin / Admin)** | `gerente@almacen.local` | `Cambiar123!` |
-| **Ventas (Employee)** \* | `ventas1@almacen.local` | `Demo1234!` |
-| **Repartidor** \* | `repartidor1@almacen.local` | `Demo1234!` |
+| **Superadmin** (Admin) | `gerente@almacen.local` | `Cambiar123!` |
+| **Ventas** (Employee) | `ventas1@almacen.local`, `ventas2@almacen.local` | `Demo1234!` |
+| **Repartidor** | `repartidor1@almacen.local` a `repartidor3@almacen.local` | `Demo1234!` |
 
-\* Solo existen si el backend se ejecutó con los datos de demostración (`--SiembraDemo:Habilitada=true`); también las puede crear el gerente desde **Administración → Personal**.
+Las cuentas de ventas y repartidor solo existen si la base se cargó con los datos de demostración (ver [Datos semilla y credenciales](../backend/README.md#10-datos-semilla-y-credenciales) en el README del backend). También pueden crearse desde **Administración > Personal**.
+
+> Estas credenciales son exclusivas del entorno de desarrollo.
 
 ---
 
-## 📂 Estructura de la carpeta
+## 12. Configuración
+
+Variables de entorno (archivo `.env`, a partir de `.env.example`):
+
+| Variable | Propósito | Valor por defecto |
+| :--- | :--- | :--- |
+| `VITE_API_URL` | Dirección de la API tal como la ve el navegador | `http://localhost:5085` |
+| `VITE_GOOGLE_CLIENT_ID` | Client ID de Google para el inicio de sesión de clientes; debe coincidir con `Google:ClientId` del backend | Vacío |
+
+**Consideraciones de despliegue**
+
+- **Variables en tiempo de compilación.** Vite incorpora las variables `VITE_*` al JavaScript generado. Cualquier cambio requiere volver a compilar (`npm run build` o `docker compose up -d --build`).
+- **CORS.** El origen desde el que se sirve el frontend debe figurar en `Cors:OrigenesPermitidos` de la API.
+- **Rutas del cliente.** El servidor web debe redirigir las rutas desconocidas a `index.html`; `nginx.conf` lo resuelve con `try_files`.
+- **Google.** En Google Cloud Console, la dirección del frontend debe registrarse en *Orígenes autorizados de JavaScript* del Client ID.
+
+---
+
+## 13. Estructura de la carpeta
 
 ```
 src/frontend/
 ├── src/
-│   ├── api/                # Cliente HTTP (cliente.js) y servicios por recurso
-│   ├── components/         # Componentes reutilizables (ui, modal, tema, gráficos del dashboard)
-│   ├── context/            # AuthContext, ThemeContext y CarritoContext (Context API)
-│   ├── layouts/            # Estructura de cada área (tienda, panel, repartidor)
-│   ├── pages/              # Páginas: tienda, panel, admin, repartidor y login
-│   ├── routes/             # Protección de rutas por rol
-│   ├── utils/              # Formato de montos y fechas, reglas de stock
-│   ├── App.jsx             # Definición de rutas
-│   ├── main.jsx            # Punto de entrada (proveedores de contexto)
-│   └── index.css           # Tailwind CSS, paleta Azul UNET y modo oscuro
-├── .env.example            # Variables de entorno de ejemplo
-├── Dockerfile              # Construcción multi-etapa con Nginx
-├── nginx.conf              # Servidor web con fallback de rutas para la SPA
-├── index.html
+│   ├── api/                    Cliente HTTP (cliente.js) y servicios por recurso
+│   ├── components/             Componentes reutilizables
+│   │   ├── dashboard/          Gráficos del dashboard (Recharts)
+│   │   ├── ui.jsx              Encabezados, campos, avisos, paginación y estados de carga
+│   │   ├── Modal.jsx
+│   │   ├── DetallePedido.jsx
+│   │   ├── ContadorExpiracion.jsx
+│   │   ├── TarjetaProducto.jsx
+│   │   ├── MenuPerfil.jsx
+│   │   └── BotonTema.jsx
+│   ├── context/                AuthContext, ThemeContext y CarritoContext
+│   ├── layouts/                Layout, TiendaLayout y PanelLayout
+│   ├── pages/
+│   │   ├── tienda/             Catálogo
+│   │   ├── auth/               Login del personal
+│   │   ├── panel/              Resumen, pedidos, productos, inventario y clientes
+│   │   ├── admin/              Dashboard, personal, auditoría y configuración
+│   │   ├── repartidor/         Área de entregas
+│   │   └── NoEncontrada.jsx
+│   ├── routes/                 RutaProtegida (control de acceso por rol)
+│   ├── utils/                  Formato de montos y fechas, constantes del panel y reglas de stock
+│   ├── App.jsx                 Definición de rutas
+│   ├── main.jsx                Punto de entrada y proveedores de contexto
+│   └── index.css               Tailwind CSS, paleta institucional y modo oscuro
+├── .env.example                Variables de entorno de ejemplo
+├── Dockerfile                  Imagen multietapa (Node.js 20 + Nginx)
+├── nginx.conf                  Servidor web con fallback de rutas para la SPA
+├── eslint.config.js
 ├── vite.config.js
+├── index.html
 └── package.json
 ```
+
+---
+
+## 14. Documentación relacionada
+
+| Documento | Contenido |
+| :--- | :--- |
+| [README principal](../../README.md) | Visión general del proyecto, equipo y arquitectura del sistema |
+| [`src/backend/README.md`](../backend/README.md) | API REST: arquitectura, modelo de datos, seguridad, instalación y pruebas |
+| [`docs/API.md`](../../docs/API.md) | Endpoints, roles requeridos, códigos de respuesta y ejemplos |
+| [`docs/REGLAS_NEGOCIO.md`](../../docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
+| [`docs/GESTION_PROYECTO.md`](../../docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
+
+---
+
+<div align="center">
+
+Universidad Nacional Experimental del Táchira · Desarrollo de Aplicaciones Web · 2026
+
+</div>
