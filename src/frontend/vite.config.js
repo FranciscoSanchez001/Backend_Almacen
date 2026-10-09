@@ -12,5 +12,8 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js'],
     env: { VITE_API_URL: 'http://api.pruebas' },
     css: false,
+    // Los formularios largos se rellenan tecla por tecla con userEvent; con todos los
+    // archivos en paralelo, el límite de 5 s por defecto se queda corto.
+    testTimeout: 20000,
   },
 })
