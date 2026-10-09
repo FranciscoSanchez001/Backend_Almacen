@@ -112,7 +112,7 @@ Cada componente tiene su propia documentación detallada:
 | :--- | :--- | :--- | :--- |
 | **Backend** | [`src/backend/`](src/backend) | API REST en ASP.NET Core 10 con Onion Architecture, EF Core y PostgreSQL | [README del backend](src/backend/README.md) |
 | **Frontend** | [`src/frontend/`](src/frontend) | SPA en React 19, Vite y Tailwind CSS: tienda, panel de ventas, administración y entregas | [README del frontend](src/frontend/README.md) |
-| **Pruebas** | [`tests/`](tests) | Pruebas unitarias, de arquitectura y de integración con xUnit | [Reporte del Test Runner](docs/evidencias/pruebas-xunit.md) |
+| **Pruebas** | [`tests/`](tests) | Pruebas unitarias, de arquitectura y de integración con xUnit | [README de las pruebas](tests/README.md) |
 | **Base de datos** | [`database/`](database) | Script SQL del esquema, volcado con datos sembrados y consultas de verificación | [Evidencias de base de datos](docs/evidencias/base-datos.md) |
 | **Documentación** | [`docs/`](docs) | Arquitectura, modelo de datos, API, reglas de negocio, gestión del proyecto y evidencias | [Sección 13](#13-documentación) |
 | **Orquestación** | [`docker-compose.yml`](docker-compose.yml) | Despliegue local de la aplicación completa | [Sección 7](#7-puesta-en-marcha-con-docker) |
@@ -272,7 +272,7 @@ Los clientes se autentican con su cuenta de Google. Ver [Datos semilla y credenc
 | [`tests/ArchitectureTests`](tests/ArchitectureTests) | Regla de dependencia entre capas y convenciones de nombres | xUnit + NetArchTest.Rules | 13 |
 | [`tests/IntegrationTests`](tests/IntegrationTests) | API completa contra PostgreSQL real en Docker | xUnit + WebApplicationFactory + Testcontainers | 20 |
 
-**Total: 50 pruebas en estado *Passed*.** El reporte de ejecución está en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md).
+**Total: 50 pruebas en estado *Passed*.** El detalle de cada prueba, la infraestructura de integración y las opciones de ejecución están en el [README de las pruebas](tests/README.md); el reporte de ejecución, en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md).
 
 ```bash
 dotnet test tests/UnitTests                       # Unitarias
@@ -313,7 +313,7 @@ Backend_Almacen/
 │       ├── src/                    Páginas, layouts, componentes, contextos y cliente HTTP
 │       ├── Dockerfile              Imagen multietapa (Node.js 20 + Nginx)
 │       └── nginx.conf              Servidor web con fallback de rutas
-├── tests/
+├── tests/                          Pruebas automatizadas                   -> README propio
 │   ├── UnitTests/                  xUnit + Moq
 │   ├── ArchitectureTests/          xUnit + NetArchTest.Rules
 │   └── IntegrationTests/           xUnit + WebApplicationFactory + Testcontainers
@@ -336,6 +336,7 @@ Backend_Almacen/
 | :--- | :--- |
 | [`src/backend/README.md`](src/backend/README.md) | Stack, arquitectura, ciclo del pedido, modelo de datos, seguridad, instalación, datos semilla, pruebas y configuración de la API |
 | [`src/frontend/README.md`](src/frontend/README.md) | Stack, arquitectura, mapa de vistas, autenticación y control de acceso, dashboard, instalación y configuración de la SPA |
+| [`tests/README.md`](tests/README.md) | Estrategia de pruebas, detalle de las 50 pruebas, infraestructura de integración y comandos de ejecución |
 
 **Documentación técnica**
 
