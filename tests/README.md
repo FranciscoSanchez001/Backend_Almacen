@@ -375,15 +375,22 @@ tests/
 
 ## 12. Pruebas del frontend
 
-La SPA tiene su propio conjunto de pruebas unitarias con **Vitest** y **React Testing Library** (jsdom), ubicadas junto al código que prueban (`*.test.js` y `*.test.jsx`). No requieren la API ni Docker.
+La SPA tiene su propio conjunto de pruebas con **Vitest** y **React Testing Library** (jsdom), ubicadas junto al código que prueban (`*.test.js` y `*.test.jsx`). No requieren la API ni Docker: los servicios de `api/` se prueban reemplazando `fetch`, y las pantallas, simulando esos servicios.
 
-| Área | Archivos | Pruebas |
-| :--- | :--- | :---: |
-| Utilidades | `utils/formato`, `utils/stock`, `utils/panel` | 23 |
-| Cliente HTTP y autenticación | `api/cliente`, `api/auth` | 25 |
-| Sesión y control de acceso | `context/AuthContext`, `routes/RutaProtegida` | 19 |
-| Carrito de compras | `context/CarritoContext` | 8 |
-| **Total** | | **75** |
+| Área | Pruebas |
+| :--- | :---: |
+| Utilidades | 23 |
+| Cliente HTTP y servicios de la API | 77 |
+| Contextos (sesión, carrito y tema) | 22 |
+| Enrutado y control de acceso | 31 |
+| Componentes | 80 |
+| Layouts | 26 |
+| Tienda, acceso y entregas | 29 |
+| Panel de ventas | 91 |
+| Administración | 76 |
+| **Total** | **455** |
+
+Dos de ellas están marcadas con `it.fails` porque documentan un error conocido del frontend (el estado `aprobado` no tiene nombre visible).
 
 ```bash
 cd src/frontend

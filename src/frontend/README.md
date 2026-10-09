@@ -28,7 +28,7 @@ tienda en línea, panel de ventas, administración con indicadores de negocio y 
 ![Autenticación](https://img.shields.io/badge/Autenticación-JWT-informational?style=flat-square)
 ![Errores](https://img.shields.io/badge/Errores-RFC_7807-informational?style=flat-square)
 ![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?style=flat-square&logo=eslint&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-75_Passed-6E9F18?style=flat-square&logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-455_pruebas-6E9F18?style=flat-square&logo=vitest&logoColor=white)
 ![Metodología](https://img.shields.io/badge/Metodología-Scrum-informational?style=flat-square)
 
 </div>
@@ -281,7 +281,7 @@ La aplicación queda disponible en <http://localhost:5173>, con recarga en calie
 | `npm run build` | Compilación de producción en `dist/` |
 | `npm run preview` | Servidor local para revisar la compilación de producción |
 | `npm run lint` | Análisis estático con ESLint |
-| `npm test` | Pruebas unitarias con Vitest (ver [Pruebas](#13-pruebas)) |
+| `npm test` | Pruebas con Vitest (ver [Pruebas](#13-pruebas)) |
 
 ---
 
@@ -321,42 +321,58 @@ Variables de entorno (archivo `.env`, a partir de `.env.example`):
 
 ## 13. Pruebas
 
-Las pruebas unitarias del frontend usan **Vitest** con **React Testing Library** sobre un navegador simulado (jsdom). No requieren la API ni Docker: las llamadas de red se simulan reemplazando `fetch`.
+Las pruebas del frontend usan **Vitest** con **React Testing Library** sobre un navegador simulado (jsdom) y cubren los servicios de la API, los contextos, el enrutado, los componentes, los layouts y todas las pantallas. No requieren la API ni Docker: las llamadas de red se simulan reemplazando `fetch`.
 
 ### 13.1 Configuración
 
-- `vite.config.js` define el bloque `test`: entorno `jsdom`, archivo de preparación `src/test/setup.js` y una `VITE_API_URL` fija (`http://api.pruebas`), para que las pruebas no dependan del `.env` de cada equipo.
-- `src/test/setup.js` registra los *matchers* de DOM (`toBeInTheDocument`, `toHaveTextContent`, ...) y, después de cada prueba, limpia el DOM, el `localStorage`, los *mocks* y los temporizadores simulados.
+- `vite.config.js` define el bloque `test`: entorno `jsdom`, archivo de preparación `src/test/setup.js`, una `VITE_API_URL` fija (`http://api.pruebas`) para que las pruebas no dependan del `.env` de cada equipo, y un límite de 20 s por prueba para los formularios que se rellenan tecla por tecla.
+- `src/test/setup.js` registra los *matchers* de DOM (`toBeInTheDocument`, `toHaveTextContent`, ...), simula las API del navegador que jsdom no implementa (`matchMedia`, `ResizeObserver`, `scrollTo` y `URL.createObjectURL`) y, después de cada prueba, limpia el DOM, el `localStorage`, la clase de tema, los *mocks* y los temporizadores simulados.
+- `src/test/renderizar.jsx` monta un componente como lo hace la aplicación: con los proveedores de tema, sesión y carrito y dentro de un router en memoria. Permite elegir la ruta inicial y el rol de la sesión, y expone la ruta a la que navegó la pantalla.
 - `src/test/jwt.js` genera tokens JWT de prueba con el rol, el nombre y la vigencia que necesita cada caso.
 - Cada archivo de pruebas (`*.test.js` o `*.test.jsx`) se ubica junto al código que prueba. Vite no los incluye en la compilación de producción.
 
-### 13.2 Cobertura actual
+### 13.2 Enfoque
 
-| Archivo | Qué verifica | Pruebas |
+- **Servicios de `api/`:** se reemplaza `fetch` y se comprueba la petición que arma cada función (ruta, método, consulta y cuerpo) y cómo trata la respuesta.
+- **Pantallas y componentes:** se simulan los módulos de `api/` con `vi.mock` y se interactúa como lo haría el usuario (React Testing Library y `user-event`), consultando el DOM por roles accesibles y textos visibles. Se verifica lo que se muestra, los argumentos con que se llama a la API, la navegación y los mensajes de error.
+- **Roles:** las vistas compartidas se prueban con `ventas` y con `superadmin` para comprobar las acciones que se muestran u ocultan a cada uno.
+- **Gráficos:** Recharts no dibuja en jsdom; de los gráficos se comprueba que se montan sin errores con y sin datos, y se verifican el mapa de calor, las tablas de datos y los colores según el tema.
+
+### 13.3 Cobertura
+
+Todos los archivos de `src/` con lógica o interfaz tienen pruebas: 46 archivos con 455 pruebas.
+
+| Área | Archivos probados | Pruebas |
 | :--- | :--- | :---: |
-| `utils/formato.test.js` | Formato de montos en USD y Bs, números, porcentajes, días, duraciones y fecha local | 12 |
-| `utils/stock.test.js` | Alerta de stock (agotado, bajo mínimo, normal y sobre máximo), siempre acompañada de un ícono | 6 |
-| `utils/panel.test.js` | Conversión de errores de validación por campo, estilo de los campos con error y estados del pedido | 5 |
-| `api/cliente.test.js` | URL y filtros, token Bearer, cuerpo JSON y `FormData`, respuestas `204` y archivos, mensajes de error, error de red y sesión vencida (`401`) | 20 |
-| `api/auth.test.js` | Inicio de sesión (correo normalizado, token y *refresh token*) y cierre de sesión con revocación, incluso si la API no responde | 5 |
-| `context/AuthContext.test.jsx` | Lectura del JWT guardado, tokens vencidos o malformados, evento `sesion-expirada`, cierre al vencer el token, login y logout | 8 |
-| `routes/RutaProtegida.test.jsx` | Redirección al login sin sesión y acceso o redirección según el rol en `/panel`, `/admin` y `/repartidor` | 11 |
-| `context/CarritoContext.test.jsx` | Cantidades, tope por stock disponible, total en USD, eliminación de productos y persistencia en el navegador | 8 |
-| **Total** | | **75** |
+| Utilidades | `utils/formato`, `utils/stock`, `utils/panel` | 23 |
+| Cliente HTTP y servicios | `api/cliente`, `api/auth` y los 10 servicios por recurso | 77 |
+| Contextos | `AuthContext`, `CarritoContext`, `ThemeContext` | 22 |
+| Enrutado y control de acceso | `App.jsx` (cada ruta y rol carga su pantalla, redirecciones y 404), `RutaProtegida` | 31 |
+| Componentes | `ui`, `Modal`, `DetallePedido`, `TarjetaProducto`, `MenuPerfil`, `ContadorExpiracion`, `BotonTema`, `dashboard/Graficos` | 80 |
+| Layouts | `Layout`, `TiendaLayout`, `PanelLayout` (menú por rol, cajón móvil, avisos sin leer, carrito) | 26 |
+| Tienda, acceso y entregas | `Catalogo`, `LoginInterno`, `NoEncontrada`, `repartidor/Inicio` | 29 |
+| Panel de ventas | `Resumen`, `Pedidos`, `Clientes`, `Productos`, `FormularioProducto`, `Inventario` | 91 |
+| Administración | `Personal`, `FormularioUsuario`, `Auditoria`, `Configuracion`, `PowerBIDashboard` | 76 |
+| **Total** | | **455** |
 
-### 13.3 Ejecución
+Dos pruebas están marcadas con `it.fails` porque documentan un error conocido: `ESTADOS_PEDIDO` (`utils/panel.js`) no define el estado `aprobado` que el backend registra al aprobar un pedido, por lo que el historial del pedido y la auditoría lo muestran como «aprobado», en minúsculas. Cuando se corrija, esas pruebas empezarán a fallar y bastará con cambiar `it.fails` por `it`.
+
+### 13.4 Ejecución
 
 ```bash
 cd src/frontend
 npm test                                      # Ejecuta todas las pruebas una vez
 npm run test:watch                            # Modo observación: repite las pruebas al guardar
+npx vitest run src/pages/panel                # Una carpeta
 npx vitest run src/api/cliente.test.js        # Un archivo concreto
 npx vitest run -t "sesión vencida"            # Pruebas cuyo nombre contiene un texto
 ```
 
-### 13.4 Pendiente
+La ejecución completa tarda alrededor de dos minutos, porque cada archivo levanta su propio entorno jsdom.
 
-Las vistas (`pages/`) y los componentes visuales todavía no tienen pruebas propias. Los siguientes pasos son las pruebas de componentes de las vistas principales (login interno, catálogo y bandeja de pedidos) con la capa `api/` simulada, y pruebas de extremo a extremo con Playwright sobre el entorno de Docker Compose.
+### 13.5 Pendiente
+
+Pruebas de extremo a extremo con Playwright sobre el entorno de Docker Compose, que recorran los flujos completos (inicio de sesión, aprobación de un pedido, reposición de inventario) contra la API real.
 
 ---
 
@@ -385,12 +401,12 @@ src/frontend/
 │   │   ├── repartidor/         Área de entregas
 │   │   └── NoEncontrada.jsx
 │   ├── routes/                 RutaProtegida (control de acceso por rol)
-│   ├── test/                   Preparación de las pruebas (setup.js) y generador de JWT de prueba
+│   ├── test/                   Preparación de las pruebas: setup.js, renderizar.jsx y jwt.js
 │   ├── utils/                  Formato de montos y fechas, constantes del panel y reglas de stock
 │   ├── App.jsx                 Definición de rutas
 │   ├── main.jsx                Punto de entrada y proveedores de contexto
 │   ├── index.css               Tailwind CSS, paleta institucional y modo oscuro
-│   └── **/*.test.{js,jsx}      Pruebas unitarias, junto al código que prueban
+│   └── **/*.test.{js,jsx}      Pruebas, junto al código que prueban (46 archivos)
 ├── .env.example                Variables de entorno de ejemplo
 ├── Dockerfile                  Imagen multietapa (Node.js 20 + Nginx)
 ├── nginx.conf                  Servidor web con fallback de rutas para la SPA

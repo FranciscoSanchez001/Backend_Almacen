@@ -24,7 +24,7 @@ auditoría e indicadores de negocio.
 ![Arquitectura](https://img.shields.io/badge/Arquitectura-Onion-informational?style=flat-square)
 ![Autenticación](https://img.shields.io/badge/Autenticación-JWT-informational?style=flat-square)
 ![Errores](https://img.shields.io/badge/Errores-RFC_7807-informational?style=flat-square)
-![Pruebas](https://img.shields.io/badge/Pruebas-125_Passed-success?style=flat-square)
+![Pruebas](https://img.shields.io/badge/Pruebas-505-success?style=flat-square)
 ![Metodología](https://img.shields.io/badge/Metodología-Scrum-informational?style=flat-square)
 
 </div>
@@ -112,7 +112,7 @@ Cada componente tiene su propia documentación detallada:
 | :--- | :--- | :--- | :--- |
 | **Backend** | [`src/backend/`](src/backend) | API REST en ASP.NET Core 10 con Onion Architecture, EF Core y PostgreSQL | [README del backend](src/backend/README.md) |
 | **Frontend** | [`src/frontend/`](src/frontend) | SPA en React 19, Vite y Tailwind CSS: tienda, panel de ventas, administración y entregas | [README del frontend](src/frontend/README.md) |
-| **Pruebas** | [`tests/`](tests) y `src/frontend/src/` | Backend: pruebas unitarias, de arquitectura y de integración con xUnit. Frontend: pruebas unitarias con Vitest | [README de las pruebas](tests/README.md) |
+| **Pruebas** | [`tests/`](tests) y `src/frontend/src/` | Backend: pruebas unitarias, de arquitectura y de integración con xUnit. Frontend: pruebas de servicios, componentes y pantallas con Vitest | [README de las pruebas](tests/README.md) |
 | **Base de datos** | [`database/`](database) | Script SQL del esquema, volcado con datos sembrados y consultas de verificación | [Evidencias de base de datos](docs/evidencias/base-datos.md) |
 | **Documentación** | [`docs/`](docs) | Arquitectura, modelo de datos, API, reglas de negocio, gestión del proyecto y evidencias | [Sección 13](#13-documentación) |
 | **Orquestación** | [`docker-compose.yml`](docker-compose.yml) | Despliegue local de la aplicación completa | [Sección 7](#7-puesta-en-marcha-con-docker) |
@@ -271,9 +271,9 @@ Los clientes se autentican con su cuenta de Google. Ver [Datos semilla y credenc
 | [`tests/UnitTests`](tests/UnitTests) | Unitarias de `ProductoService` con repositorios y unidad de trabajo simulados; no requieren base de datos | xUnit + Moq | 17 |
 | [`tests/ArchitectureTests`](tests/ArchitectureTests) | Regla de dependencia entre capas y convenciones de nombres | xUnit + NetArchTest.Rules | 13 |
 | [`tests/IntegrationTests`](tests/IntegrationTests) | API completa contra PostgreSQL real en Docker | xUnit + WebApplicationFactory + Testcontainers | 20 |
-| [`src/frontend`](src/frontend/README.md#13-pruebas) | Unitarias del frontend: utilidades, cliente HTTP, sesión, rutas protegidas y carrito | Vitest + React Testing Library | 75 |
+| [`src/frontend`](src/frontend/README.md#13-pruebas) | Frontend: servicios de la API, contextos, enrutado, componentes, layouts y todas las pantallas | Vitest + React Testing Library | 455 |
 
-**Total: 125 pruebas en estado *Passed*: 50 del backend y 75 del frontend.** El detalle de cada prueba, la infraestructura de integración y las opciones de ejecución están en el [README de las pruebas](tests/README.md); el reporte de ejecución, en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md).
+**Total: 505 pruebas: 50 del backend y 455 del frontend.** Todas pasan, salvo dos del frontend marcadas como fallo esperado (`it.fails`) que documentan un error conocido. El detalle de cada prueba, la infraestructura de integración y las opciones de ejecución están en el [README de las pruebas](tests/README.md); el reporte de ejecución, en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md).
 
 ```bash
 dotnet test tests/UnitTests                       # Unitarias
