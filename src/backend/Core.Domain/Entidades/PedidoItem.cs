@@ -16,8 +16,11 @@ namespace Core.Domain.Entidades
 
         public int Cantidad { get; set; }
 
-        // Precios congelados al momento de la compra.
+        // Precios congelados al momento de la compra, ya con la oferta del producto si la había.
         public decimal PrecioUsd { get; set; }
         public decimal PrecioBs { get; set; }
+
+        // Precio de lista (sin oferta) al momento de la compra. Igual a PrecioUsd si no hubo oferta.
+        public decimal PrecioListaUsd { get; set; }
     }
 }

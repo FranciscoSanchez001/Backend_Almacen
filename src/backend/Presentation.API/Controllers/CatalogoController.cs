@@ -24,12 +24,13 @@ namespace Presentation.API.Controllers
         public async Task<Pagina<CatalogoItem>> Listar(
             [FromQuery] string? q,
             [FromQuery] Guid? categoriaId,
+            [FromQuery] bool ofertas = false,
             [FromQuery] int pagina = 1,
             [FromQuery] int tamano = 24,
             CancellationToken ct = default)
         {
             var resultado = await productos.ListarAsync(
-                new FiltroProductos(q, categoriaId, SoloVisiblesEnTienda: true), pagina, tamano, ct);
+                new FiltroProductos(q, categoriaId, SoloVisiblesEnTienda: true, SoloEnOferta: ofertas), pagina, tamano, ct);
             var tasa = await tasas.ObtenerActualAsync(ct);
             return resultado.Convertir(p => CatalogoItem.De(p, tasa));
         }

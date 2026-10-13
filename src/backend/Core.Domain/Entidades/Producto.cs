@@ -1,4 +1,5 @@
 using Core.Domain.Comun;
+using Core.Domain.Reglas;
 
 namespace Core.Domain.Entidades
 {
@@ -29,6 +30,12 @@ namespace Core.Domain.Entidades
         public string? Ubicacion { get; set; }
         public string UnidadMedida { get; set; } = ValoresPorDefecto.UnidadMedida;
 
+        // Oferta: % de descuento sobre PrecioUsd, vigente en [DescuentoDesde, DescuentoHasta).
+        // Sin fechas, la oferta aplica mientras tenga porcentaje.
+        public decimal? DescuentoPorcentaje { get; set; }
+        public DateTime? DescuentoDesde { get; set; }
+        public DateTime? DescuentoHasta { get; set; }
+
         // Borrado lógico.
         public bool Activo { get; set; } = true;
 
@@ -36,6 +43,13 @@ namespace Core.Domain.Entidades
         public Usuario? CreadoPor { get; set; }
 
         public DateTime? ActualizadoEn { get; set; }
+
+        public bool TieneOfertaVigente(DateTime ahora) =>
+            DescuentoPorcentaje is > 0 && Descuentos.EstaVigente(DescuentoDesde, DescuentoHasta, ahora);
+
+        // Precio de venta en este momento: con la oferta aplicada si está vigente.
+        public decimal PrecioVigenteUsd(DateTime ahora) =>
+            TieneOfertaVigente(ahora) ? Descuentos.AplicarPorcentaje(PrecioUsd, DescuentoPorcentaje!.Value) : PrecioUsd;
 
         // Los usa también la configuración de EF (HasDefaultValue) para que la base tenga los mismos.
         public static class ValoresPorDefecto

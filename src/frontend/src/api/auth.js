@@ -1,4 +1,5 @@
-// Autenticación del personal contra Backend_Almacen (POST /auth/login).
+// Autenticación contra Backend_Almacen: el personal con correo y contraseña (POST /auth/login)
+// y los clientes con Google (POST /auth/google).
 // Las pantallas no usan esto directo: pasan por AuthContext, que decodifica el token.
 import { pedir, guardarToken } from './cliente';
 
@@ -16,9 +17,21 @@ export async function login({ correo, clave }) {
     metodo: 'POST',
     cuerpo: { email: correo.trim(), password: clave },
   });
+  guardarSesion(sesion);
+  return sesion;
+}
+
+// Clientes de la tienda: el ID token lo entrega el botón de Google Identity Services.
+// Si es la primera vez, la API crea la cuenta del cliente.
+export async function loginGoogle(idToken) {
+  const sesion = await pedir('/auth/google', { metodo: 'POST', cuerpo: { idToken } });
+  guardarSesion(sesion);
+  return sesion;
+}
+
+function guardarSesion(sesion) {
   guardarToken(sesion.token);
   localStorage.setItem(CLAVE_REFRESH, sesion.refreshToken);
-  return sesion;
 }
 
 // Cierra la sesión: revoca el refresh token en la API y borra todo del navegador.

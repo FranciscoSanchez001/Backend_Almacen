@@ -37,6 +37,12 @@ namespace Core.Domain.Enums
         [JsonStringEnumMemberName("USDT")] Usdt
     }
 
+    public enum TipoCupon
+    {
+        Porcentaje,
+        MontoFijo
+    }
+
     public enum TipoMovimientoInventario
     {
         Reserva,

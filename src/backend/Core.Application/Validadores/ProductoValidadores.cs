@@ -53,6 +53,14 @@ namespace Core.Application.Validadores
             RuleFor(x => x.UnidadMedida)
                 .NotEmpty().WithMessage("La unidad de medida es obligatoria.")
                 .MaximumLength(20).WithMessage("La unidad de medida admite como máximo 20 caracteres.");
+
+            RuleFor(x => x.DescuentoPorcentaje)
+                .ExclusiveBetween(0, 100).WithMessage("El descuento debe ser mayor que 0 % y menor que 100 %.")
+                .When(x => x.DescuentoPorcentaje is not null);
+
+            RuleFor(x => x.DescuentoHasta)
+                .GreaterThan(x => x.DescuentoDesde).WithMessage("La oferta debe terminar después de empezar.")
+                .When(x => x.DescuentoDesde is not null && x.DescuentoHasta is not null);
         }
 
         private static bool EsUrlHttp(string? url) =>

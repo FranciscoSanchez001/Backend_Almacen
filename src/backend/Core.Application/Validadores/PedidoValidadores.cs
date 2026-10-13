@@ -41,6 +41,8 @@ namespace Core.Application.Validadores
             RuleFor(x => x.Telefono)
                 .Must(t => Telefonos.NormalizarVenezolano(t) is not null)
                 .WithMessage("Debe ser un celular venezolano: +58 4XX XXX XXXX.");
+            RuleFor(x => x.CodigoCupon)
+                .MaximumLength(30).WithMessage("El código del cupón admite como máximo 30 caracteres.");
         }
     }
 

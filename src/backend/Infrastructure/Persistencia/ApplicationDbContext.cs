@@ -25,6 +25,7 @@ namespace Infrastructure.Persistencia
         public DbSet<Configuracion> Configuracion => Set<Configuracion>();
         public DbSet<HistorialTasa> HistorialTasas => Set<HistorialTasa>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<Cupon> Cupones => Set<Cupon>();
 
         // Enums nativos de PostgreSQL; se registra en UseNpgsql (DependencyInjection.cs).
         public static void ConfigurarNpgsql(NpgsqlDbContextOptionsBuilder npgsql)
@@ -37,6 +38,7 @@ namespace Infrastructure.Persistencia
             npgsql.MapEnum<AccionAuditoria>("accion_auditoria");
             npgsql.MapEnum<TipoNotificacion>("tipo_notificacion");
             npgsql.MapEnum<EstadoMensajeWhatsapp>("estado_mensaje_whatsapp");
+            npgsql.MapEnum<TipoCupon>("tipo_cupon");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

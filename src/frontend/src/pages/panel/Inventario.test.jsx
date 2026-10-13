@@ -57,10 +57,10 @@ describe('Inventario: listado y alertas', () => {
     montar()
     await screen.findByText('Arroz')
 
-    const tarjeta = (titulo) => screen.getByText(titulo).parentElement
-    expect(tarjeta('⛔ Agotados')).toHaveTextContent('2')
-    expect(tarjeta('⚠️ Bajo el mínimo')).toHaveTextContent('1')
-    expect(tarjeta('📦 Sobre el máximo')).toHaveTextContent('1')
+    const tarjeta = (titulo) => screen.getByText(titulo, { selector: 'p' }).parentElement
+    expect(tarjeta('Agotados')).toHaveTextContent('2')
+    expect(tarjeta('Bajo el mínimo')).toHaveTextContent('1')
+    expect(tarjeta('Sobre el máximo')).toHaveTextContent('1')
   })
 
   it('si la API falla muestra el error y permite reintentar', async () => {

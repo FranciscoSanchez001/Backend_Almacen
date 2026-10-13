@@ -81,4 +81,22 @@ describe('CarritoContext', () => {
 
     expect(carrito.current.lineas).toEqual([])
   })
+
+  it('quitar elimina la línea, vaciar deja el carrito vacío e items arma lo que espera la API', () => {
+    const carrito = usarCarrito()
+
+    act(() => carrito.current.cambiarCantidad(arroz, 2))
+    act(() => carrito.current.cambiarCantidad(leche, 1))
+    expect(carrito.current.items).toEqual([
+      { productoId: 'p1', cantidad: 2 },
+      { productoId: 'p2', cantidad: 1 },
+    ])
+
+    act(() => carrito.current.quitar('p1'))
+    expect(carrito.current.items).toEqual([{ productoId: 'p2', cantidad: 1 }])
+
+    act(() => carrito.current.vaciar())
+    expect(carrito.current.lineas).toEqual([])
+    expect(JSON.parse(localStorage.getItem('almacen.carrito'))).toEqual({})
+  })
 })

@@ -75,7 +75,9 @@ namespace Core.Application.Abstracciones
         Guid? CategoriaId = null,
         bool IncluirInactivos = false,
         // Catálogo público: solo activos con stock disponible.
-        bool SoloVisiblesEnTienda = false);
+        bool SoloVisiblesEnTienda = false,
+        // Solo productos con oferta vigente en este momento.
+        bool SoloEnOferta = false);
 
     public interface IProductoRepository
     {
@@ -160,6 +162,31 @@ namespace Core.Application.Abstracciones
         // Pedidos asignados o en camino del repartidor.
         Task<int> ContarEnCursoDeRepartidorAsync(Guid repartidorId, CancellationToken ct = default);
         void Agregar(Pedido pedido);
+    }
+
+    public record FiltroCupones(string? Texto = null, bool? Activo = null);
+
+    public interface ICuponRepository
+    {
+        // Los más recientes primero.
+        Task<Pagina<Cupon>> ListarAsync(FiltroCupones filtro, int pagina, int tamano, CancellationToken ct = default);
+        Task<Cupon?> ObtenerAsync(Guid id, CancellationToken ct = default);
+        Task<Cupon?> ObtenerPorCodigoAsync(string codigo, CancellationToken ct = default);
+        Task<Cupon?> ObtenerParaEditarAsync(Guid id, CancellationToken ct = default);
+        Task<bool> CodigoEnUsoAsync(string codigo, CancellationToken ct = default);
+
+        // ¿El cliente tiene un pedido vigente (ni rechazado ni expirado) con este cupón?
+        Task<bool> ClienteLoUsoAsync(Guid cuponId, Guid clienteId, CancellationToken ct = default);
+
+        // usos + 1 en un único UPDATE condicional, solo si el cupón sigue activo, vigente en
+        // `ahora` y con usos disponibles. Bloquea la fila hasta el fin de la transacción.
+        // Devuelve false si la condición no se cumplió.
+        Task<bool> ConsumirUsoAsync(Guid cuponId, DateTime ahora, CancellationToken ct = default);
+
+        // usos − 1 (pedido rechazado o expirado).
+        Task LiberarUsoAsync(Guid cuponId, CancellationToken ct = default);
+
+        void Agregar(Cupon cupon);
     }
 
     public interface INotificacionRepository

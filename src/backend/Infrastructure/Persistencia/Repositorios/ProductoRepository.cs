@@ -20,6 +20,14 @@ namespace Infrastructure.Persistencia.Repositorios
             {
                 query = query.Where(p => p.Activo);
             }
+            if (filtro.SoloEnOferta)
+            {
+                // Misma regla que Producto.TieneOfertaVigente.
+                var ahora = DateTime.UtcNow;
+                query = query.Where(p => p.DescuentoPorcentaje > 0
+                    && (p.DescuentoDesde == null || p.DescuentoDesde <= ahora)
+                    && (p.DescuentoHasta == null || p.DescuentoHasta > ahora));
+            }
             query = Filtrar(query, filtro.Texto, filtro.CategoriaId);
 
             return query.OrderBy(p => p.Nombre).ThenBy(p => p.Id).PaginarAsync(pagina, tamano, ct);

@@ -33,7 +33,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/catalogo` | 🌐 | Productos activos con stock. Filtros: `q` (texto), `categoriaId`, `pagina`, `tamano` (24 por defecto). Incluye el precio en USD y en Bs. |
+| `GET` | `/catalogo` | 🌐 | Productos activos con stock. Filtros: `q` (texto), `categoriaId`, `ofertas` (solo los que tienen oferta vigente), `pagina`, `tamano` (24 por defecto). `precioUsd`/`precioBs` ya traen la oferta aplicada; si hay oferta vigente, `precioOriginalUsd`, `descuentoPorcentaje` y `ofertaHasta` vienen con valor (si no, en `null`). |
 | `GET` | `/catalogo/{id}` | 🌐 | Detalle de un producto. |
 | `GET` | `/catalogo/inicio` | 🌐 | Inicio personalizado: los más vendidos y, si hay sesión de cliente, sus productos frecuentes y últimas compras. Parámetro: `limite` (10 por defecto, máximo 30). |
 | `GET` | `/catalogo/pago` | 🔑 | Datos para pagar: cuentas de transferencia, pago móvil y wallet de Binance. |
@@ -53,7 +53,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | :--- | :--- | :---: | :--- |
 | `GET` | `/productos` | 🧾 | Lista para el personal. Filtros: `q`, `categoriaId`, `incluirInactivos`, `pagina`, `tamano`. |
 | `GET` | `/productos/{id}` | 🧾 | Detalle de un producto. |
-| `POST` | `/productos` | 🧾 | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial` y, opcionales, `stockMinimo` (5), `stockMaximo` (100), `ubicacion`, `unidadMedida` (`unidad`). Validación: precio y costo `> 0`, stocks `>= 0`, `stockMaximo > stockMinimo`. Queda registrado en la auditoría. |
+| `POST` | `/productos` | 🧾 | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial` y, opcionales, `stockMinimo` (5), `stockMaximo` (100), `ubicacion`, `unidadMedida` (`unidad`) y la oferta: `descuentoPorcentaje` (mayor que 0 y menor que 100), `descuentoDesde`, `descuentoHasta`. Validación: precio y costo `> 0`, stocks `>= 0`, `stockMaximo > stockMinimo`, `descuentoHasta > descuentoDesde`. Queda registrado en la auditoría. |
 | `PUT` | `/productos/{id}` | 🧾 | Edita un producto (mismos campos, con `stockDisponible` opcional en lugar de `stockInicial`). Si cambia el stock disponible, se registra como ajuste de inventario. |
 | `DELETE` | `/productos/{id}` | 👔 | Borrado lógico (el producto deja de aparecer en `/catalogo`, pero se conserva su historial). Un Employee (ventas) recibe `403`. |
 
@@ -99,6 +99,22 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | `direccionTexto` | texto | Sí | Dirección y punto de referencia (5 a 500 caracteres). |
 | `latitud`, `longitud` | número | No | Coordenadas de la dirección de entrega. |
 | `telefono` | texto | Sí | Formato venezolano `+58 4XX XXX XXXX`. |
+| `codigoCupon` | texto | No | Cupón de descuento. Si no aplica, `400` con el motivo; si se agotó mientras se confirmaba, `409`. |
+
+### Cotizar el carrito — `POST /pedidos/cotizar` 🛒
+
+Cuerpo: `{ "items": [{ "productoId", "cantidad" }], "codigoCupon": "VERANO10" | null }`. Devuelve lo que pagaría el cliente con los precios vigentes (ofertas incluidas) y el cupón: `lineas` (con `precioUsd`, `precioListaUsd`, `subtotalUsd` y el `stockDisponible` actual), `subtotalUsd`, `descuentoUsd`, `totalUsd`, `tasaBsUsd` y los mismos montos en Bs (en `null` si no hay tasa del día), y `cupon`. No reserva stock ni consume el cupón. Responde `400` con el motivo si el cupón no existe, no está vigente, no alcanza la compra mínima o el cliente ya lo usó.
+
+El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, `descuentoUsd`, `descuentoBs` y `codigoCupon`; cada ítem trae además `precioListaUsd` (precio sin oferta).
+
+## 7.1 Cupones — `/cupones`
+
+| Método | Ruta | Acceso | Descripción |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/cupones` | 👔 | Lista de cupones, los más recientes primero. Filtros: `q` (código o descripción), `activo`, `pagina`, `tamano`. Cada cupón trae `usosActuales` y `vigente`. |
+| `GET` | `/cupones/{id}` | 👔 | Detalle de un cupón. |
+| `POST` | `/cupones` | 👔 | Crea un cupón. Cuerpo: `codigo` (3 a 30, letras, números, `-` y `_`; se guarda en mayúsculas), `descripcion`, `tipo` (`porcentaje` o `monto_fijo`), `valor` (> 0; hasta 100 si es porcentaje) y, opcionales, `compraMinimaUsd`, `validoDesde`, `validoHasta`, `usosMaximos`, `activo` (verdadero). `409` si el código ya existe. Queda en la auditoría. |
+| `PUT` | `/cupones/{id}` | 👔 | Edita un cupón (mismos campos salvo `codigo`, que no cambia). `409` si `usosMaximos` queda por debajo de los usos ya hechos. Los cupones no se borran: se desactivan con `activo: false`. |
 
 ## 8. Clientes — `/clientes`
 

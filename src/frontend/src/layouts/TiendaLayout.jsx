@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { listarCategorias } from '../api/catalogo'
 import { useCarrito } from '../context/CarritoContext'
 import BotonTema from '../components/BotonTema'
+import CarritoPanel from '../components/CarritoPanel'
+import MenuCliente from '../components/MenuCliente'
 import { formatoUsd } from '../utils/formato'
 import Icono from '../components/Icono'
 
@@ -15,7 +17,10 @@ export default function TiendaLayout() {
   const [params] = useSearchParams()
   const navegar = useNavigate()
   const { totalUnidades, totalUsd } = useCarrito()
+  const [carritoAbierto, setCarritoAbierto] = useState(false)
+  const cerrarCarrito = useCallback(() => setCarritoAbierto(false), [])
   const categoriaActiva = params.get('categoria')
+  const enOfertas = params.get('ofertas') === '1'
 
   useEffect(() => {
     listarCategorias()
@@ -72,11 +77,10 @@ export default function TiendaLayout() {
 
           <div className="ml-auto flex items-center gap-4 sm:ml-0">
             <BotonTema />
-            <button type="button" className="text-sm font-medium text-slate-700 hover:text-emerald-700 dark:hover:text-emerald-300">
-              Ingresar
-            </button>
+            <MenuCliente />
             <button
               type="button"
+              onClick={() => setCarritoAbierto(true)}
               className="relative flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
               aria-label={`Carrito: ${totalUnidades} productos`}
             >
@@ -98,11 +102,21 @@ export default function TiendaLayout() {
                 to="/"
                 end
                 className={`block whitespace-nowrap rounded-full px-3 py-1.5 font-medium ${
-                  !categoriaActiva ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-600 hover:bg-slate-100'
+                  !categoriaActiva && !enOfertas ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 Todo
               </NavLink>
+            </li>
+            <li>
+              <Link
+                to="/?ofertas=1"
+                className={`block whitespace-nowrap rounded-full px-3 py-1.5 font-semibold ${
+                  enOfertas ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300' : 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40'
+                }`}
+              >
+                Ofertas
+              </Link>
             </li>
             {categorias.map((c) => (
               <li key={c.id}>
@@ -119,6 +133,8 @@ export default function TiendaLayout() {
           </ul>
         </nav>
       </header>
+
+      <CarritoPanel abierto={carritoAbierto} alCerrar={cerrarCarrito} />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <Outlet context={{ categorias }} />

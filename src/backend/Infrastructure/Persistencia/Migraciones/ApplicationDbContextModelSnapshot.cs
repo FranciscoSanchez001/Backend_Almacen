@@ -28,6 +28,7 @@ namespace Infrastructure.Persistencia.Migraciones
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "metodo_pago", new[] { "binance", "pago_movil", "transferencia" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "moneda_pago", new[] { "USDT", "VES" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "rol_usuario", new[] { "cliente", "repartidor", "superadmin", "ventas" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "tipo_cupon", new[] { "monto_fijo", "porcentaje" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "tipo_movimiento_inventario", new[] { "ajuste", "liberacion", "reposicion", "reserva", "venta" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "tipo_notificacion", new[] { "pedido_nuevo", "pedido_por_expirar", "stock_agotado" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -199,6 +200,94 @@ namespace Infrastructure.Persistencia.Migraciones
                             t.HasCheckConstraint("ck_configuracion_horas_expiracion", "horas_expiracion > 0");
 
                             t.HasCheckConstraint("ck_configuracion_una_fila", "id = '00000000-0000-0000-0000-000000000001'");
+                        });
+                });
+
+            modelBuilder.Entity("Core.Domain.Entidades.Cupon", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<DateTime?>("ActualizadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("actualizado_en");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("codigo");
+
+                    b.Property<decimal?>("CompraMinimaUsd")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("compra_minima_usd");
+
+                    b.Property<Guid?>("CreadoPorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("creado_por");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creado_en")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("descripcion");
+
+                    b.Property<TipoCupon>("Tipo")
+                        .HasColumnType("tipo_cupon")
+                        .HasColumnName("tipo");
+
+                    b.Property<int>("UsosActuales")
+                        .HasColumnType("integer")
+                        .HasColumnName("usos_actuales");
+
+                    b.Property<int?>("UsosMaximos")
+                        .HasColumnType("integer")
+                        .HasColumnName("usos_maximos");
+
+                    b.Property<DateTime?>("ValidoDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valido_desde");
+
+                    b.Property<DateTime?>("ValidoHasta")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valido_hasta");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("valor");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cupones");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cupones_codigo");
+
+                    b.HasIndex("CreadoPorId")
+                        .HasDatabaseName("ix_cupones_creado_por_id");
+
+                    b.ToTable("cupones", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_cupones_compra_minima", "compra_minima_usd IS NULL OR compra_minima_usd >= 0");
+
+                            t.HasCheckConstraint("ck_cupones_usos", "usos_actuales >= 0 AND (usos_maximos IS NULL OR usos_actuales <= usos_maximos)");
+
+                            t.HasCheckConstraint("ck_cupones_valor", "valor > 0 AND (tipo <> 'porcentaje' OR valor <= 100)");
+
+                            t.HasCheckConstraint("ck_cupones_vigencia", "valido_desde IS NULL OR valido_hasta IS NULL OR valido_hasta > valido_desde");
                         });
                 });
 
@@ -459,6 +548,20 @@ namespace Infrastructure.Persistencia.Migraciones
                         .HasColumnName("creado_en")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<Guid?>("CuponId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cupon_id");
+
+                    b.Property<decimal>("DescuentoBs")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("descuento_bs");
+
+                    b.Property<decimal>("DescuentoUsd")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("descuento_usd");
+
                     b.Property<string>("DireccionTexto")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -570,6 +673,11 @@ namespace Infrastructure.Persistencia.Migraciones
                     b.HasIndex("ZonaId")
                         .HasDatabaseName("ix_pedidos_zona_id");
 
+                    b.HasIndex("CuponId", "ClienteId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_pedidos_cupon_cliente_vigente")
+                        .HasFilter("cupon_id IS NOT NULL AND estado NOT IN ('rechazado', 'expirado')");
+
                     b.HasIndex("Estado", "CreatedAt")
                         .HasDatabaseName("ix_pedidos_estado_creado_en");
 
@@ -578,6 +686,8 @@ namespace Infrastructure.Persistencia.Migraciones
 
                     b.ToTable("pedidos", null, t =>
                         {
+                            t.HasCheckConstraint("ck_pedidos_descuento", "descuento_usd >= 0 AND descuento_bs >= 0");
+
                             t.HasCheckConstraint("ck_pedidos_totales", "total_usd >= 0 AND total_bs >= 0 AND tasa_cambio > 0");
                         });
                 });
@@ -611,6 +721,11 @@ namespace Infrastructure.Persistencia.Migraciones
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("precio_bs");
+
+                    b.Property<decimal>("PrecioListaUsd")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("precio_lista_usd");
 
                     b.Property<decimal>("PrecioUsd")
                         .HasPrecision(18, 2)
@@ -684,6 +799,19 @@ namespace Infrastructure.Persistencia.Migraciones
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("descripcion");
 
+                    b.Property<DateTime?>("DescuentoDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("descuento_desde");
+
+                    b.Property<DateTime?>("DescuentoHasta")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("descuento_hasta");
+
+                    b.Property<decimal?>("DescuentoPorcentaje")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("descuento_porcentaje");
+
                     b.Property<string>("ImagenUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
@@ -752,6 +880,10 @@ namespace Infrastructure.Persistencia.Migraciones
                     b.ToTable("productos", null, t =>
                         {
                             t.HasCheckConstraint("ck_productos_costo_usd", "costo_usd >= 0");
+
+                            t.HasCheckConstraint("ck_productos_descuento", "descuento_porcentaje IS NULL OR (descuento_porcentaje > 0 AND descuento_porcentaje < 100)");
+
+                            t.HasCheckConstraint("ck_productos_descuento_vigencia", "descuento_desde IS NULL OR descuento_hasta IS NULL OR descuento_hasta > descuento_desde");
 
                             t.HasCheckConstraint("ck_productos_precio_usd", "precio_usd >= 0");
 
@@ -1161,6 +1293,17 @@ namespace Infrastructure.Persistencia.Migraciones
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("Core.Domain.Entidades.Cupon", b =>
+                {
+                    b.HasOne("Core.Domain.Entidades.Usuario", "CreadoPor")
+                        .WithMany()
+                        .HasForeignKey("CreadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_cupones_usuarios_creado_por_id");
+
+                    b.Navigation("CreadoPor");
+                });
+
             modelBuilder.Entity("Core.Domain.Entidades.HistorialEstadoPedido", b =>
                 {
                     b.HasOne("Core.Domain.Entidades.Pedido", "Pedido")
@@ -1261,6 +1404,12 @@ namespace Infrastructure.Persistencia.Migraciones
                         .IsRequired()
                         .HasConstraintName("fk_pedidos_usuarios_cliente_id");
 
+                    b.HasOne("Core.Domain.Entidades.Cupon", "Cupon")
+                        .WithMany()
+                        .HasForeignKey("CuponId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_pedidos_cupones_cupon_id");
+
                     b.HasOne("Core.Domain.Entidades.Usuario", "Repartidor")
                         .WithMany()
                         .HasForeignKey("RepartidorId")
@@ -1281,6 +1430,8 @@ namespace Infrastructure.Persistencia.Migraciones
                         .HasConstraintName("fk_pedidos_zonas_zona_id");
 
                     b.Navigation("Cliente");
+
+                    b.Navigation("Cupon");
 
                     b.Navigation("Repartidor");
 

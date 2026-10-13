@@ -1,4 +1,5 @@
 using Core.Application.Dtos;
+using Core.Application.Servicios;
 using Core.Domain.Entidades;
 using Core.Domain.Enums;
 
@@ -26,7 +27,9 @@ namespace Presentation.API.Dtos
         decimal PrecioUsd,
         decimal PrecioBs,
         decimal SubtotalUsd,
-        decimal SubtotalBs);
+        decimal SubtotalBs,
+        // Precio sin oferta; igual a PrecioUsd si no la hubo.
+        decimal PrecioListaUsd);
 
     // Usuario null: lo hizo el sistema (job de expiración).
     public record HistorialEstadoResponse(
@@ -62,7 +65,13 @@ namespace Presentation.API.Dtos
         DateTime ExpiraEn,
         DateTime CreadoEn,
         List<PedidoItemResponse> Items,
-        List<HistorialEstadoResponse> Historial)
+        List<HistorialEstadoResponse> Historial,
+        // Subtotal (ítems con ofertas) − descuento del cupón = total.
+        decimal SubtotalUsd,
+        decimal SubtotalBs,
+        decimal DescuentoUsd,
+        decimal DescuentoBs,
+        string? CodigoCupon)
     {
         // El pedido debe venir de IPedidoRepository.ObtenerDetalleAsync / ListarAsync.
         public static PedidoResponse De(Pedido p) => new(
@@ -77,10 +86,42 @@ namespace Presentation.API.Dtos
             p.ExpiraEn, p.CreatedAt,
             p.Items.OrderBy(i => i.Producto.Nombre).Select(i => new PedidoItemResponse(
                 i.ProductoId, i.Producto.CodigoSku, i.Producto.Nombre, i.Categoria.Nombre, i.Cantidad,
-                i.PrecioUsd, i.PrecioBs, i.PrecioUsd * i.Cantidad, i.PrecioBs * i.Cantidad)).ToList(),
+                i.PrecioUsd, i.PrecioBs, i.PrecioUsd * i.Cantidad, i.PrecioBs * i.Cantidad, i.PrecioListaUsd)).ToList(),
             p.HistorialEstados.OrderBy(h => h.CreatedAt).ThenBy(h => (int)h.EstadoNuevo).Select(h => new HistorialEstadoResponse(
-                h.EstadoAnterior, h.EstadoNuevo, Resumen(h.Usuario), h.CreatedAt)).ToList());
+                h.EstadoAnterior, h.EstadoNuevo, Resumen(h.Usuario), h.CreatedAt)).ToList(),
+            p.TotalUsd + p.DescuentoUsd, p.TotalBs + p.DescuentoBs, p.DescuentoUsd, p.DescuentoBs, p.Cupon?.Codigo);
 
         private static UsuarioResumen? Resumen(Usuario? u) => u is null ? null : new(u.Id, u.Nombre, u.Telefono);
+    }
+
+    // POST /pedidos/cotizar. StockDisponible permite avisar en el checkout si el carrito pide más
+    // de lo que queda. Los montos en Bs van en null mientras no haya tasa del día.
+    public record LineaCotizacionResponse(
+        Guid ProductoId,
+        string Nombre,
+        int Cantidad,
+        int StockDisponible,
+        decimal PrecioUsd,
+        decimal PrecioListaUsd,
+        decimal SubtotalUsd);
+
+    public record CuponAplicadoResponse(string Codigo, string? Descripcion, TipoCupon Tipo, decimal Valor);
+
+    public record CotizacionResponse(
+        List<LineaCotizacionResponse> Lineas,
+        decimal SubtotalUsd,
+        decimal DescuentoUsd,
+        decimal TotalUsd,
+        decimal? TasaBsUsd,
+        decimal? SubtotalBs,
+        decimal? DescuentoBs,
+        decimal? TotalBs,
+        CuponAplicadoResponse? Cupon)
+    {
+        public static CotizacionResponse De(Cotizacion c) => new(
+            c.Lineas.Select(l => new LineaCotizacionResponse(l.Producto.Id, l.Producto.Nombre, l.Cantidad,
+                l.Producto.StockDisponible, l.PrecioUsd, l.PrecioListaUsd, l.SubtotalUsd)).ToList(),
+            c.SubtotalUsd, c.DescuentoUsd, c.TotalUsd, c.Tasa, c.SubtotalBs, c.DescuentoBs, c.TotalBs,
+            c.Cupon is null ? null : new CuponAplicadoResponse(c.Cupon.Codigo, c.Cupon.Descripcion, c.Cupon.Tipo, c.Cupon.Valor));
     }
 }

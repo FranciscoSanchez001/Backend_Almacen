@@ -65,13 +65,17 @@ Al confirmar la compra, el cliente envía (`POST /pedidos`):
 - **Referencia** del pago y **captura** del comprobante (obligatorias).
 - **Zona**, dirección con punto de referencia y, opcionalmente, coordenadas.
 - **Teléfono venezolano obligatorio** (`+58 4XX XXX XXXX`), validado en `Core.Domain/Reglas/Telefonos.cs`. Se guarda en el pedido, porque el cliente puede comprar para otra persona.
+- **Cupón** de descuento, opcional (ver sección 10).
+
+Antes de confirmar, el checkout consulta `POST /pedidos/cotizar`, que calcula el total con los mismos precios, ofertas y cupón que usará la creación. El precio nunca sale del navegador.
 
 El sistema entonces:
 1. Verifica que haya **tasa del día** cargada. Si no la hay, el pedido no se crea.
-2. **Congela** la tasa de cambio, el precio de cada producto (USD y Bs) y su categoría.
-3. **Reserva el stock** de todos los productos (ver sección 4). Si alguno no alcanza, el pedido no se crea.
-4. Fija la fecha de vencimiento: `expira_en = creado_en + horas_expiracion` (5 horas por defecto).
-5. Crea una notificación de **pedido nuevo** para el personal.
+2. **Congela** la tasa de cambio, el precio de cada producto (USD y Bs, **ya con la oferta vigente**), su precio de lista y su categoría.
+3. Si hay cupón, verifica que aplique y **congela el descuento** (USD y Bs). Total = subtotal − descuento.
+4. **Reserva el stock** de todos los productos (ver sección 4) y, después, **un uso del cupón**. Si algo no alcanza, el pedido no se crea.
+5. Fija la fecha de vencimiento: `expira_en = creado_en + horas_expiracion` (5 horas por defecto).
+6. Crea una notificación de **pedido nuevo** para el personal.
 
 ---
 
@@ -139,6 +143,7 @@ Reglas:
 - Solo el **superadmin** accede a los KPIs (`GET /kpis`) y al informe (`GET /reportes/excel`).
 - **Solo cuentan como venta** los pedidos `aprobado`, `asignado`, `en_camino` y `entregado`. Los pendientes, rechazados y expirados no suman a los ingresos.
 - Los montos están en USD, con su equivalente en Bs según la tasa congelada de cada pedido.
+- Los **ingresos totales** (por día, método de pago y zona) usan el total del pedido, que ya descuenta el cupón. Los ingresos **por producto y categoría** usan el precio de cada ítem (con la oferta, sin prorratear el cupón), así que su suma puede superar el total cuando hubo cupones.
 - El período puede ser diario, semanal (lunes a domingo), mensual o personalizado, en hora local de la tienda.
 - Los KPIs y el Excel salen del mismo cálculo (`ReportesService`), así que siempre coinciden.
 - El informe trae 10 hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos. La hoja **Detalle de pedidos** trae los datos sin procesar, para que el gerente haga sus propios análisis.
@@ -150,3 +155,24 @@ Reglas:
 - Cada creación, edición o borrado de productos queda registrado en `auditoria`, con el usuario, la fecha y los datos **antes y después** en JSON.
 - Cada cambio de stock queda en `movimientos_inventario` (ver sección 4), también con el usuario que lo hizo.
 - El personal de ventas **no puede borrar** productos; el borrado es **lógico** (el producto se marca inactivo y se conserva el historial de ventas).
+
+---
+
+## 10. Ofertas y Cupones
+
+### Ofertas de producto
+
+- Cada producto puede tener un **% de descuento** (mayor que 0 y menor que 100) con fechas de inicio y fin **opcionales**. Sin fechas, la oferta aplica mientras tenga porcentaje. La vigencia es `[desde, hasta)`; en el panel se eligen días y "hasta" es inclusive.
+- Lo configuran ventas y el gerente al editar el producto; el cambio queda en la auditoría.
+- `/catalogo` devuelve el precio **ya rebajado** y, si la oferta está vigente, el precio original para mostrarlo tachado. `?ofertas=true` lista solo los productos en oferta.
+- La regla vive en `Producto.PrecioVigenteUsd(...)` (`Core.Domain/Entidades/Producto.cs`).
+
+### Cupones
+
+- Los crea y edita **solo el gerente** (`/admin/cupones`), porque afectan los ingresos. No se borran: se desactivan.
+- Tipos: **porcentaje** (hasta 100 %) o **monto fijo** en USD. El descuento nunca deja el total por debajo de 0.
+- Se aplican al **subtotal del pedido ya con las ofertas** (se acumulan con ellas).
+- Condiciones opcionales: **compra mínima** (sobre ese subtotal), **vigencia** y **límite de usos** entre todos los clientes.
+- **Un uso por cliente.** Los pedidos rechazados o expirados no cuentan: al rechazarse o expirar, el uso se devuelve y el cliente puede volver a usarlo.
+- **Sin sobreuso.** El uso se descuenta con un `UPDATE` condicional dentro de la transacción del pedido, y la base impide pasar del límite (`ck_cupones_usos`) y repetir cupón por cliente (`ux_pedidos_cupon_cliente_vigente`). Si dos pedidos compiten por el último uso, solo uno lo consigue.
+- Reglas en `Cupon.MotivoNoAplicable(...)` y `Cupon.CalcularDescuento(...)` (`Core.Domain/Entidades/Cupon.cs`); el flujo, en `PedidosService`.

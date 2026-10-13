@@ -37,6 +37,16 @@ export function CarritoProvider({ children }) {
       lineas: lista,
       cantidadDe: (id) => lineas[id]?.cantidad ?? 0,
       cambiarCantidad,
+      quitar: (id) =>
+        setLineas((actual) => {
+          const siguiente = { ...actual }
+          delete siguiente[id]
+          return siguiente
+        }),
+      // Después de confirmar el pedido.
+      vaciar: () => setLineas({}),
+      // Lo que espera la API: [{ productoId, cantidad }].
+      items: lista.map((l) => ({ productoId: l.producto.id, cantidad: l.cantidad })),
       totalUnidades: lista.reduce((suma, l) => suma + l.cantidad, 0),
       totalUsd: lista.reduce((suma, l) => suma + l.cantidad * l.producto.precioUsd, 0),
     }

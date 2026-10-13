@@ -26,17 +26,31 @@ namespace Presentation.API.Dtos
         string UnidadMedida,
         bool Activo,
         DateTime CreadoEn,
-        DateTime? ActualizadoEn)
+        DateTime? ActualizadoEn,
+        // Oferta configurada (aunque no esté vigente) y el precio que paga hoy el cliente.
+        decimal? DescuentoPorcentaje,
+        DateTime? DescuentoDesde,
+        DateTime? DescuentoHasta,
+        bool OfertaVigente,
+        decimal PrecioVigenteUsd)
     {
         // El producto debe traer la categoría cargada.
-        public static ProductoResponse De(Producto p, decimal? tasa) => new(
-            p.Id, p.CodigoSku, p.Nombre, p.Descripcion, p.PrecioUsd, TasaService.EnBs(p.PrecioUsd, tasa), p.CostoUsd,
-            p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible, p.StockReservado,
-            p.StockMinimo, p.StockMaximo, p.StockDisponible < p.StockMinimo, p.Ubicacion, p.UnidadMedida, p.Activo,
-            p.CreatedAt, p.ActualizadoEn);
+        public static ProductoResponse De(Producto p, decimal? tasa)
+        {
+            var ahora = DateTime.UtcNow;
+            return new(
+                p.Id, p.CodigoSku, p.Nombre, p.Descripcion, p.PrecioUsd, TasaService.EnBs(p.PrecioUsd, tasa), p.CostoUsd,
+                p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible, p.StockReservado,
+                p.StockMinimo, p.StockMaximo, p.StockDisponible < p.StockMinimo, p.Ubicacion, p.UnidadMedida, p.Activo,
+                p.CreatedAt, p.ActualizadoEn,
+                p.DescuentoPorcentaje, p.DescuentoDesde, p.DescuentoHasta, p.TieneOfertaVigente(ahora),
+                p.PrecioVigenteUsd(ahora));
+        }
     }
 
-    // Vista pública de la tienda (sin costo ni stock reservado).
+    // Vista pública de la tienda (sin costo ni stock reservado). PrecioUsd y PrecioBs son lo que
+    // se cobra hoy (con la oferta aplicada); si hay oferta vigente, PrecioOriginalUsd trae el
+    // precio sin descuento para mostrarlo tachado. Sin oferta, los campos de oferta van en null.
     public record CatalogoItem(
         Guid Id,
         string CodigoSku,
@@ -48,11 +62,21 @@ namespace Presentation.API.Dtos
         Guid CategoriaId,
         string Categoria,
         int StockDisponible,
-        string UnidadMedida)
+        string UnidadMedida,
+        decimal? PrecioOriginalUsd,
+        decimal? DescuentoPorcentaje,
+        DateTime? OfertaHasta)
     {
-        public static CatalogoItem De(Producto p, decimal? tasa) => new(
-            p.Id, p.CodigoSku, p.Nombre, p.Descripcion, p.PrecioUsd, TasaService.EnBs(p.PrecioUsd, tasa),
-            p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible, p.UnidadMedida);
+        public static CatalogoItem De(Producto p, decimal? tasa)
+        {
+            var ahora = DateTime.UtcNow;
+            var oferta = p.TieneOfertaVigente(ahora);
+            var precio = p.PrecioVigenteUsd(ahora);
+            return new(
+                p.Id, p.CodigoSku, p.Nombre, p.Descripcion, precio, TasaService.EnBs(precio, tasa),
+                p.ImagenUrl, p.CategoriaId, p.Categoria.Nombre, p.StockDisponible, p.UnidadMedida,
+                oferta ? p.PrecioUsd : null, oferta ? p.DescuentoPorcentaje : null, oferta ? p.DescuentoHasta : null);
+        }
     }
 
     // Inicio de la tienda. Las listas personales van vacías si no hay un cliente con sesión.

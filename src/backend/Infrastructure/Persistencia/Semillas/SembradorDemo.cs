@@ -436,6 +436,7 @@ namespace Infrastructure.Persistencia.Semillas
                     Cantidad = cantidad,
                     PrecioUsd = s.Producto.PrecioUsd,
                     PrecioBs = Math.Round(s.Producto.PrecioUsd * tasa, 2, MidpointRounding.AwayFromZero),
+                    PrecioListaUsd = s.Producto.PrecioUsd,
                 });
             }
             if (pedido.Items.Count == 0)

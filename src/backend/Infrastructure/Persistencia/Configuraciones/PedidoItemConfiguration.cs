@@ -13,6 +13,7 @@ namespace Infrastructure.Persistencia.Configuraciones
 
             builder.Property(i => i.PrecioUsd).HasPrecision(18, 2);
             builder.Property(i => i.PrecioBs).HasPrecision(18, 2);
+            builder.Property(i => i.PrecioListaUsd).HasPrecision(18, 2);
 
             builder.HasOne(i => i.Pedido)
                 .WithMany(p => p.Items)

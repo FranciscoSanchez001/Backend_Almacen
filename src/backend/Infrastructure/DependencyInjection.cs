@@ -36,6 +36,7 @@ namespace Infrastructure
             services.AddScoped<IMensajeWhatsappRepository, MensajeWhatsappRepository>();
             services.AddScoped<IDiagnosticoBaseDatos, DiagnosticoBaseDatos>();
             services.AddScoped<IReportesRepository, ReportesRepository>();
+            services.AddScoped<ICuponRepository, CuponRepository>();
 
             // KPIs e informe en Excel.
             services.AddSingleton(configuracion.GetSection("Reportes").Get<ReportesOptions>() ?? new ReportesOptions());

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { formatoBs, formatoDia, formatoMinutos, formatoNumero, formatoPct, formatoUsd, hoyIso } from './formato'
+import { formatoBs, formatoDia, formatoMinutos, formatoNumero, formatoPct, formatoUsd, hoyIso, diaAIso, isoADia } from './formato'
 
 describe('formato de montos', () => {
   it('formatoUsd usa el símbolo de dólar y dos decimales', () => {
@@ -54,5 +54,22 @@ describe('hoyIso', () => {
     vi.setSystemTime(new Date(2026, 0, 7, 23, 30))
 
     expect(hoyIso()).toBe('2026-01-07')
+  })
+})
+
+describe('vigencias por día', () => {
+  it('diaAIso da la medianoche local del día, o la del día siguiente para el fin', () => {
+    expect(new Date(diaAIso('2026-10-20')).getTime()).toBe(new Date(2026, 9, 20).getTime())
+    expect(new Date(diaAIso('2026-10-31', { fin: true })).getTime()).toBe(new Date(2026, 10, 1).getTime())
+  })
+
+  it('isoADia es el inverso de diaAIso, también para el fin inclusive', () => {
+    expect(isoADia(diaAIso('2026-10-20'))).toBe('2026-10-20')
+    expect(isoADia(diaAIso('2026-12-31', { fin: true }), { fin: true })).toBe('2026-12-31')
+  })
+
+  it('sin fecha devuelve null o vacío', () => {
+    expect(diaAIso('')).toBeNull()
+    expect(isoADia(null)).toBe('')
   })
 })
