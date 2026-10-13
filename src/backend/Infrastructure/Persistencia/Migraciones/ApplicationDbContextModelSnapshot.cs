@@ -29,6 +29,7 @@ namespace Infrastructure.Persistencia.Migraciones
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "moneda_pago", new[] { "USDT", "VES" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "rol_usuario", new[] { "cliente", "repartidor", "superadmin", "ventas" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "tipo_cupon", new[] { "monto_fijo", "porcentaje" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "tipo_evento_analitica", new[] { "abrir_carrito", "agregar_carrito", "busqueda", "cupon_aplicado", "cupon_rechazado", "filtro_categoria", "filtro_ofertas", "inicio_checkout", "pagina_vista", "pedido_confirmado", "quitar_carrito" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "tipo_movimiento_inventario", new[] { "ajuste", "liberacion", "reposicion", "reserva", "venta" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "tipo_notificacion", new[] { "pedido_nuevo", "pedido_por_expirar", "stock_agotado" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -289,6 +290,75 @@ namespace Infrastructure.Persistencia.Migraciones
 
                             t.HasCheckConstraint("ck_cupones_vigencia", "valido_desde IS NULL OR valido_hasta IS NULL OR valido_hasta > valido_desde");
                         });
+                });
+
+            modelBuilder.Entity("Core.Domain.Entidades.EventoAnalitica", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int?>("Cantidad")
+                        .HasColumnType("integer")
+                        .HasColumnName("cantidad");
+
+                    b.Property<Guid?>("CategoriaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("categoria_id");
+
+                    b.Property<Guid?>("ClienteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cliente_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creado_en")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid?>("ProductoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("producto_id");
+
+                    b.Property<string>("Ruta")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("ruta");
+
+                    b.Property<string>("SesionId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("sesion_id");
+
+                    b.Property<string>("Texto")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("texto");
+
+                    b.Property<TipoEventoAnalitica>("Tipo")
+                        .HasColumnType("tipo_evento_analitica")
+                        .HasColumnName("tipo");
+
+                    b.Property<decimal?>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("valor");
+
+                    b.HasKey("Id")
+                        .HasName("pk_eventos_analitica");
+
+                    b.HasIndex("ClienteId")
+                        .HasDatabaseName("ix_eventos_analitica_cliente_id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_eventos_analitica_creado_en");
+
+                    b.HasIndex("Tipo", "CreatedAt")
+                        .HasDatabaseName("ix_eventos_analitica_tipo_creado_en");
+
+                    b.ToTable("eventos_analitica", (string)null);
                 });
 
             modelBuilder.Entity("Core.Domain.Entidades.HistorialEstadoPedido", b =>
@@ -1302,6 +1372,17 @@ namespace Infrastructure.Persistencia.Migraciones
                         .HasConstraintName("fk_cupones_usuarios_creado_por_id");
 
                     b.Navigation("CreadoPor");
+                });
+
+            modelBuilder.Entity("Core.Domain.Entidades.EventoAnalitica", b =>
+                {
+                    b.HasOne("Core.Domain.Entidades.Usuario", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_eventos_analitica_usuarios_cliente_id");
+
+                    b.Navigation("Cliente");
                 });
 
             modelBuilder.Entity("Core.Domain.Entidades.HistorialEstadoPedido", b =>

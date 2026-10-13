@@ -49,7 +49,7 @@ async function crearError(respuesta) {
 
 // --- La función que usan todas las pantallas ---
 
-export async function pedir(ruta, { metodo = 'GET', cuerpo, consulta } = {}) {
+export async function pedir(ruta, { metodo = 'GET', cuerpo, consulta, encabezados: extra } = {}) {
   // 1. Dirección completa + filtros (?q=harina&pagina=1). Se omiten los vacíos.
   const url = new URL(ruta, URL_API);
   if (consulta) {
@@ -59,7 +59,7 @@ export async function pedir(ruta, { metodo = 'GET', cuerpo, consulta } = {}) {
   }
 
   // 2. Token de sesión, si hay.
-  const encabezados = {};
+  const encabezados = { ...extra };
   const token = obtenerToken();
   if (token) encabezados.Authorization = `Bearer ${token}`;
 

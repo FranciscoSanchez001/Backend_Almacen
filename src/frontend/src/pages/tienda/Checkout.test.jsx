@@ -5,9 +5,11 @@ import { renderizar } from '../../test/renderizar'
 import { listarZonasEntrega, obtenerDatosPago } from '../../api/catalogo'
 import { cotizarPedido, crearPedido } from '../../api/pedidos'
 import { ErrorApi } from '../../api/cliente'
+import { enviarEventos, registrarEvento } from '../../utils/analitica'
 
 vi.mock('../../api/catalogo', () => ({ listarZonasEntrega: vi.fn(), obtenerDatosPago: vi.fn() }))
 vi.mock('../../api/pedidos', () => ({ cotizarPedido: vi.fn(), crearPedido: vi.fn() }))
+vi.mock('../../utils/analitica', () => ({ registrarEvento: vi.fn(), enviarEventos: vi.fn() }))
 
 const arroz = { id: 'p1', nombre: 'Arroz', precioUsd: 1.5, precioOriginalUsd: 2, stockDisponible: 10 }
 const cafe = { id: 'p2', nombre: 'Café', precioUsd: 5, stockDisponible: 10 }
@@ -263,5 +265,48 @@ describe('Checkout: pago y envío', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No hay suficiente stock de "Arroz".')
     await waitFor(() => expect(vi.mocked(cotizarPedido).mock.calls.length).toBeGreaterThan(cotizacionesAntes))
     expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
+  })
+})
+
+describe('Checkout: analítica', () => {
+  const eventos = () => vi.mocked(registrarEvento).mock.calls.map(([tipo, datos]) => (datos ? [tipo, datos] : [tipo]))
+
+  it('registra el inicio del pago y los cupones aplicados y rechazados', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    expect(eventos()).toContainEqual(['inicio_checkout'])
+
+    vi.mocked(cotizarPedido).mockRejectedValueOnce(new ErrorApi('El cupón no existe.', 400, null))
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'falso')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+    await screen.findByText('El cupón no existe.')
+
+    vi.mocked(cotizarPedido).mockResolvedValue(conCupon)
+    await user.clear(screen.getByLabelText('¿Tienes un cupón?'))
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'verano10')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+    await screen.findByText('−$0.80')
+
+    expect(eventos()).toContainEqual(['cupon_rechazado', { texto: 'falso' }])
+    expect(eventos()).toContainEqual(['cupon_aplicado', { texto: 'verano10' }])
+  })
+
+  it('al confirmar registra el pedido con su total y envía los eventos enseguida', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockResolvedValue({ id: 'n1', numero: 42, totalUsd: 8 })
+    const { user } = abrir()
+    await screen.findByRole('option', { name: 'Centro' })
+    await user.selectOptions(screen.getByLabelText('Zona'), 'z1')
+    await user.type(screen.getByLabelText('Teléfono de contacto'), '0414 123 4567')
+    await user.type(screen.getByLabelText('Dirección y punto de referencia'), 'Calle 10, portón azul')
+    await user.type(screen.getByLabelText('Referencia del pago'), '987654')
+    await user.upload(screen.getByLabelText('Captura del comprobante'), new File(['img'], 'pago.png', { type: 'image/png' }))
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    await screen.findByTestId('ubicacion')
+    expect(eventos()).toContainEqual(['pedido_confirmado', { valor: 8 }])
+    expect(enviarEventos).toHaveBeenCalled()
   })
 })

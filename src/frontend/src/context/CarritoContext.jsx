@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { registrarEvento } from '../utils/analitica'
 
 // Carrito de la tienda. Se guarda en el navegador para no perderlo al recargar.
 // Cada línea: { producto, cantidad }, indexada por el id del producto.
@@ -21,8 +22,15 @@ export function CarritoProvider({ children }) {
   }, [lineas])
 
   const valor = useMemo(() => {
+    // Analítica: cuántas unidades se agregaron o se quitaron.
+    function registrarCambio(productoId, antes, despues) {
+      if (despues > antes) registrarEvento('agregar_carrito', { productoId, cantidad: despues - antes })
+      else if (despues < antes) registrarEvento('quitar_carrito', { productoId, cantidad: antes - despues })
+    }
+
     // Cambia la cantidad de un producto; con 0 o menos lo quita. No pasa del stock disponible.
     function cambiarCantidad(producto, cantidad) {
+      registrarCambio(producto.id, lineas[producto.id]?.cantidad ?? 0, Math.max(0, Math.min(cantidad, producto.stockDisponible)))
       setLineas((actual) => {
         const siguiente = { ...actual }
         const tope = Math.min(cantidad, producto.stockDisponible)
@@ -37,12 +45,14 @@ export function CarritoProvider({ children }) {
       lineas: lista,
       cantidadDe: (id) => lineas[id]?.cantidad ?? 0,
       cambiarCantidad,
-      quitar: (id) =>
+      quitar: (id) => {
+        registrarCambio(id, lineas[id]?.cantidad ?? 0, 0)
         setLineas((actual) => {
           const siguiente = { ...actual }
           delete siguiente[id]
           return siguiente
-        }),
+        })
+      },
       // Después de confirmar el pedido.
       vaciar: () => setLineas({}),
       // Lo que espera la API: [{ productoId, cantidad }].

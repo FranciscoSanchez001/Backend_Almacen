@@ -17,7 +17,9 @@ namespace Presentation.API.Controllers
         IProductoRepository productos,
         IZonaRepository zonas,
         IConfiguracionRepository configuracion,
-        TasaService tasas) : ControllerBase
+        TasaService tasas,
+        AnaliticaService analitica,
+        ILogger<CatalogoController> logger) : ControllerBase
     {
         [HttpGet]
         [AllowAnonymous]
@@ -31,8 +33,32 @@ namespace Presentation.API.Controllers
         {
             var resultado = await productos.ListarAsync(
                 new FiltroProductos(q, categoriaId, SoloVisiblesEnTienda: true, SoloEnOferta: ofertas), pagina, tamano, ct);
+            if (!string.IsNullOrWhiteSpace(q) && pagina == 1)
+            {
+                await RegistrarBusquedaAsync(q, resultado.Total, ct);
+            }
             var tasa = await tasas.ObtenerActualAsync(ct);
             return resultado.Convertir(p => CatalogoItem.De(p, tasa));
+        }
+
+        // Analítica: qué buscan los visitantes y cuántos resultados encontraron. Solo la primera
+        // página (pasar de página no es buscar otra vez) y solo si el navegador mandó su sesión.
+        // Un fallo aquí no debe dejar al cliente sin catálogo.
+        private async Task RegistrarBusquedaAsync(string texto, int resultados, CancellationToken ct)
+        {
+            if (AnaliticaController.SesionDe(Request) is not { } sesion
+                || !AnaliticaController.EsCliente(User, out var clienteId))
+            {
+                return;
+            }
+            try
+            {
+                await analitica.RegistrarBusquedaAsync(sesion, clienteId, texto, resultados, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex, "No se pudo registrar la búsqueda en la analítica.");
+            }
         }
 
         [HttpGet("{id:guid}")]

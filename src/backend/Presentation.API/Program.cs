@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Core.Application;
 using Core.Application.Abstracciones;
 using FluentValidation;
@@ -7,6 +8,7 @@ using Infrastructure;
 using Infrastructure.Archivos;
 using Infrastructure.Persistencia.Semillas;
 using Presentation.API.Auth;
+using Presentation.API.Controllers;
 using Presentation.API.Filtros;
 using Presentation.API.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -111,6 +113,16 @@ builder.Services.AddControllers(options =>
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// POST /analitica/eventos es anónimo: se limita a 60 lotes por minuto por IP para que nadie
+// pueda llenar la base de eventos falsos. Pasado el límite responde 429.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(AnaliticaController.PoliticaLimite, contexto => RateLimitPartition.GetFixedWindowLimiter(
+        contexto.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1) }));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -146,6 +158,7 @@ if (app.Services.GetService<AlmacenamientoLocal>() is { } local)
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 

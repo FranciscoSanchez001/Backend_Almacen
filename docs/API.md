@@ -183,6 +183,15 @@ El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, 
 
 Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los datos del Excel coinciden con los de `/kpis`**. El informe trae las hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos.
 
+## 14.1 Analítica de comportamiento — `/analitica`
+
+| Método | Ruta | Acceso | Descripción |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/analitica/eventos` | 🌐 | Lote de eventos de la tienda. Cuerpo: `{ "sesionId", "eventos": [{ "tipo", "ruta", "productoId", "categoriaId", "texto", "cantidad", "valor" }] }` (1 a 50 eventos; `sesionId` de 8 a 64 caracteres). Tipos: `pagina_vista`, `filtro_categoria`, `filtro_ofertas`, `abrir_carrito`, `agregar_carrito`, `quitar_carrito`, `inicio_checkout`, `cupon_aplicado`, `cupon_rechazado`, `pedido_confirmado` (`busqueda` no: la registra `/catalogo`). Responde `204`; los lotes del personal se descartan. Límite: 60 lotes por minuto por IP (`429`). |
+| `GET` | `/analitica/comportamiento` | 👔 | Resumen del período (mismos parámetros que `/kpis`: `tipo`, `desde`, `hasta`): visitas, búsquedas y % sin resultados, conversión, embudo, lo más buscado, lo buscado sin resultados, productos agregados al carrito vs. vendidos, categorías, cupones y actividad por día. |
+
+`GET /catalogo` con `q` registra la búsqueda (y cuántos resultados dio) si la petición trae el encabezado `X-Sesion-Analitica` con el id de la visita. Solo cuenta la primera página.
+
 ## 15. Diagnóstico — `/DbTest`
 
 | Método | Ruta | Acceso | Descripción |

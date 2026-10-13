@@ -16,6 +16,7 @@ namespace Core.Application
             services.AddScoped<PedidosService>();
             services.AddScoped<ReportesService>();
             services.AddScoped<CuponService>();
+            services.AddScoped<AnaliticaService>();
 
             // Cola en memoria compartida con el worker de WhatsApp: una sola instancia.
             services.AddSingleton<ColaWhatsapp>();

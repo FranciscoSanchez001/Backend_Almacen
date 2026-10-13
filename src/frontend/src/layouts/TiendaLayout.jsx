@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { listarCategorias } from '../api/catalogo'
+import { registrarEvento } from '../utils/analitica'
 import { useCarrito } from '../context/CarritoContext'
 import BotonTema from '../components/BotonTema'
 import CarritoPanel from '../components/CarritoPanel'
@@ -21,6 +22,12 @@ export default function TiendaLayout() {
   const cerrarCarrito = useCallback(() => setCarritoAbierto(false), [])
   const categoriaActiva = params.get('categoria')
   const enOfertas = params.get('ofertas') === '1'
+  const { pathname, search } = useLocation()
+
+  // Analítica: cada pantalla de la tienda que se abre (incluida la búsqueda y los filtros).
+  useEffect(() => {
+    registrarEvento('pagina_vista', { ruta: (pathname + search).slice(0, 200) })
+  }, [pathname, search])
 
   useEffect(() => {
     listarCategorias()
@@ -80,7 +87,10 @@ export default function TiendaLayout() {
             <MenuCliente />
             <button
               type="button"
-              onClick={() => setCarritoAbierto(true)}
+              onClick={() => {
+                setCarritoAbierto(true)
+                registrarEvento('abrir_carrito')
+              }}
               className="relative flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
               aria-label={`Carrito: ${totalUnidades} productos`}
             >

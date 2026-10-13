@@ -3,6 +3,7 @@ import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { listarCatalogo } from '../../api/catalogo'
 import TarjetaProducto from '../../components/TarjetaProducto'
 import Icono from '../../components/Icono'
+import { registrarEvento } from '../../utils/analitica'
 
 const TAMANO_PAGINA = 24
 
@@ -34,6 +35,14 @@ export default function Catalogo() {
       vigente = false
     }
   }, [q, categoriaId, ofertas, pagina, intento])
+
+  // Analítica: qué categorías y si las ofertas interesan. Las búsquedas las registra la API.
+  useEffect(() => {
+    if (categoriaId) registrarEvento('filtro_categoria', { categoriaId })
+  }, [categoriaId])
+  useEffect(() => {
+    if (ofertas) registrarEvento('filtro_ofertas')
+  }, [ofertas])
 
   function irAPagina(n) {
     const siguiente = new URLSearchParams(params)

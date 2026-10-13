@@ -176,3 +176,33 @@ Reglas:
 - **Un uso por cliente.** Los pedidos rechazados o expirados no cuentan: al rechazarse o expirar, el uso se devuelve y el cliente puede volver a usarlo.
 - **Sin sobreuso.** El uso se descuenta con un `UPDATE` condicional dentro de la transacción del pedido, y la base impide pasar del límite (`ck_cupones_usos`) y repetir cupón por cliente (`ux_pedidos_cupon_cliente_vigente`). Si dos pedidos compiten por el último uso, solo uno lo consigue.
 - Reglas en `Cupon.MotivoNoAplicable(...)` y `Cupon.CalcularDescuento(...)` (`Core.Domain/Entidades/Cupon.cs`); el flujo, en `PedidosService`.
+
+---
+
+## 11. Analítica de Comportamiento
+
+El gerente ve en `/admin/comportamiento` qué hacen los visitantes de la tienda: qué buscan, qué no encuentran, qué agregan al carrito y en qué paso abandonan la compra.
+
+**Qué se registra** (tabla `eventos_analitica`):
+
+| Evento | Quién lo registra | Datos |
+| :--- | :--- | :--- |
+| Búsqueda | La API, al responder `/catalogo?q=` (solo la primera página) | Texto normalizado y cantidad de resultados |
+| Página vista | El navegador | Ruta de la tienda |
+| Filtro por categoría / ofertas | El navegador | Categoría |
+| Abrir carrito, agregar y quitar productos | El navegador | Producto y unidades |
+| Inicio del pago, cupón aplicado o rechazado | El navegador | Código del cupón |
+| Pedido confirmado | El navegador | Total en USD |
+
+**Privacidad:**
+- Es **anónimo**: cada visita tiene un id aleatorio que el navegador renueva tras **30 minutos sin actividad**. No se guarda la IP ni datos personales; si el visitante inició sesión con Google, el evento queda asociado a su cuenta.
+- Se respeta **"No rastrear"** (Do Not Track): el navegador no envía nada.
+- El **personal** no se cuenta, aunque navegue la tienda.
+- Los eventos se **borran solos** a los 180 días (`Analitica:DiasRetencion`, job `LimpiezaAnaliticaJob`).
+
+**Cómo leer el resumen:**
+- **Visitas**: sesiones distintas con al menos un evento. **Conversión**: % de visitas con un pedido confirmado.
+- **Embudo**: visitaron → agregaron al carrito → iniciaron el pago → confirmaron el pedido, en sesiones.
+- **Agregados vs. vendidos**: unidades agregadas al carrito frente a unidades vendidas (pedidos que son venta) en el mismo período.
+- Los eventos llegan por lotes cada pocos segundos; un fallo de la analítica **nunca** afecta a la compra.
+- Las cifras son aproximadas: bloqueadores de anuncios o pestañas cerradas de golpe pueden perder eventos. Para las ventas reales, la fuente es el dashboard KPI.

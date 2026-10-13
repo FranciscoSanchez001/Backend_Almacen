@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { listarCatalogo, listarCategorias, listarZonasEntrega, obtenerDatosPago } from './catalogo'
+import { activarAnalitica, desactivarAnalitica, sesionAnalitica } from '../utils/analitica'
 
 let fetchSimulado
 
@@ -47,5 +48,26 @@ describe('catálogo: ofertas y checkout', () => {
 
     const rutas = fetchSimulado.mock.calls.map(([u]) => new URL(u.toString()).pathname)
     expect(rutas).toEqual(['/catalogo/zonas', '/catalogo/pago'])
+  })
+})
+
+describe('catálogo: analítica de búsquedas', () => {
+  const encabezados = () => fetchSimulado.mock.calls[0][1].headers
+
+  it('con la analítica activa, una búsqueda manda el id de la visita', async () => {
+    activarAnalitica()
+    await listarCatalogo({ q: 'arroz' })
+
+    expect(encabezados()['X-Sesion-Analitica']).toBe(sesionAnalitica())
+    desactivarAnalitica()
+  })
+
+  it('sin búsqueda, o con la analítica apagada, no lo manda', async () => {
+    activarAnalitica()
+    await listarCatalogo({ categoriaId: 'c1' })
+    desactivarAnalitica()
+    await listarCatalogo({ q: 'arroz' })
+
+    expect(fetchSimulado.mock.calls.map(([, o]) => o.headers['X-Sesion-Analitica'])).toEqual([undefined, undefined])
   })
 })

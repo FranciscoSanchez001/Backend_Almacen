@@ -43,6 +43,23 @@ namespace Core.Domain.Enums
         MontoFijo
     }
 
+    // Analítica de comportamiento en la tienda. Busqueda la registra el servidor (/catalogo); el
+    // resto, el navegador (POST /analitica/eventos).
+    public enum TipoEventoAnalitica
+    {
+        PaginaVista,
+        Busqueda,
+        FiltroCategoria,
+        FiltroOfertas,
+        AbrirCarrito,
+        AgregarCarrito,
+        QuitarCarrito,
+        InicioCheckout,
+        CuponAplicado,
+        CuponRechazado,
+        PedidoConfirmado
+    }
+
     public enum TipoMovimientoInventario
     {
         Reserva,

@@ -8,6 +8,7 @@ import BotonGoogle from '../../components/BotonGoogle'
 import { Campo } from '../../components/ui'
 import Icono from '../../components/Icono'
 import { formatoBs, formatoUsd } from '../../utils/formato'
+import { enviarEventos, registrarEvento } from '../../utils/analitica'
 
 // Checkout de la tienda (POST /pedidos). Pide sesión de cliente (Google).
 // Los montos salen siempre de la API (POST /pedidos/cotizar): precios vigentes, ofertas y cupón.
@@ -106,6 +107,7 @@ function FormularioCheckout() {
   const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
+    registrarEvento('inicio_checkout')
     Promise.all([listarZonasEntrega(), obtenerDatosPago()])
       .then(([z, p]) => {
         setZonas(z)
@@ -150,8 +152,10 @@ function FormularioCheckout() {
     try {
       setCotizacion(await cotizarPedido({ items, codigoCupon: codigo }))
       setCupon(codigo.toUpperCase())
+      registrarEvento('cupon_aplicado', { texto: codigo })
     } catch (e) {
       setErrorCupon(e.message)
+      if (e.estado === 400) registrarEvento('cupon_rechazado', { texto: codigo })
     } finally {
       setAplicandoCupon(false)
     }
@@ -222,6 +226,8 @@ function FormularioCheckout() {
     try {
       const pedido = await crearPedido({ ...d, items, codigoCupon: cupon, captura, ...ubicacion })
       vaciar()
+      registrarEvento('pedido_confirmado', { valor: pedido.totalUsd })
+      enviarEventos()
       navegar('/mis-pedidos', { replace: true, state: { nuevo: pedido.numero } })
     } catch (err) {
       const porCampo = {}

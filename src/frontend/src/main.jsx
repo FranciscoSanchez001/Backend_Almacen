@@ -6,6 +6,10 @@ import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CarritoProvider } from './context/CarritoContext'
+import { activarAnalitica } from './utils/analitica'
+
+// Analítica de comportamiento de la tienda (anónima; respeta "No rastrear").
+activarAnalitica()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

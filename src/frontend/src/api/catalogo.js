@@ -1,10 +1,17 @@
 // Catálogo público de la tienda (no pide sesión).
 import { pedir } from './cliente';
+import { sesionAnalitica } from '../utils/analitica';
 
 // Productos activos con stock. Responde { items, total, numeroPagina, tamano }.
 // Con ofertas=true, solo los que tienen una oferta vigente.
+// Si la analítica está activa, se manda el id de la visita: la API registra la búsqueda (?q=)
+// junto con cuántos resultados encontró.
 export function listarCatalogo({ q, categoriaId, ofertas, pagina = 1, tamano = 24 } = {}) {
-  return pedir('/catalogo', { consulta: { q, categoriaId, ofertas: ofertas || undefined, pagina, tamano } });
+  const sesion = q?.trim() ? sesionAnalitica() : null;
+  return pedir('/catalogo', {
+    consulta: { q, categoriaId, ofertas: ofertas || undefined, pagina, tamano },
+    encabezados: sesion ? { 'X-Sesion-Analitica': sesion } : undefined,
+  });
 }
 
 // [{ id, nombre }] para el filtro por categorías.
