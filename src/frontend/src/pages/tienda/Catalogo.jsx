@@ -3,6 +3,7 @@ import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { listarCatalogo } from '../../api/catalogo'
 import TarjetaProducto from '../../components/TarjetaProducto'
 import Icono from '../../components/Icono'
+import { registrarEvento } from '../../utils/analitica'
 
 const TAMANO_PAGINA = 24
 
@@ -14,6 +15,7 @@ export default function Catalogo() {
   const [params, setParams] = useSearchParams()
   const q = params.get('q') ?? ''
   const categoriaId = params.get('categoria') ?? ''
+  const ofertas = params.get('ofertas') === '1'
   const pagina = Number(params.get('pagina')) || 1
 
   const [resultado, setResultado] = useState(null)
@@ -25,14 +27,22 @@ export default function Catalogo() {
     let vigente = true // Evita pintar la respuesta de una búsqueda que ya cambió.
     setCargando(true)
     setError(null)
-    listarCatalogo({ q, categoriaId, pagina, tamano: TAMANO_PAGINA })
+    listarCatalogo({ q, categoriaId, pagina, tamano: TAMANO_PAGINA, ...(ofertas && { ofertas: true }) })
       .then((datos) => vigente && setResultado(datos))
       .catch((e) => vigente && setError(e.message))
       .finally(() => vigente && setCargando(false))
     return () => {
       vigente = false
     }
-  }, [q, categoriaId, pagina, intento])
+  }, [q, categoriaId, ofertas, pagina, intento])
+
+  // Analítica: qué categorías y si las ofertas interesan. Las búsquedas las registra la API.
+  useEffect(() => {
+    if (categoriaId) registrarEvento('filtro_categoria', { categoriaId })
+  }, [categoriaId])
+  useEffect(() => {
+    if (ofertas) registrarEvento('filtro_ofertas')
+  }, [ofertas])
 
   function irAPagina(n) {
     const siguiente = new URLSearchParams(params)
@@ -42,9 +52,9 @@ export default function Catalogo() {
   }
 
   const categoria = categorias.find((c) => c.id === categoriaId)
-  const titulo = q ? `Resultados para “${q}”` : (categoria?.nombre ?? 'Todos los productos')
+  const titulo = q ? `Resultados para “${q}”` : (categoria?.nombre ?? (ofertas ? 'Ofertas' : 'Todos los productos'))
   const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / TAMANO_PAGINA)) : 1
-  const sinFiltros = !q && !categoriaId
+  const sinFiltros = !q && !categoriaId && !ofertas
 
   return (
     <div className="space-y-6">

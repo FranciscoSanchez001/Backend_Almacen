@@ -36,6 +36,8 @@ namespace Infrastructure
             services.AddScoped<IMensajeWhatsappRepository, MensajeWhatsappRepository>();
             services.AddScoped<IDiagnosticoBaseDatos, DiagnosticoBaseDatos>();
             services.AddScoped<IReportesRepository, ReportesRepository>();
+            services.AddScoped<ICuponRepository, CuponRepository>();
+            services.AddScoped<IAnaliticaRepository, AnaliticaRepository>();
 
             // KPIs e informe en Excel.
             services.AddSingleton(configuracion.GetSection("Reportes").Get<ReportesOptions>() ?? new ReportesOptions());
@@ -64,6 +66,10 @@ namespace Infrastructure
             // Job de expiración de pedidos pendientes.
             services.AddSingleton(configuracion.GetSection("Expiracion").Get<ExpiracionOptions>() ?? new ExpiracionOptions());
             services.AddHostedService<ExpiracionPedidosJob>();
+
+            // Limpieza diaria de los eventos de analítica viejos.
+            services.AddSingleton(configuracion.GetSection("Analitica").Get<AnaliticaOptions>() ?? new AnaliticaOptions());
+            services.AddHostedService<LimpiezaAnaliticaJob>();
 
             return services;
         }

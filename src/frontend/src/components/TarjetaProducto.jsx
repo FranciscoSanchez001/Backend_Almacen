@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCarrito } from '../context/CarritoContext'
-import { formatoBs, formatoUsd } from '../utils/formato'
+import { formatoBs, formatoNumero, formatoUsd } from '../utils/formato'
 import Icono from './Icono'
 
 // Tarjeta de un producto del catálogo: imagen, nombre, precio en USD (y Bs debajo)
@@ -10,6 +10,8 @@ export default function TarjetaProducto({ producto }) {
   const [sinImagen, setSinImagen] = useState(!producto.imagenUrl)
   const cantidad = cantidadDe(producto.id)
   const pocasUnidades = producto.stockDisponible <= 5
+  // La API manda precioOriginalUsd solo si hay una oferta vigente; precioUsd ya trae el descuento.
+  const enOferta = producto.precioOriginalUsd != null
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-superficie transition hover:-translate-y-0.5 hover:shadow-md">
@@ -32,6 +34,11 @@ export default function TarjetaProducto({ producto }) {
             ¡Quedan {producto.stockDisponible}!
           </span>
         )}
+        {enOferta && (
+          <span className="absolute right-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+            −{formatoNumero(producto.descuentoPorcentaje)} %
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-3">
@@ -42,7 +49,15 @@ export default function TarjetaProducto({ producto }) {
         <p className="text-xs text-slate-400">Por {producto.unidadMedida}</p>
 
         <div className="mt-2">
-          <p className="text-lg font-extrabold text-slate-900">{formatoUsd(producto.precioUsd)}</p>
+          <p className={`text-lg font-extrabold ${enOferta ? 'text-red-600 dark:text-red-400' : 'text-slate-900'}`}>
+            {formatoUsd(producto.precioUsd)}
+            {enOferta && (
+              <span className="ml-2 text-sm font-medium text-slate-400 line-through">
+                <span className="sr-only">Antes </span>
+                {formatoUsd(producto.precioOriginalUsd)}
+              </span>
+            )}
+          </p>
           {producto.precioBs != null && <p className="text-xs text-slate-500">{formatoBs(producto.precioBs)}</p>}
         </div>
 

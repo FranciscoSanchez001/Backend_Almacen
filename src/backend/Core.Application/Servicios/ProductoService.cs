@@ -1,4 +1,5 @@
 using Core.Application.Abstracciones;
+using Core.Application.Comun;
 using Core.Application.Dtos;
 using Core.Application.Excepciones;
 using Core.Domain.Entidades;
@@ -130,6 +131,11 @@ namespace Core.Application.Servicios
             producto.StockMaximo = datos.StockMaximo;
             producto.Ubicacion = string.IsNullOrWhiteSpace(datos.Ubicacion) ? null : datos.Ubicacion.Trim();
             producto.UnidadMedida = datos.UnidadMedida.Trim().ToLowerInvariant();
+
+            // Sin porcentaje no hay oferta: las fechas se descartan para no dejar datos huérfanos.
+            producto.DescuentoPorcentaje = datos.DescuentoPorcentaje is decimal pct ? Math.Round(pct, 2) : null;
+            producto.DescuentoDesde = producto.DescuentoPorcentaje is null ? null : FechasUtc.AUtc(datos.DescuentoDesde);
+            producto.DescuentoHasta = producto.DescuentoPorcentaje is null ? null : FechasUtc.AUtc(datos.DescuentoHasta);
         }
 
         private static string NormalizarSku(string sku) => sku.Trim().ToUpperInvariant();

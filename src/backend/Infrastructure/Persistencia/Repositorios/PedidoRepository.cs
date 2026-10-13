@@ -13,6 +13,7 @@ namespace Infrastructure.Persistencia.Repositorios
             .Include(p => p.Zona)
             .Include(p => p.RevisadoPor)
             .Include(p => p.Repartidor)
+            .Include(p => p.Cupon)
             .Include(p => p.Items).ThenInclude(i => i.Producto)
             .Include(p => p.Items).ThenInclude(i => i.Categoria)
             .Include(p => p.HistorialEstados).ThenInclude(h => h.Usuario)

@@ -25,6 +25,9 @@ namespace Core.Application.Dtos
         // +58 4XX XXX XXXX
         public string Telefono { get; set; } = "";
 
+        // Opcional. Se valida contra la base al crear el pedido.
+        public string? CodigoCupon { get; set; }
+
         public static MetodoPago? ParsearMetodoPago(string? valor) => valor?.Trim().ToLowerInvariant() switch
         {
             "transferencia" => Domain.Enums.MetodoPago.Transferencia,

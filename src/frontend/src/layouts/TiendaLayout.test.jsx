@@ -61,13 +61,13 @@ describe('TiendaLayout: categorías', () => {
     expect(screen.getByTestId('busqueda')).toHaveTextContent('?categoria=c2')
   })
 
-  it('sin categorías (error de la API) muestra solo "Todo"', async () => {
+  it('sin categorías (error de la API) muestra solo "Todo" y "Ofertas"', async () => {
     vi.mocked(listarCategorias).mockRejectedValue(new Error('Sin conexión'))
 
     renderizarTienda()
 
     await vi.waitFor(() => expect(listarCategorias).toHaveBeenCalled())
-    expect(within(barraCategorias()).getAllByRole('link')).toHaveLength(1)
+    expect(within(barraCategorias()).getAllByRole('link').map((l) => l.textContent)).toEqual(['Todo', 'Ofertas'])
   })
 })
 

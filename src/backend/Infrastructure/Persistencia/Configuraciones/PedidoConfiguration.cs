@@ -8,8 +8,12 @@ namespace Infrastructure.Persistencia.Configuraciones
     {
         public void Configure(EntityTypeBuilder<Pedido> builder)
         {
-            builder.ToTable("pedidos", t => t.HasCheckConstraint("ck_pedidos_totales",
-                "total_usd >= 0 AND total_bs >= 0 AND tasa_cambio > 0"));
+            builder.ToTable("pedidos", t =>
+            {
+                t.HasCheckConstraint("ck_pedidos_totales",
+                    "total_usd >= 0 AND total_bs >= 0 AND tasa_cambio > 0");
+                t.HasCheckConstraint("ck_pedidos_descuento", "descuento_usd >= 0 AND descuento_bs >= 0");
+            });
             builder.HasKey(p => p.Id);
 
             // Correlativo legible, generado por PostgreSQL.
@@ -19,6 +23,8 @@ namespace Infrastructure.Persistencia.Configuraciones
             builder.Property(p => p.TasaCambio).HasPrecision(18, 4);
             builder.Property(p => p.TotalUsd).HasPrecision(18, 2);
             builder.Property(p => p.TotalBs).HasPrecision(18, 2);
+            builder.Property(p => p.DescuentoUsd).HasPrecision(18, 2);
+            builder.Property(p => p.DescuentoBs).HasPrecision(18, 2);
             builder.Property(p => p.ReferenciaPago).HasMaxLength(100);
             builder.Property(p => p.CapturaUrl).HasMaxLength(500);
             builder.Property(p => p.DireccionTexto).IsRequired().HasMaxLength(500);
@@ -45,6 +51,18 @@ namespace Infrastructure.Persistencia.Configuraciones
                 .WithMany()
                 .HasForeignKey(p => p.ZonaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(p => p.Cupon)
+                .WithMany()
+                .HasForeignKey(p => p.CuponId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Un cupón, una vez por cliente. Los pedidos rechazados o expirados no cuentan, así el
+            // cliente puede volver a usarlo. PedidosService ya lo revisa; esto es la red de seguridad.
+            builder.HasIndex(p => new { p.CuponId, p.ClienteId })
+                .IsUnique()
+                .HasFilter("cupon_id IS NOT NULL AND estado NOT IN ('rechazado', 'expirado')")
+                .HasDatabaseName("ux_pedidos_cupon_cliente_vigente");
 
             // Índices para la bandeja, los KPIs, el Excel y el job de expiración.
             builder.HasIndex(p => new { p.Estado, p.CreatedAt })

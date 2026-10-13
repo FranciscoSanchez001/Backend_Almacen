@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { obtenerToken } from '../api/cliente'
-import { login as loginApi, cerrarSesion as cerrarSesionApi } from '../api/auth'
+import { login as loginApi, loginGoogle as loginGoogleApi, cerrarSesion as cerrarSesionApi } from '../api/auth'
 
-// Sesión del personal, centralizada. El usuario sale del propio token JWT
+// Sesión del personal y de los clientes de la tienda, centralizada. El usuario sale del propio token JWT
 // (claims sub, name, email, role, exp), así que la sesión sobrevive a una
 // recarga mientras el token siga guardado y vigente.
 const AuthContext = createContext(null)
@@ -60,6 +60,14 @@ export function AuthProvider({ children }) {
     return datos
   }, [])
 
+  // credential: el ID token que entrega el botón de Google.
+  const loginConGoogle = useCallback(async (credential) => {
+    const sesion = await loginGoogleApi(credential)
+    const datos = decodificarToken(sesion.token)
+    setUsuario(datos)
+    return datos
+  }, [])
+
   const logout = useCallback(async () => {
     await cerrarSesionApi()
     setUsuario(null)
@@ -69,11 +77,12 @@ export function AuthProvider({ children }) {
     () => ({
       usuario,
       login,
+      loginConGoogle,
       logout,
       // ¿El usuario tiene alguno de estos roles?
       tieneRol: (...roles) => !!usuario && roles.includes(usuario.rol),
     }),
-    [usuario, login, logout],
+    [usuario, login, loginConGoogle, logout],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>

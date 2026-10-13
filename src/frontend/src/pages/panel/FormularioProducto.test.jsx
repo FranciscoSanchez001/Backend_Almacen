@@ -145,6 +145,9 @@ describe('FormularioProducto: creación', () => {
       stockMaximo: 100,
       ubicacion: null,
       unidadMedida: 'unidad',
+      descuentoPorcentaje: null,
+      descuentoDesde: null,
+      descuentoHasta: null,
       stockInicial: 20,
     })
     expect(actualizarProducto).not.toHaveBeenCalled()

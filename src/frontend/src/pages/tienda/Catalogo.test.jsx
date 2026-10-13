@@ -184,7 +184,7 @@ describe('Catalogo: errores', () => {
     renderizarTienda()
 
     expect(await screen.findByRole('heading', { name: 'Arroz' })).toBeInTheDocument()
-    expect(within(screen.getByRole('navigation', { name: 'Categorías' })).getAllByRole('link')).toHaveLength(1)
+    expect(within(screen.getByRole('navigation', { name: 'Categorías' })).getAllByRole('link')).toHaveLength(2) // Todo y Ofertas
   })
 })
 

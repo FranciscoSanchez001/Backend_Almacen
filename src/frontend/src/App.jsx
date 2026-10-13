@@ -8,6 +8,10 @@ import Catalogo from './pages/tienda/Catalogo'
 import LoginInterno from './pages/auth/LoginInterno'
 import NoEncontrada from './pages/NoEncontrada'
 
+// El checkout y "Mis pedidos" se descargan al abrirlos: quien solo mira el catálogo no los carga.
+const Checkout = lazy(() => import('./pages/tienda/Checkout'))
+const MisPedidos = lazy(() => import('./pages/tienda/MisPedidos'))
+
 // Las pantallas del personal se descargan solo cuando se abren: así la tienda
 // no carga los gráficos del dashboard ni el resto del panel.
 const Resumen = lazy(() => import('./pages/panel/Resumen'))
@@ -19,6 +23,8 @@ const PowerBIDashboard = lazy(() => import('./pages/admin/PowerBIDashboard'))
 const Personal = lazy(() => import('./pages/admin/Personal'))
 const Auditoria = lazy(() => import('./pages/admin/Auditoria'))
 const Configuracion = lazy(() => import('./pages/admin/Configuracion'))
+const Cupones = lazy(() => import('./pages/admin/Cupones'))
+const Comportamiento = lazy(() => import('./pages/admin/Comportamiento'))
 const RepartidorInicio = lazy(() => import('./pages/repartidor/Inicio'))
 
 // Las 4 áreas del sistema (ver especificación). Cada área del personal está
@@ -28,9 +34,12 @@ function App() {
   return (
     <Suspense fallback={<p className="p-10 text-center text-sm text-slate-500">Cargando…</p>}>
       <Routes>
-        {/* Tienda (cliente) → / */}
+        {/* Tienda (cliente) → /, /checkout y /mis-pedidos. Las dos últimas piden
+            iniciar sesión con Google desde la propia pantalla, sin perder el carrito. */}
         <Route element={<TiendaLayout />}>
           <Route index element={<Catalogo />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/mis-pedidos" element={<MisPedidos />} />
         </Route>
 
         {/* Panel del personal: ventas → /panel, gerente → /panel y /admin */}
@@ -54,6 +63,8 @@ function App() {
             <Route path="personal" element={<Personal />} />
             <Route path="auditoria" element={<Auditoria />} />
             <Route path="configuracion" element={<Configuracion />} />
+            <Route path="cupones" element={<Cupones />} />
+            <Route path="comportamiento" element={<Comportamiento />} />
           </Route>
         </Route>
 
