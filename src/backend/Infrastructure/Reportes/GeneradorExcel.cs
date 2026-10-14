@@ -1,6 +1,7 @@
 using Core.Application.Abstracciones;
 using Core.Application.Modelos;
 using Core.Domain.Enums;
+using Core.Domain.Reglas;
 using ClosedXML.Excel;
 
 namespace Infrastructure.Reportes
@@ -58,11 +59,21 @@ namespace Infrastructure.Reportes
             Hoja(libro, "Inventario",
                 [new("Producto", Formato.Texto), new("Categoría", Formato.Texto), new("Stock disponible", Formato.Entero),
                  new("Stock reservado", Formato.Entero), new("Unidades vendidas", Formato.Entero),
-                 new("Stock promedio", Formato.Decimal), new("Rotación", Formato.Decimal), new("Agotado", Formato.Texto)],
+                 new("Stock promedio", Formato.Decimal), new("Rotación", Formato.Decimal), new("Agotado", Formato.Texto),
+                 new("Capacidad (stock máximo)", Formato.Entero), new("Ocupación", Formato.Porcentaje),
+                 new("Nivel de ocupación", Formato.Texto)],
                 k.Inventario.Productos.Select(p => new object?[]
                 {
                     p.Producto, p.Categoria, p.StockDisponible, p.StockReservado, p.UnidadesVendidas, p.StockPromedio, p.Rotacion,
-                    p.Agotado ? "Sí" : "No",
+                    p.Agotado ? "Sí" : "No", p.StockMaximo, p.Ocupacion, NombreNivel(p.NivelOcupacion),
+                }));
+
+            Hoja(libro, "Ocupación por categoría",
+                [new("Categoría", Formato.Texto), new("Productos", Formato.Entero), new("Unidades en almacén", Formato.Entero),
+                 new("Capacidad", Formato.Entero), new("Ocupación", Formato.Porcentaje), new("Nivel", Formato.Texto)],
+                k.Inventario.OcupacionPorCategoria.Select(c => new object?[]
+                {
+                    c.Categoria, c.Productos, c.Unidades, c.Capacidad, c.Ocupacion, NombreNivel(c.NivelOcupacion),
                 }));
 
             Hoja(libro, "Repartidores",
@@ -122,6 +133,8 @@ namespace Infrastructure.Reportes
                 ("Tiempo promedio de entrega (min)", o.TiempoPromedioEntregaMin, null, null, Formato.Minutos),
                 ("Rotación del stock", k.Inventario.RotacionGlobal, null, null, Formato.Decimal),
                 ("Productos sin stock", k.Inventario.SinStock.Count, null, null, Formato.Entero),
+                ("Ocupación del almacén", k.Inventario.OcupacionGlobal, null, null, Formato.Porcentaje),
+                ("Productos saturados (> 100 %)", k.Inventario.ProductosSaturados, null, null, Formato.Entero),
             };
 
             Tabla(hoja, 6,
@@ -219,6 +232,15 @@ namespace Infrastructure.Reportes
             TipoReporte.Semanal => "semanal",
             TipoReporte.Mensual => "mensual",
             _ => "personalizado",
+        };
+
+        private static string? NombreNivel(NivelOcupacion? n) => n switch
+        {
+            NivelOcupacion.Baja => "Baja",
+            NivelOcupacion.Optima => "Óptima",
+            NivelOcupacion.Alta => "Alta",
+            NivelOcupacion.Saturada => "Saturada",
+            _ => null,
         };
     }
 }

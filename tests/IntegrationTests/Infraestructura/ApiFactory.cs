@@ -21,7 +21,7 @@ namespace IntegrationTests.Infraestructura
         public const string EmailAdmin = "admin@pruebas.local";
         public const string PasswordAdmin = "Admin1234!";
 
-        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16")
+        private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:15")
             .WithDatabase("almacen_pruebas")
             .Build();
 

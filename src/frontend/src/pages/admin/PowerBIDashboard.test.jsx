@@ -59,7 +59,18 @@ function kpisDePrueba(cambios = {}) {
     zonas: [{ zona: 'Centro', pedidos: 20, ingresosUsd: 600, porcentaje: 48.6 }],
     inventario: {
       rotacionGlobal: 1.8,
-      productos: [{ productoId: 'r1', producto: 'Arroz', categoria: 'Víveres', unidadesVendidas: 50, stockPromedio: 25, rotacion: 2, stockDisponible: 20, agotado: false }],
+      productos: [
+        {
+          productoId: 'r1', producto: 'Arroz', categoria: 'Víveres', unidadesVendidas: 50, stockPromedio: 25, rotacion: 2,
+          stockDisponible: 20, stockReservado: 5, agotado: false, stockMaximo: 100, ocupacion: 25, nivelOcupacion: 'optima',
+        },
+      ],
+      ocupacionGlobal: 25,
+      nivelOcupacionGlobal: 'optima',
+      ocupacionPorCategoria: [
+        { categoria: 'Víveres', productos: 1, unidades: 25, capacidad: 100, ocupacion: 25, nivelOcupacion: 'optima' },
+      ],
+      productosSaturados: 0,
     },
     operacion: {
       total: 50,

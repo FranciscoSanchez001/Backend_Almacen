@@ -2,6 +2,7 @@ using System.Globalization;
 using Core.Application.Abstracciones;
 using Core.Application.Modelos;
 using Core.Domain.Enums;
+using Core.Domain.Reglas;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -15,7 +16,9 @@ namespace Infrastructure.Reportes
     // se ve. Las listas largas se recortan; el detalle completo está en el Excel.
     public class GeneradorPdf : IGeneradorPdf
     {
-        private static readonly CultureInfo Cultura = CultureInfo.GetCultureInfo("es-VE");
+        // Formato venezolano (1.234,56) construido a mano: la imagen Docker Alpine corre en modo de
+        // globalización invariante (sin ICU), donde GetCultureInfo("es-VE") lanza una excepción.
+        private static readonly CultureInfo Cultura = CrearCulturaVenezolana();
         private const string Marca = "#1D4ED8";
         private const string Suave = "#DBEAFE";
         private const string Borde = "#E2E8F0";
@@ -137,7 +140,17 @@ namespace Infrastructure.Reportes
                 ("Rotación del stock", Num(k.Inventario.RotacionGlobal), "vendidas ÷ stock promedio"),
                 ("Productos sin stock", Num(k.Inventario.SinStock.Count), k.Inventario.SinStock.Count > 0
                     ? string.Join(", ", k.Inventario.SinStock.Take(3).Select(p => p.Producto)) + (k.Inventario.SinStock.Count > 3 ? "…" : "")
-                    : "todo con stock"));
+                    : "todo con stock"),
+                ("Ocupación del almacén", Pct(k.Inventario.OcupacionGlobal), NombreNivel(k.Inventario.NivelOcupacionGlobal)
+                    + (k.Inventario.ProductosSaturados > 0 ? $" · {k.Inventario.ProductosSaturados} saturados" : "")));
+
+            Subtitulo(col, "Ocupación por categoría");
+            Tabla(col, ["Categoría", "Productos", "Unidades", "Capacidad", "Ocupación", "Nivel"], [3, 1, 1, 1, 1, 1],
+                k.Inventario.OcupacionPorCategoria.Select(c => new[]
+                {
+                    c.Categoria, Num(c.Productos), Num(c.Unidades), Num(c.Capacidad), Pct(c.Ocupacion), NombreNivel(c.NivelOcupacion),
+                }),
+                "Sin productos.", barra: (4, k.Inventario.OcupacionPorCategoria.Select(c => c.Ocupacion ?? 0).ToList()));
 
             Subtitulo(col, "Rotación por producto");
             Tabla(col, ["Producto", "Categoría", "Vendidas", "Stock prom.", "Rotación", "Disponible"], [3, 2, 1, 1, 1, 1],
@@ -215,8 +228,10 @@ namespace Infrastructure.Reportes
         private static void Subtitulo(ColumnDescriptor col, string texto) =>
             col.Item().Text(texto).SemiBold().FontSize(10);
 
+        // ShowEntire: si la fila no cabe al final de la página pasa entera a la siguiente, en vez de
+        // partir cada tarjeta (el valor en una página y su detalle en la otra).
         private static void Tarjetas(ColumnDescriptor col, params (string Titulo, string Valor, string Detalle)[] tarjetas) =>
-            col.Item().Row(fila =>
+            col.Item().ShowEntire().Row(fila =>
             {
                 fila.Spacing(8);
                 foreach (var t in tarjetas)
@@ -338,6 +353,23 @@ namespace Infrastructure.Reportes
         }
 
         // ---- Formatos (iguales a los de la pantalla) ----
+
+        private static CultureInfo CrearCulturaVenezolana()
+        {
+            var cultura = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+            cultura.NumberFormat.NumberDecimalSeparator = ",";
+            cultura.NumberFormat.NumberGroupSeparator = ".";
+            return CultureInfo.ReadOnly(cultura);
+        }
+
+        private static string NombreNivel(NivelOcupacion? nivel) => nivel switch
+        {
+            NivelOcupacion.Baja => "baja",
+            NivelOcupacion.Optima => "óptima",
+            NivelOcupacion.Alta => "alta",
+            NivelOcupacion.Saturada => "saturada",
+            _ => "—",
+        };
 
         private static string Usd(decimal v) => "$" + v.ToString("N2", Cultura);
         private static string Bs(decimal v) => "Bs " + v.ToString("N2", Cultura);

@@ -9,6 +9,7 @@ import ContadorExpiracion from '../../components/ContadorExpiracion'
 import { EstadoCarga, Selector } from '../../components/ui'
 import { METODOS_PAGO, claseBoton, claseInput } from '../../utils/panel'
 import { BarrasHorizontales, Dona, GraficoLinea, MapaCalor, TarjetaGrafico, TarjetaKpi } from '../../components/dashboard/Graficos'
+import OcupacionAlmacen from '../../components/dashboard/OcupacionAlmacen'
 import { formatoBs, formatoDia, formatoMinutos, formatoNumero, formatoPct, formatoUsd, hoyIso } from '../../utils/formato'
 import { alertaStock } from '../../utils/stock'
 import Icono from '../../components/Icono'
@@ -379,7 +380,7 @@ export default function PowerBIDashboard() {
               </div>
             </Seccion>
 
-            {/* 4. Inventario: valorización, rotación y alertas */}
+            {/* 4. Inventario: valorización, ocupación del almacén, rotación y alertas */}
             <Seccion titulo="Inventario">
               {valorizacion ? (
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -393,6 +394,8 @@ export default function PowerBIDashboard() {
               )}
 
               <div className="grid gap-4 xl:grid-cols-2">
+                <OcupacionAlmacen inventario={kpis.inventario} />
+
                 {valorizacion && (
                   <TarjetaGrafico
                     titulo="Valorización por categoría: costo vs. venta (USD)"

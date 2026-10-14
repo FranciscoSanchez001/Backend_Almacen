@@ -1,10 +1,16 @@
 # ============================================================================
 # Backend_Almacen · docker-compose de toda la aplicación
-#   db          PostgreSQL 16
+#   db          PostgreSQL 15                    -> localhost:5432
 #   migraciones Aplica las migraciones de EF Core y termina
-#   api         ASP.NET Core 10 Web API      -> http://localhost:5085
-#   spa         React + Vite servido por Nginx -> http://localhost:8080
+#   api         ASP.NET Core 10 Web API          -> http://localhost:5000
+#   spa         React + Vite servido por Nginx   -> http://localhost:8080
 #   postgrest   API REST automática sobre la base -> http://localhost:3000
+#
+# Orden de arranque: db (healthy) -> migraciones (terminada) -> api (healthy) -> spa
+#
+# Redes:
+#   backend   db, migraciones, api y postgrest. La SPA no tiene acceso a la base de datos.
+#   frontend  api y spa.
 #
 # Uso (desde la raíz del repositorio):  docker compose up -d --build
 # ============================================================================
@@ -14,10 +20,11 @@ name: backend_almacen
 
 services:
   # -------------------------------------------------------------
-  # Base de datos relacional (PostgreSQL)
+  # Base de datos relacional (PostgreSQL 15)
   # -------------------------------------------------------------
   db:
-    image: postgres:16
+    # Variante Debian (no Alpine): su collation glibc ordena bien los acentos (Á junto a A).
+    image: postgres:15
     container_name: postgres_db
     restart: unless-stopped
     environment:
@@ -27,7 +34,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres15_data:/var/lib/postgresql/data
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U miusuario -d midatabase"]
       interval: 5s
@@ -58,6 +67,8 @@ services:
     command: ["--connection", "Host=db;Port=5432;Database=midatabase;Username=miusuario;Password=mipassword"]
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+    networks:
+      - backend
     depends_on:
       db:
         condition: service_healthy
@@ -72,11 +83,27 @@ services:
     container_name: almacen_api
     restart: unless-stopped
     ports:
-      # host:contenedor -> la API queda en http://localhost:5085
-      - "5085:8080"
+      # host:contenedor -> la API queda en http://localhost:5000
+      - "5000:5000"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Almacen: Host=db;Port=5432;Database=midatabase;Username=miusuario;Password=mipassword
+      # Datos de demostración (90 días de pedidos, clientes y personal) para el dashboard KPI.
+      # Solo siembra si la base no tiene pedidos: en los arranques siguientes no hace nada.
+      SiembraDemo__Habilitada: "true"
+    volumes:
+      # Capturas de pago subidas por los clientes (cuando no hay Cloudinary configurado).
+      - capturas_pago:/app/wwwroot/capturas
+    networks:
+      - backend
+      - frontend
+    # GET /health responde 200 solo si la API puede conectarse a PostgreSQL.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     depends_on:
       migraciones:
         condition: service_completed_successfully
@@ -90,15 +117,23 @@ services:
       dockerfile: Dockerfile
       args:
         # Dirección de la API tal como la ve el NAVEGADOR (tu máquina).
-        VITE_API_URL: http://localhost:5085
+        VITE_API_URL: http://localhost:5000
         VITE_GOOGLE_CLIENT_ID: ""
     container_name: almacen_spa
     restart: unless-stopped
     ports:
       # host:contenedor -> la app queda en http://localhost:8080
       - "8080:80"
+    networks:
+      - frontend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
   # -------------------------------------------------------------
   # PostgREST (API REST automática sobre la base de datos)
@@ -113,9 +148,16 @@ services:
       PGRST_DB_URI: postgres://miusuario:mipassword@db:5432/midatabase
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: miusuario
+    networks:
+      - backend
     depends_on:
       migraciones:
         condition: service_completed_successfully
 
+networks:
+  backend:
+  frontend:
+
 volumes:
-  postgres_data:
+  postgres15_data:
+  capturas_pago:

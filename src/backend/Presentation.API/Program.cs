@@ -11,6 +11,7 @@ using Presentation.API.Auth;
 using Presentation.API.Controllers;
 using Presentation.API.Filtros;
 using Presentation.API.Middleware;
+using Presentation.API.Salud;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -123,6 +124,9 @@ builder.Services.AddRateLimiter(options =>
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1) }));
 });
 
+// GET /health: anónimo, responde 200 "Healthy" si hay conexión con la base de datos y 503 si no.
+builder.Services.AddHealthChecks().AddCheck<BaseDatosHealthCheck>("postgresql");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -161,6 +165,7 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 await app.Services.InicializarBaseDatosAsync(app.Configuration);
 

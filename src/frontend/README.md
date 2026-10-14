@@ -258,7 +258,7 @@ docker compose up -d --build
 | Servicio | Dirección |
 | :--- | :--- |
 | Frontend (React + Nginx) | <http://localhost:8080> |
-| API REST | <http://localhost:5085> |
+| API REST | <http://localhost:5000> |
 
 La imagen se construye en dos etapas: Node.js 20 compila la aplicación y Nginx publica el contenido de `dist/`. Las variables `VITE_*` se incorporan al código durante la compilación, por lo que se definen como argumentos de construcción en el `docker-compose.yml`.
 
