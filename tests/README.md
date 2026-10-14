@@ -390,7 +390,7 @@ La SPA tiene su propio conjunto de pruebas con **Vitest** y **React Testing Libr
 | Administración | 76 |
 | **Total** | **455** |
 
-Dos de ellas están marcadas con `it.fails` porque documentan un error conocido del frontend (el estado `aprobado` no tiene nombre visible).
+Las pruebas del historial y la auditoría verifican el nombre visible «Aprobado» y se ejecutan como pruebas normales, sin fallos esperados.
 
 ```bash
 cd src/frontend

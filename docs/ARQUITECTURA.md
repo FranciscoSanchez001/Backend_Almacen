@@ -189,11 +189,11 @@ La consigna habla de los roles `Admin` y `Employee`; en el negocio corresponden 
 
 | Operación | Admin (`superadmin`) | Employee (`ventas`) | Sin token |
 | :--- | :---: | :---: | :---: |
-| Consultar productos, inventario y pedidos | ✅ | ✅ | `401` |
-| Registrar y editar productos | ✅ | ✅ | `401` |
-| **Borrar productos** (`DELETE /productos/{id}`) | ✅ | `403` | `401` |
-| **Crear y editar categorías** | ✅ | `403` | `401` |
-| Usuarios, zonas, configuración, reportes, auditoría | ✅ | `403` | `401` |
+| Consultar productos, inventario y pedidos | ![correcto](../src/frontend/public/iconos/correcto.svg) | ![correcto](../src/frontend/public/iconos/correcto.svg) | `401` |
+| Registrar y editar productos | ![correcto](../src/frontend/public/iconos/correcto.svg) | ![correcto](../src/frontend/public/iconos/correcto.svg) | `401` |
+| **Borrar productos** (`DELETE /productos/{id}`) | ![correcto](../src/frontend/public/iconos/correcto.svg) | `403` | `401` |
+| **Crear y editar categorías** | ![correcto](../src/frontend/public/iconos/correcto.svg) | `403` | `401` |
+| Usuarios, zonas, configuración, reportes, auditoría | ![correcto](../src/frontend/public/iconos/correcto.svg) | `403` | `401` |
 
 Todo se declara con `[Authorize(Roles = ...)]` en controladores y acciones.
 

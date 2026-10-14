@@ -19,6 +19,24 @@ const responder = (estado, cuerpo) =>
   )
 
 describe('BotonGoogle', () => {
+  it('ignora una credencial recibida después de desmontar el botón', async () => {
+    responder(200, { token: crearToken({ rol: 'cliente' }), refreshToken: 'refresh' })
+    const { unmount } = renderizar(<BotonGoogle />)
+    await waitFor(() => expect(gis.initialize).toHaveBeenCalled())
+    const callback = gis.initialize.mock.calls[0][0].callback
+    unmount()
+    await callback({ credential: 'tardia' })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('no intercambia dos veces la misma credencial mientras está ingresando', async () => {
+    responder(200, { token: crearToken({ rol: 'cliente' }), refreshToken: 'refresh' })
+    renderizar(<BotonGoogle />)
+    await waitFor(() => expect(gis.initialize).toHaveBeenCalled())
+    const callback = gis.initialize.mock.calls[0][0].callback
+    await act(async () => { await Promise.all([callback({ credential: 'id-token' }), callback({ credential: 'id-token' })]) })
+    expect(fetch).toHaveBeenCalledOnce()
+  })
   it('inicializa Google con el Client ID y dibuja el botón', async () => {
     renderizar(<BotonGoogle />)
 

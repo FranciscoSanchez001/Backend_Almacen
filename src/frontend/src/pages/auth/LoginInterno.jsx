@@ -5,8 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import BotonTema from '../../components/BotonTema'
 
 // Acceso INTERNO (personal: ventas, repartidor y gerente): solo correo y contraseña.
-// El inicio de sesión de clientes con Google NO vive aquí: será un pop-up que se
-// abrirá desde un botón "Iniciar sesión" en una esquina del catálogo.
+// Los clientes ingresan con Google desde el botón "Ingresar" del catálogo.
 // Se conecta con la API en POST /auth/login y redirige según el rol.
 export default function LoginInterno() {
   const [correo, setCorreo] = useState('')

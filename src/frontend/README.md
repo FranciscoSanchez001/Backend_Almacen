@@ -92,10 +92,22 @@ Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma.
 
 | Área | Ruta | Perfil | Estado |
 | :--- | :--- | :--- | :--- |
-| Tienda | `/` | Cliente (público) | Catálogo y carrito disponibles; inicio de sesión con Google y checkout en desarrollo |
+| Tienda | `/`, `/checkout`, `/mis-pedidos` | Cliente | Catálogo, ofertas, carrito, acceso con Google, checkout con cupón/comprobante e historial |
 | Panel de ventas | `/panel` | `ventas`, `superadmin` | Disponible |
 | Administración | `/admin` | `superadmin` | Disponible |
-| Entregas | `/repartidor` | `repartidor`, `superadmin` | En desarrollo (maqueta de las secciones previstas) |
+| Entregas | `/repartidor` | `repartidor`, `superadmin` | Entregas activas, detalle actualizado, mapas, confirmaciones e historial; el gerente gestiona los pedidos desde el panel |
+
+El detalle del repartidor consulta el pedido actual antes de habilitar acciones.
+Las confirmaciones de salida y entrega bloquean solicitudes duplicadas; si falla
+la respuesta o cambia el estado, se actualiza el pedido antes de continuar.
+Los enlaces a Google Maps/Waze usan coordenadas o la dirección escrita. La lista
+de asignaciones se actualiza cada minuto y el historial conserva su paginación.
+
+El checkout conserva la cotización del servidor, ofertas, cupones y analítica.
+Solo permite confirmar con un método de pago configurado y un comprobante válido.
+Tras guardar retira únicamente las unidades enviadas, conservando lo añadido
+mientras esperaba la respuesta. Si se pierde esa respuesta, dirige al historial
+para comprobar si el pedido se registró antes de repetirlo.
 
 ---
 
@@ -355,7 +367,7 @@ Todos los archivos de `src/` con lógica o interfaz tienen pruebas: 46 archivos 
 | Administración | `Personal`, `FormularioUsuario`, `Auditoria`, `Configuracion`, `PowerBIDashboard` | 76 |
 | **Total** | | **455** |
 
-Dos pruebas están marcadas con `it.fails` porque documentan un error conocido: `ESTADOS_PEDIDO` (`utils/panel.js`) no define el estado `aprobado` que el backend registra al aprobar un pedido, por lo que el historial del pedido y la auditoría lo muestran como «aprobado», en minúsculas. Cuando se corrija, esas pruebas empezarán a fallar y bastará con cambiar `it.fails` por `it`.
+Las pruebas del historial y la auditoría verifican que el estado `aprobado` se muestre como «Aprobado». Son pruebas normales y deben pasar; no se mantienen fallos esperados para ese estado.
 
 ### 13.4 Ejecución
 

@@ -130,9 +130,7 @@ describe('DetallePedido', () => {
     expect(entradas[1]).toHaveTextContent('Vendedor Uno')
   })
 
-  // ESTADOS_PEDIDO (utils/panel.js) no define "aprobado", que el backend sí registra en el
-  // historial al aprobar un pedido: se muestra el valor crudo "aprobado" en lugar de "Aprobado".
-  it.fails('muestra el estado "aprobado" del historial con su nombre visible', () => {
+  it('muestra el estado "aprobado" del historial con su nombre visible', () => {
     const historial = [{ estadoNuevo: 'aprobado', creadoEn: '2026-10-05T15:00:00Z', usuario: { nombre: 'Vendedor Uno' } }]
 
     render(<DetallePedido pedido={crearPedido({ historial })} />)

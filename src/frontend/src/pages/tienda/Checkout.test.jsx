@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Checkout from './Checkout'
 import { renderizar } from '../../test/renderizar'
@@ -191,6 +191,51 @@ describe('Checkout: pago y envío', () => {
     await user.type(screen.getByLabelText('Referencia del pago'), '987654')
     await user.upload(screen.getByLabelText('Captura del comprobante'), new File(['img'], 'pago.png', { type: 'image/png' }))
   }
+
+  it('bloquea envíos duplicados mientras espera la respuesta del pedido', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockReturnValue(new Promise(() => {}))
+    const { user } = abrir()
+    await llenarFormulario(user)
+    const boton = screen.getByRole('button', { name: 'Confirmar pedido' })
+    await user.click(boton)
+    fireEvent.submit(boton.closest('form'))
+    expect(crearPedido).toHaveBeenCalledOnce()
+    expect(screen.getByRole('button', { name: 'Enviando tu pedido…' })).toBeDisabled()
+    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
+  })
+
+  it('con una respuesta perdida conserva el carrito y dirige a consultar pedidos', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockRejectedValue(new ErrorApi('Sin conexión.', 0, null))
+    const { user } = abrir()
+    await llenarFormulario(user)
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+    expect(await screen.findByRole('link', { name: /Revisa tus pedidos/ })).toHaveAttribute('href', '/mis-pedidos')
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
+    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
+  })
+
+  it('rechaza un comprobante vacío', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await llenarFormulario(user)
+    await user.upload(screen.getByLabelText('Captura del comprobante'), new File([], 'vacio.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+    expect(screen.getByText('La captura debe pesar entre 1 byte y 5 MB.')).toBeInTheDocument()
+    expect(crearPedido).not.toHaveBeenCalled()
+  })
+
+  it('no permite pagar con un método sin datos configurados', async () => {
+    guardarCarrito()
+    vi.mocked(obtenerDatosPago).mockResolvedValue({ tasaBsUsd: 40, datosPagoMovil: '', walletBinance: 'wallet' })
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    expect(screen.getByLabelText('Pago móvil')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
+    await user.click(screen.getByLabelText('Binance (USDT)'))
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeEnabled()
+  })
 
   it('muestra los datos del método elegido y el monto en Bs o en USDT', async () => {
     guardarCarrito()

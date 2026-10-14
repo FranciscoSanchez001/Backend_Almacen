@@ -8,6 +8,17 @@ const leche = { id: 'p2', nombre: 'Leche', precioUsd: 2.25, stockDisponible: 3 }
 const usarCarrito = () => renderHook(() => useCarrito(), { wrapper: CarritoProvider }).result
 
 describe('CarritoContext', () => {
+  it('retira unidades compradas sin eliminar lo agregado durante el envío', () => {
+    const carrito = usarCarrito()
+    act(() => carrito.current.cambiarCantidad(arroz, 3))
+    act(() => carrito.current.cambiarCantidad(leche, 1))
+    act(() => carrito.current.retirarComprados([{ productoId: arroz.id, cantidad: 2 }]))
+    expect(carrito.current.cantidadDe(arroz.id)).toBe(1)
+    expect(carrito.current.cantidadDe(leche.id)).toBe(1)
+    act(() => carrito.current.retirarComprados([{ productoId: arroz.id, cantidad: 2 }]))
+    expect(carrito.current.cantidadDe(arroz.id)).toBe(0)
+    expect(carrito.current.cantidadDe(leche.id)).toBe(1)
+  })
   it('arranca vacío', () => {
     const carrito = usarCarrito()
 

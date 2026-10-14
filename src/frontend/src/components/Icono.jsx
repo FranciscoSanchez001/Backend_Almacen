@@ -1,3 +1,5 @@
+import iconosAdicionales from '../assets/iconos.json'
+
 // Íconos SVG de la interfaz (reemplazan a los emojis). Trazo con currentColor:
 // toman el color del texto y se ven igual en todos los sistemas y en modo oscuro.
 const TRAZOS = {
@@ -89,8 +91,9 @@ export default function Icono({ nombre, className = 'h-4 w-4', grosor = 1.8, ton
       strokeLinejoin="round"
       className={`inline-block shrink-0 ${className} ${tono ? (TONOS[nombre] ?? '') : ''}`}
       aria-hidden="true"
+      focusable="false"
     >
-      {TRAZOS[nombre]}
+      {TRAZOS[nombre] ?? <path d={iconosAdicionales[nombre]} />}
     </svg>
   )
 }

@@ -1,163 +1,187 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Inicio from './Inicio'
 import { renderizar } from '../../test/renderizar'
+import { obtenerPedido, marcarEnCamino, marcarEntregado } from '../../api/pedidos'
 import { listarMisEntregas } from '../../api/repartidor'
-import { marcarEnCamino, marcarEntregado } from '../../api/pedidos'
 import { ErrorApi } from '../../api/cliente'
 
 vi.mock('../../api/repartidor', () => ({ listarMisEntregas: vi.fn() }))
-vi.mock('../../api/pedidos', () => ({ marcarEnCamino: vi.fn(), marcarEntregado: vi.fn() }))
+vi.mock('../../api/pedidos', () => ({
+  obtenerPedido: vi.fn(), marcarEnCamino: vi.fn(), marcarEntregado: vi.fn(),
+}))
 
-const pedido = (extra = {}) => ({
-  id: 'p1',
-  numero: 101,
-  estado: 'asignado',
-  cliente: { id: 'c1', nombre: 'Ana Pérez' },
-  totalUsd: 12.5,
-  totalBs: 548.75,
-  zona: { id: 'z1', nombre: 'Centro' },
-  direccionTexto: 'Calle 5, casa 12, frente a la panadería',
-  latitud: 7.7669,
-  longitud: -72.225,
-  telefonoContacto: '+58 412 123 4567',
-  asignadoEn: '2026-10-13T14:00:00Z',
-  creadoEn: '2026-10-13T13:00:00Z',
-  entregadoEn: null,
-  items: [
-    { productoId: 'a', producto: 'Harina de maíz 1 kg', cantidad: 2 },
-    { productoId: 'b', producto: 'Café molido 500 g', cantidad: 1 },
-  ],
-  ...extra,
-})
-
-const pagina = (items) => ({ items, total: items.length, numeroPagina: 1, tamano: 20 })
-const abrir = () => renderizar(<Inicio />, { ruta: '/repartidor', rol: 'repartidor' })
-const tarjeta = (numero) => screen.getByRole('article', { name: `Pedido #${numero}` })
+const asignado = {
+  id: 'p1', numero: 42, estado: 'asignado', cliente: { nombre: 'María' }, zona: { nombre: 'Centro' },
+  direccionTexto: 'Casa azul #2', telefonoContacto: '+584121234567', totalUsd: 4,
+  creadoEn: '2026-10-14T12:00:00Z', asignadoEn: '2026-10-14T13:00:00Z',
+  latitud: null, longitud: null, items: [{ productoId: 'i1', producto: 'Arroz', cantidad: 2 }],
+  historial: [{ estadoNuevo: 'asignado', creadoEn: '2026-10-14T13:00:00Z' }],
+}
+const enCamino = { ...asignado, estado: 'en_camino' }
+const entregado = { ...asignado, estado: 'entregado', entregadoEn: '2026-10-14T14:00:00Z' }
+const pagina = (items, total = items.length) => ({ items, total })
+const montar = (ruta = '/repartidor', rol = 'repartidor') => renderizar(<Inicio />, { ruta, rol })
 
 beforeEach(() => {
-  vi.clearAllMocks()
-  vi.mocked(listarMisEntregas).mockResolvedValue(pagina([pedido()]))
-  vi.mocked(marcarEnCamino).mockResolvedValue({})
-  vi.mocked(marcarEntregado).mockResolvedValue({})
+  vi.mocked(listarMisEntregas).mockReset().mockResolvedValue(pagina([asignado]))
+  vi.mocked(obtenerPedido).mockReset().mockResolvedValue(asignado)
+  vi.mocked(marcarEnCamino).mockReset().mockResolvedValue(enCamino)
+  vi.mocked(marcarEntregado).mockReset().mockResolvedValue(entregado)
 })
 
+async function abrir() {
+  const vista = montar()
+  await vista.user.click(await screen.findByRole('button', { name: 'Ver pedido #42' }))
+  await screen.findByRole('button', { name: 'Iniciar entrega' })
+  return vista
+}
+
 describe('Entregas del repartidor', () => {
-  it('lista sus pedidos por entregar con dirección, zona, cliente y total', async () => {
-    abrir()
-
-    const t = await screen.findByRole('article', { name: 'Pedido #101' })
+  it('consulta sus entregas y muestra cliente, dirección y estado', async () => {
+    montar()
+    const tarjeta = await screen.findByRole('button', { name: 'Ver pedido #42' })
+    expect(tarjeta).toHaveTextContent('María')
+    expect(tarjeta).toHaveTextContent('Centro · Casa azul #2')
+    expect(tarjeta).toHaveTextContent('Asignado')
     expect(listarMisEntregas).toHaveBeenCalledWith({ historial: false, pagina: 1, tamano: 20 })
-    expect(within(t).getByText(/Calle 5, casa 12/)).toBeInTheDocument()
-    expect(within(t).getByText('Centro')).toBeInTheDocument()
-    expect(within(t).getByText('Ana Pérez')).toBeInTheDocument()
-    expect(within(t).getByText('$12.50')).toBeInTheDocument()
-    expect(screen.getByText('1 por entregar')).toBeInTheDocument()
+    expect(screen.queryByText('Por construir')).not.toBeInTheDocument()
   })
 
-  it('abre la navegación al punto exacto y permite llamar o escribir al cliente', async () => {
-    abrir()
-    const t = await screen.findByRole('article', { name: 'Pedido #101' })
-
-    expect(within(t).getByRole('link', { name: /Google Maps/ })).toHaveAttribute(
-      'href',
-      'https://www.google.com/maps/dir/?api=1&destination=7.7669,-72.225',
-    )
-    expect(within(t).getByRole('link', { name: /Waze/ })).toHaveAttribute('href', 'https://waze.com/ul?ll=7.7669,-72.225&navigate=yes')
-    expect(within(t).getByRole('link', { name: 'Llamar al +58 412 123 4567' })).toHaveAttribute('href', 'tel:+58 412 123 4567')
-    expect(within(t).getByRole('link', { name: /WhatsApp/ })).toHaveAttribute('href', 'https://wa.me/584121234567')
+  it('el gerente accede al panel general sin llamar al endpoint exclusivo del repartidor', () => {
+    montar('/repartidor', 'superadmin')
+    expect(screen.getByRole('link', { name: 'Ir a pedidos' })).toHaveAttribute('href', '/panel/pedidos')
+    expect(listarMisEntregas).not.toHaveBeenCalled()
   })
 
-  it('sin coordenadas busca la dirección escrita en el mapa', async () => {
-    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([pedido({ latitud: null, longitud: null })]))
-    abrir()
-    const t = await screen.findByRole('article', { name: 'Pedido #101' })
-
-    expect(within(t).getByRole('link', { name: /Google Maps/ }).getAttribute('href')).toBe(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Calle 5, casa 12, frente a la panadería, Centro')}`,
-    )
-  })
-
-  it('muestra los productos al pedirlos', async () => {
-    const { user } = abrir()
-    const t = await screen.findByRole('article', { name: 'Pedido #101' })
-
-    await user.click(within(t).getByRole('button', { name: 'Ver productos (3 unidades)' }))
-
-    expect(within(t).getByText('Harina de maíz 1 kg')).toBeInTheDocument()
-    expect(within(t).getByText('× 2')).toBeInTheDocument()
-  })
-
-  it('un pedido asignado se marca en camino y la lista se actualiza', async () => {
-    vi.mocked(listarMisEntregas)
-      .mockResolvedValueOnce(pagina([pedido()]))
-      .mockResolvedValue(pagina([pedido({ estado: 'en_camino' })]))
-    const { user } = abrir()
-    await screen.findByRole('article', { name: 'Pedido #101' })
-
-    await user.click(within(tarjeta(101)).getByRole('button', { name: 'Salí a entregar' }))
-
-    expect(marcarEnCamino).toHaveBeenCalledWith('p1')
-    expect(await screen.findByText(/en camino. Le avisamos al cliente por WhatsApp/)).toBeInTheDocument()
-    expect(await within(tarjeta(101)).findByRole('button', { name: 'Marcar entregado' })).toBeInTheDocument()
-  })
-
-  it('marcar entregado pide confirmación y se puede cancelar', async () => {
-    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([pedido({ estado: 'en_camino' })]))
-    const { user } = abrir()
-    await screen.findByRole('article', { name: 'Pedido #101' })
-
-    await user.click(within(tarjeta(101)).getByRole('button', { name: 'Marcar entregado' }))
-    const confirmar = within(tarjeta(101)).getByRole('group', { name: 'Confirmar entrega' })
-    await user.click(within(confirmar).getByRole('button', { name: 'Cancelar' }))
-    expect(marcarEntregado).not.toHaveBeenCalled()
-
-    await user.click(within(tarjeta(101)).getByRole('button', { name: 'Marcar entregado' }))
-    await user.click(within(tarjeta(101)).getByRole('button', { name: 'Sí, entregado' }))
-
-    expect(marcarEntregado).toHaveBeenCalledWith('p1')
-    expect(await screen.findByText('Pedido #101 entregado. ¡Buen trabajo!')).toBeInTheDocument()
-  })
-
-  it('si la API rechaza el cambio muestra el motivo', async () => {
-    vi.mocked(marcarEnCamino).mockRejectedValue(new ErrorApi('El pedido ya no está asignado a ti.', 409, null))
-    const { user } = abrir()
-    await screen.findByRole('article', { name: 'Pedido #101' })
-
-    await user.click(within(tarjeta(101)).getByRole('button', { name: 'Salí a entregar' }))
-
-    expect(await screen.findByText('El pedido ya no está asignado a ti.')).toBeInTheDocument()
-  })
-
-  it('el historial pide las entregas hechas y no ofrece acciones', async () => {
-    const { user } = abrir()
-    await screen.findByRole('article', { name: 'Pedido #101' })
-    vi.mocked(listarMisEntregas).mockResolvedValue(
-      pagina([pedido({ id: 'p2', numero: 90, estado: 'entregado', entregadoEn: '2026-10-12T18:30:00Z' })]),
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Historial' }))
-
+  it('cambia de página y reinicia la paginación al abrir el historial', async () => {
+    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([asignado], 21))
+    const { user } = montar()
+    await screen.findByRole('button', { name: 'Ver pedido #42' })
+    await user.click(screen.getByRole('button', { name: /Siguiente/ }))
+    await waitFor(() => expect(listarMisEntregas).toHaveBeenLastCalledWith({ historial: false, pagina: 2, tamano: 20 }))
+    await screen.findByRole('button', { name: 'Ver pedido #42' })
+    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([entregado]))
+    await user.click(screen.getByRole('button', { name: 'Historial', exact: true }))
     await waitFor(() => expect(listarMisEntregas).toHaveBeenLastCalledWith({ historial: true, pagina: 1, tamano: 20 }))
-    const t = await screen.findByRole('article', { name: 'Pedido #90' })
-    expect(within(t).getByText(/Entregado el/)).toBeInTheDocument()
-    expect(within(t).queryByRole('button', { name: /Salí a entregar|Marcar entregado/ })).not.toBeInTheDocument()
-    expect(within(t).queryByRole('link', { name: /Google Maps/ })).not.toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Ver pedido #42' })).toHaveTextContent('Entregado')
   })
 
-  it('sin pedidos asignados lo explica', async () => {
+  it('recupera la última página válida si ya no hay pedidos en la página actual', async () => {
+    vi.mocked(listarMisEntregas).mockResolvedValueOnce(pagina([])).mockResolvedValue(pagina([asignado]))
+    montar('/repartidor?pagina=2')
+    await screen.findByRole('button', { name: 'Ver pedido #42' })
+    expect(listarMisEntregas).toHaveBeenLastCalledWith({ historial: false, pagina: 1, tamano: 20 })
+  })
+
+  it('muestra un listado vacío y permite reintentar tras un error', async () => {
+    vi.mocked(listarMisEntregas).mockRejectedValueOnce(new Error('Sin conexión')).mockResolvedValue(pagina([]))
+    const { user } = montar()
+    expect(await screen.findByText('Sin conexión')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+    expect(await screen.findByText('No tienes pedidos pendientes de entrega.')).toBeInTheDocument()
+  })
+
+  it('muestra detalle actualizado, productos, teléfono y mapas con dirección escrita', async () => {
+    const { user } = await abrir()
+    expect(obtenerPedido).toHaveBeenCalledWith('p1')
+    const dialogo = screen.getByRole('dialog')
+    expect(within(dialogo).getByText('Arroz')).toBeInTheDocument()
+    expect(within(dialogo).getByRole('link', { name: 'Llamar al cliente' })).toHaveAttribute('href', 'tel:+584121234567')
+    expect(new URL(within(dialogo).getByRole('link', { name: 'Google Maps' }).href).searchParams.get('query')).toBe('Casa azul #2, Centro, Venezuela')
+    expect(within(dialogo).getByRole('link', { name: 'Waze' })).toHaveAttribute('target', '_blank')
+    expect(within(dialogo).getByRole('heading', { name: 'Historial de estados' })).toBeInTheDocument()
+    fireEvent(dialogo, new Event('cancel', { cancelable: true }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ver pedido #42' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Ver pedido #42' }))
+    await screen.findByRole('button', { name: 'Iniciar entrega' })
+  })
+
+  it('permite cancelar la confirmación sin cambiar el estado', async () => {
+    const { user } = await abrir()
+    await user.click(screen.getByRole('button', { name: 'Iniciar entrega' }))
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+    expect(marcarEnCamino).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Iniciar entrega' })).toBeInTheDocument()
+  })
+
+  it('avanza de asignado a en camino y luego entregado, refrescando la lista y el historial', async () => {
+    const { user } = await abrir()
+    await user.click(screen.getByRole('button', { name: 'Iniciar entrega' }))
+    expect(marcarEnCamino).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Confirmar salida' }))
+    expect(await screen.findByRole('button', { name: 'Marcar entregado' })).toBeInTheDocument()
+    expect(marcarEnCamino).toHaveBeenCalledWith('p1')
     vi.mocked(listarMisEntregas).mockResolvedValue(pagina([]))
-    abrir()
-
-    expect(await screen.findByText(/No tienes pedidos por entregar/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Marcar entregado' }))
+    expect(marcarEntregado).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Confirmar entrega' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(marcarEntregado).toHaveBeenCalledWith('p1')
+    expect(await screen.findByText('No tienes pedidos pendientes de entrega.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Pedido #42 entregado.')
+    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([entregado]))
+    vi.mocked(obtenerPedido).mockResolvedValue(entregado)
+    await user.click(screen.getByRole('button', { name: 'Historial', exact: true }))
+    await user.click(await screen.findByRole('button', { name: 'Ver pedido #42' }))
+    expect(await screen.findByText('Esta entrega ya está finalizada.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Iniciar entrega' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Marcar entregado' })).not.toBeInTheDocument()
   })
 
-  it('si falla la carga muestra el error y permite reintentar', async () => {
-    vi.mocked(listarMisEntregas).mockRejectedValueOnce(new ErrorApi('Sin conexión', 0, null))
-    const { user } = abrir()
+  it('respeta el estado actualizado del servidor aunque la tarjeta conserve el anterior', async () => {
+    vi.mocked(obtenerPedido).mockResolvedValue(enCamino)
+    const { user } = montar()
+    await user.click(await screen.findByRole('button', { name: 'Ver pedido #42' }))
+    expect(await screen.findByRole('button', { name: 'Marcar entregado' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Iniciar entrega' })).not.toBeInTheDocument()
+  })
 
-    await user.click(await screen.findByRole('button', { name: 'Reintentar' }))
+  it('bloquea envíos duplicados y el cierre mientras se confirma la salida', async () => {
+    let resolver
+    vi.mocked(marcarEnCamino).mockReturnValue(new Promise(resolve => { resolver = resolve }))
+    const { user } = await abrir()
+    await user.click(screen.getByRole('button', { name: 'Iniciar entrega' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar salida' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardando…' }))
+    expect(marcarEnCamino).toHaveBeenCalledOnce()
+    expect(screen.getByRole('button', { name: 'Cerrar detalle de entrega' })).toBeDisabled()
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await act(async () => resolver(enCamino))
+    expect(await screen.findByRole('button', { name: 'Marcar entregado' })).toBeInTheDocument()
+  })
 
-    expect(await screen.findByRole('article', { name: 'Pedido #101' })).toBeInTheDocument()
+  it('informa conflictos y exige consultar el estado actual antes de repetir', async () => {
+    vi.mocked(marcarEnCamino).mockRejectedValue(new ErrorApi('El estado cambió.', 409))
+    const { user } = await abrir()
+    await user.click(screen.getByRole('button', { name: 'Iniciar entrega' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar salida' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('El estado cambió.')
+    expect(screen.getByRole('button', { name: 'Iniciar entrega' })).toBeDisabled()
+    vi.mocked(obtenerPedido).mockResolvedValue(enCamino)
+    await user.click(screen.getByRole('button', { name: 'Actualizar entrega' }))
+    expect(await screen.findByRole('button', { name: 'Marcar entregado' })).toBeEnabled()
+  })
+
+  it('no muestra acciones si el backend rechaza el acceso al pedido y permite consultar otra vez', async () => {
+    vi.mocked(obtenerPedido).mockRejectedValueOnce(new ErrorApi('Pedido no encontrado.', 404)).mockResolvedValue(asignado)
+    const { user } = montar()
+    await user.click(await screen.findByRole('button', { name: 'Ver pedido #42' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pedido no encontrado.')
+    expect(screen.queryByRole('button', { name: 'Iniciar entrega' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Actualizar entrega' }))
+    expect(await screen.findByRole('button', { name: 'Iniciar entrega' })).toBeInTheDocument()
+  })
+
+  it('ignora una respuesta de la pestaña anterior cuando el usuario abre el historial', async () => {
+    let resolverAnterior
+    vi.mocked(listarMisEntregas).mockReturnValueOnce(new Promise(resolve => { resolverAnterior = resolve })).mockResolvedValue(pagina([entregado]))
+    const { user } = montar()
+    await user.click(screen.getByRole('button', { name: 'Historial', exact: true }))
+    expect(await screen.findByRole('button', { name: 'Ver pedido #42' })).toHaveTextContent('Entregado')
+    await act(async () => resolverAnterior(pagina([{ ...asignado, numero: 99 }])))
+    expect(screen.queryByRole('button', { name: 'Ver pedido #99' })).not.toBeInTheDocument()
   })
 })

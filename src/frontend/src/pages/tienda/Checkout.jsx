@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { listarZonasEntrega, obtenerDatosPago } from '../../api/catalogo'
 import { cotizarPedido, crearPedido } from '../../api/pedidos'
@@ -83,7 +83,7 @@ function Tarjeta({ children }) {
 
 function FormularioCheckout() {
   const navegar = useNavigate()
-  const { lineas, items, cambiarCantidad, quitar, vaciar } = useCarrito()
+  const { lineas, items, cambiarCantidad, quitar, retirarComprados } = useCarrito()
 
   const [zonas, setZonas] = useState([])
   const [datosPago, setDatosPago] = useState(null)
@@ -105,6 +105,8 @@ function FormularioCheckout() {
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false)
   const [errores, setErrores] = useState({})
   const [enviando, setEnviando] = useState(false)
+  const [incierto, setIncierto] = useState(false)
+  const bloqueado = useRef(false)
 
   useEffect(() => {
     registrarEvento('inicio_checkout')
@@ -212,20 +214,23 @@ function FormularioCheckout() {
     if (!d.referenciaPago.trim()) e.referenciaPago = 'Escribe la referencia del pago.'
     if (!captura) e.captura = 'Adjunta la captura del pago.'
     else if (!TIPOS_CAPTURA.includes(captura.type)) e.captura = 'La captura debe ser una imagen JPG, PNG o WEBP.'
-    else if (captura.size > TAMANO_MAXIMO_CAPTURA) e.captura = 'La captura debe pesar como máximo 5 MB.'
+    else if (captura.size === 0 || captura.size > TAMANO_MAXIMO_CAPTURA) e.captura = 'La captura debe pesar entre 1 byte y 5 MB.'
     return e
   }
 
   async function alEnviar(e) {
     e.preventDefault()
+    if (bloqueado.current || !puedeConfirmar) return
     const encontrados = validar()
     setErrores(encontrados)
     if (Object.keys(encontrados).length) return
 
+    bloqueado.current = true
     setEnviando(true)
+    const itemsEnviados = items.map(item => ({ ...item }))
     try {
-      const pedido = await crearPedido({ ...d, items, codigoCupon: cupon, captura, ...ubicacion })
-      vaciar()
+      const pedido = await crearPedido({ ...d, items: itemsEnviados, codigoCupon: cupon, captura, ...ubicacion })
+      retirarComprados(itemsEnviados)
       registrarEvento('pedido_confirmado', { valor: pedido.totalUsd })
       enviarEventos()
       navegar('/mis-pedidos', { replace: true, state: { nuevo: pedido.numero } })
@@ -235,9 +240,12 @@ function FormularioCheckout() {
         porCampo[campo.charAt(0).toLowerCase() + campo.slice(1)] = mensajes[0]
       }
       setErrores(Object.keys(porCampo).length ? porCampo : { general: err.message })
+      if (err.estado === 0) setIncierto(true)
       // Stock o cupón cambiaron: se vuelve a cotizar para mostrar la situación real.
       if (err.estado === 409) setIntento((n) => n + 1)
       setEnviando(false)
+    } finally {
+      bloqueado.current = false
     }
   }
 
@@ -253,7 +261,7 @@ function FormularioCheckout() {
   const metodo = METODOS.find((m) => m.valor === d.metodoPago)
   const datosMetodo = datosPago?.[metodo.datos]
   const sinTasa = cotizacion && cotizacion.tasaBsUsd == null
-  const puedeConfirmar = cotizacion && !cotizando && !sinTasa && sinStock.length === 0 && !enviando
+  const puedeConfirmar = cotizacion && !cotizando && !sinTasa && sinStock.length === 0 && !enviando && !incierto && !!datosMetodo?.trim()
 
   return (
     <form onSubmit={alEnviar} noValidate className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -270,6 +278,7 @@ function FormularioCheckout() {
             {errores.general}
           </p>
         )}
+        {incierto && <p className="rounded-lg border border-amber-200 p-4 text-sm">No pudimos comprobar si el pedido se registró. <Link to="/mis-pedidos" className="font-semibold underline">Revisa tus pedidos antes de volver a confirmar.</Link></p>}
 
         {/* 1. Entrega */}
         <Seccion numero="1" titulo="¿Dónde te lo llevamos?">
@@ -345,6 +354,7 @@ function FormularioCheckout() {
                   type="radio"
                   name="metodoPago"
                   value={m.valor}
+                  disabled={!datosPago?.[m.datos]?.trim()}
                   checked={d.metodoPago === m.valor}
                   onChange={() => cambiar('metodoPago', m.valor)}
                   className="accent-emerald-600"

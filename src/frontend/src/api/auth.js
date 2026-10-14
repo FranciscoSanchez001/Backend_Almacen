@@ -48,4 +48,5 @@ export async function cerrarSesion() {
   guardarToken(null);
   localStorage.removeItem(CLAVE_REFRESH);
   localStorage.removeItem('almacen.usuario'); // Lo guardaban versiones anteriores.
+  window.google?.accounts?.id?.disableAutoSelect?.();
 }

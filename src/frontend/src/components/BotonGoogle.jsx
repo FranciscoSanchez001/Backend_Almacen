@@ -16,11 +16,19 @@ function cargarScriptGoogle() {
     const script = document.createElement('script')
     script.src = URL_SCRIPT
     script.async = true
-    script.onload = resolver
-    script.onerror = () => {
+    const fallar = () => {
+      clearTimeout(timeout)
+      script.remove()
       cargaScript = null // Permite reintentar.
       rechazar(new Error('No se pudo cargar el inicio de sesión de Google. Revisa tu conexión.'))
     }
+    const timeout = setTimeout(fallar, 15000)
+    script.onload = () => {
+      if (!window.google?.accounts?.id) return fallar()
+      clearTimeout(timeout)
+      resolver()
+    }
+    script.onerror = fallar
     document.head.appendChild(script)
   })
   return cargaScript
@@ -31,6 +39,7 @@ export default function BotonGoogle({ alIngresar }) {
   const { loginConGoogle } = useAuth()
   const [error, setError] = useState(CLIENT_ID ? null : 'El inicio de sesión con Google no está configurado (VITE_GOOGLE_CLIENT_ID).')
   const [entrando, setEntrando] = useState(false)
+  const procesando = useRef(false)
 
   // La última versión de los callbacks, sin volver a inicializar Google en cada render.
   const alIngresarRef = useRef(alIngresar)
@@ -47,15 +56,19 @@ export default function BotonGoogle({ alIngresar }) {
         window.google.accounts.id.initialize({
           client_id: CLIENT_ID,
           callback: async ({ credential }) => {
+            if (!vigente || procesando.current) return
+            if (!credential) { setError('Google no devolvió una credencial. Inténtalo de nuevo.'); return }
+            procesando.current = true
             setEntrando(true)
             setError(null)
             try {
               const usuario = await loginConGoogle(credential)
-              alIngresarRef.current?.(usuario)
+              if (vigente) alIngresarRef.current?.(usuario)
             } catch (e) {
-              setError(e.message)
+              if (vigente) setError(e.message)
             } finally {
-              setEntrando(false)
+              procesando.current = false
+              if (vigente) setEntrando(false)
             }
           },
         })
