@@ -35,6 +35,7 @@ const renderizarPanel = (rol, ruta = '/panel') => renderizar(<Panel />, { ruta, 
 const menuLateral = () => screen.getAllByRole('navigation', { name: 'Menú del panel' })[0]
 
 beforeEach(() => {
+  localStorage.removeItem('panel.lateralOculto')
   vi.mocked(listarNotificaciones).mockReset().mockResolvedValue({ items: [], total: 0 })
 })
 
@@ -63,6 +64,8 @@ describe('PanelLayout: menú según el rol', () => {
     ]) {
       expect(within(menu).getByRole('link', { name: new RegExp(opcion) })).toHaveAttribute('href', ruta)
     }
+    // El comportamiento ahora está dentro del Dashboard KPI.
+    expect(within(menu).queryByRole('link', { name: /Comportamiento/ })).not.toBeInTheDocument()
   })
 
   it('la marca indica el área según el rol', () => {
@@ -123,6 +126,34 @@ describe('PanelLayout: cajón móvil', () => {
 
     expect(screen.getByText('Página Pedidos')).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Menú' })).not.toBeInTheDocument()
+  })
+})
+
+describe('PanelLayout: menú lateral en escritorio', () => {
+  const lateral = () => document.getElementById('menu-lateral')
+
+  it('se oculta y se vuelve a mostrar con el botón de menú', async () => {
+    const { user } = renderizarPanel('superadmin', '/admin')
+    expect(lateral()).toHaveClass('lg:flex')
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar menú lateral' }))
+    expect(lateral()).not.toHaveClass('lg:flex')
+    expect(screen.getByRole('button', { name: 'Mostrar menú lateral' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByText('Página Dashboard')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar menú lateral' }))
+    expect(lateral()).toHaveClass('lg:flex')
+  })
+
+  it('recuerda la preferencia al volver a entrar', async () => {
+    const { user, unmount } = renderizarPanel('ventas')
+    await user.click(screen.getByRole('button', { name: 'Ocultar menú lateral' }))
+    unmount()
+
+    renderizarPanel('ventas')
+
+    expect(lateral()).not.toHaveClass('lg:flex')
+    expect(screen.getByRole('button', { name: 'Mostrar menú lateral' })).toBeInTheDocument()
   })
 })
 

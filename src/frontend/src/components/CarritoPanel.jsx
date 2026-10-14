@@ -58,7 +58,7 @@ export default function CarritoPanel({ abierto, alCerrar }) {
                 <li key={producto.id} className="flex gap-3 py-4">
                   <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-slate-50">
                     {producto.imagenUrl ? (
-                      <img src={producto.imagenUrl} alt="" className="h-full w-full object-contain p-1" />
+                      <img src={producto.imagenUrl} alt="" className="h-full w-full object-cover" />
                     ) : (
                       <Icono nombre="bolsa" className="h-8 w-8 text-slate-300" grosor={1.4} />
                     )}

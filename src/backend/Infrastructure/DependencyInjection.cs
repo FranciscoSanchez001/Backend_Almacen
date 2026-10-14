@@ -39,9 +39,10 @@ namespace Infrastructure
             services.AddScoped<ICuponRepository, CuponRepository>();
             services.AddScoped<IAnaliticaRepository, AnaliticaRepository>();
 
-            // KPIs e informe en Excel.
+            // KPIs e informes en Excel y PDF.
             services.AddSingleton(configuracion.GetSection("Reportes").Get<ReportesOptions>() ?? new ReportesOptions());
             services.AddSingleton<IGeneradorExcel, GeneradorExcel>();
+            services.AddSingleton<IGeneradorPdf, GeneradorPdf>();
 
             services.AddSingleton<IHasherContrasenas, HasherBcrypt>();
 
