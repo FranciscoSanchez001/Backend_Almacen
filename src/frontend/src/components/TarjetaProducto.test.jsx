@@ -114,3 +114,20 @@ describe('TarjetaProducto: carrito', () => {
     expect(mas).toBeDisabled()
   })
 })
+
+describe('TarjetaProducto: ofertas', () => {
+  it('con oferta vigente muestra el porcentaje, el precio rebajado y el anterior tachado', () => {
+    renderizarTarjeta(producto({ precioUsd: 1, precioOriginalUsd: 1.25, descuentoPorcentaje: 20 }))
+
+    expect(screen.getByText('−20 %')).toBeInTheDocument()
+    expect(screen.getByText('$1.25')).toHaveClass('line-through')
+    expect(screen.getByText(/^\$1\.00/)).toBeInTheDocument()
+  })
+
+  it('sin oferta no muestra la etiqueta ni el precio tachado', () => {
+    renderizarTarjeta(producto())
+
+    expect(screen.queryByText(/%$/)).not.toBeInTheDocument()
+    expect(document.querySelector('.line-through')).toBeNull()
+  })
+})

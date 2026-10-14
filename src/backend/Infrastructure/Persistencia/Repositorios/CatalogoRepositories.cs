@@ -109,6 +109,7 @@ namespace Infrastructure.Persistencia.Repositorios
                     : a.Entidad == Entidades.Categoria ? db.Categorias.Where(c => c.Id == a.EntidadId).Select(c => c.Nombre).FirstOrDefault()
                     : a.Entidad == Entidades.Zona ? db.Zonas.Where(z => z.Id == a.EntidadId).Select(z => z.Nombre).FirstOrDefault()
                     : a.Entidad == Entidades.Usuario ? db.Usuarios.Where(u => u.Id == a.EntidadId).Select(u => u.Nombre).FirstOrDefault()
+                    : a.Entidad == Entidades.Cupon ? db.Cupones.Where(c => c.Id == a.EntidadId).Select(c => c.Codigo).FirstOrDefault()
                     : null,
                     a.Accion,
                     a.DatosAntes,

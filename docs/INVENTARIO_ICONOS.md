@@ -4,7 +4,7 @@ Revisión del repositorio: 202 apariciones en 18 archivos. Frontend: 29; pruebas
 
 Se incluyen también los símbolos de enlace externo, descarga y confirmación usados como iconos. Las ubicaciones corresponden al código anterior a la sustitución. Los símbolos legales de copyright, marca registrada y marca comercial permanecen como texto.
 
-Los componentes usan `Icono.jsx`, con trazos definidos en `src/frontend/src/assets/iconos.json`, color heredado y SVG ocultos a lectores de pantalla cuando acompañan texto. La documentación usa los SVG de `src/frontend/public/iconos/` con texto alternativo. Las pruebas buscan los nombres de las acciones sin depender del dibujo.
+Los componentes usan `Icono.jsx`, con trazos propios y un catálogo complementario en `src/frontend/src/assets/iconos.json`, color heredado y SVG ocultos a lectores de pantalla cuando acompañan texto. La documentación usa los SVG de `src/frontend/public/iconos/` con texto alternativo. Las pruebas buscan los nombres de las acciones sin depender del dibujo. Este inventario conserva las ubicaciones de la sustitución original; el PR también conserva las funciones incorporadas después en `master`.
 
 | Código Unicode original | SVG | Apariciones |
 | :--- | :--- | ---: |

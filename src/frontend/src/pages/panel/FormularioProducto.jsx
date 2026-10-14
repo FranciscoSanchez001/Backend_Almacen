@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { actualizarProducto, crearProducto } from '../../api/productos'
 import { Campo } from '../../components/ui'
 import { claseBoton, claseInput, erroresPorCampo } from '../../utils/panel'
-import { formatoPct } from '../../utils/formato'
+import { diaAIso, formatoPct, formatoUsd, isoADia } from '../../utils/formato'
 
 // Crear o editar un producto. Las reglas son las mismas que valida la API;
 // si la API rechaza algo, su mensaje aparece debajo del campo.
@@ -22,6 +22,10 @@ function validar(d, esNuevo) {
   if (d[stock] === '' || Number(d[stock]) < 0) e[stock] = 'El stock no puede estar vacío ni ser negativo.'
   if (Number(d.stockMinimo) < 0) e.stockMinimo = 'No puede ser negativo.'
   if (!(Number(d.stockMaximo) > Number(d.stockMinimo))) e.stockMaximo = 'Debe ser mayor que el stock mínimo.'
+  if (d.descuentoPorcentaje !== '' && !(Number(d.descuentoPorcentaje) > 0 && Number(d.descuentoPorcentaje) < 100))
+    e.descuentoPorcentaje = 'Debe ser mayor que 0 y menor que 100.'
+  if (d.descuentoDesde && d.descuentoHasta && d.descuentoHasta < d.descuentoDesde)
+    e.descuentoHasta = 'Debe ser igual o posterior al inicio.'
   return e
 }
 
@@ -41,6 +45,9 @@ export default function FormularioProducto({ producto, categorias, alGuardar, al
     stockMaximo: producto?.stockMaximo ?? 100,
     ubicacion: producto?.ubicacion ?? '',
     unidadMedida: producto?.unidadMedida ?? 'unidad',
+    descuentoPorcentaje: producto?.descuentoPorcentaje ?? '',
+    descuentoDesde: isoADia(producto?.descuentoDesde),
+    descuentoHasta: isoADia(producto?.descuentoHasta, { fin: true }),
   })
   const [errores, setErrores] = useState({})
   const [guardando, setGuardando] = useState(false)
@@ -68,6 +75,10 @@ export default function FormularioProducto({ producto, categorias, alGuardar, al
       stockMaximo: Number(d.stockMaximo),
       ubicacion: d.ubicacion.trim() || null,
       unidadMedida: d.unidadMedida,
+      // Sin porcentaje no hay oferta (la API descarta las fechas).
+      descuentoPorcentaje: d.descuentoPorcentaje === '' ? null : Number(d.descuentoPorcentaje),
+      descuentoDesde: diaAIso(d.descuentoDesde),
+      descuentoHasta: diaAIso(d.descuentoHasta, { fin: true }),
       ...(esNuevo ? { stockInicial: Number(d.stockInicial) } : { stockDisponible: Number(d.stockDisponible) }),
     }
     setGuardando(true)
@@ -82,6 +93,8 @@ export default function FormularioProducto({ producto, categorias, alGuardar, al
 
   const margen = Number(d.precioUsd) > 0 && Number(d.costoUsd) > 0 ? ((d.precioUsd - d.costoUsd) / d.precioUsd) * 100 : null
   const campoStock = esNuevo ? 'stockInicial' : 'stockDisponible'
+  const pct = Number(d.descuentoPorcentaje)
+  const precioOferta = Number(d.precioUsd) > 0 && pct > 0 && pct < 100 ? Math.round(d.precioUsd * (100 - pct)) / 100 : null
 
   return (
     <form onSubmit={alEnviar} noValidate className="space-y-4">
@@ -159,6 +172,49 @@ export default function FormularioProducto({ producto, categorias, alGuardar, al
           <input id="ubicacion" value={d.ubicacion} onChange={(e) => cambiar('ubicacion', e.target.value)} className={claseInput(errores.ubicacion)} />
         </Campo>
       </div>
+
+      <fieldset className="rounded-lg border border-slate-200 p-4">
+        <legend className="px-1 text-sm font-semibold text-slate-700">Oferta (opcional)</legend>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Campo
+            id="descuento"
+            etiqueta="Descuento (%)"
+            error={errores.descuentoPorcentaje}
+            ayuda={precioOferta != null ? `Precio en oferta: ${formatoUsd(precioOferta)}` : 'Vacío = sin oferta.'}
+          >
+            <input
+              id="descuento"
+              type="number"
+              min="0"
+              max="99"
+              step="0.5"
+              value={d.descuentoPorcentaje}
+              onChange={(e) => cambiar('descuentoPorcentaje', e.target.value)}
+              className={claseInput(errores.descuentoPorcentaje)}
+            />
+          </Campo>
+          <Campo id="ofertaDesde" etiqueta="Desde" error={errores.descuentoDesde} ayuda="Vacío = desde ya.">
+            <input
+              id="ofertaDesde"
+              type="date"
+              value={d.descuentoDesde}
+              disabled={d.descuentoPorcentaje === ''}
+              onChange={(e) => cambiar('descuentoDesde', e.target.value)}
+              className={`${claseInput(errores.descuentoDesde)} disabled:opacity-50`}
+            />
+          </Campo>
+          <Campo id="ofertaHasta" etiqueta="Hasta (inclusive)" error={errores.descuentoHasta} ayuda="Vacío = sin fecha de fin.">
+            <input
+              id="ofertaHasta"
+              type="date"
+              value={d.descuentoHasta}
+              disabled={d.descuentoPorcentaje === ''}
+              onChange={(e) => cambiar('descuentoHasta', e.target.value)}
+              className={`${claseInput(errores.descuentoHasta)} disabled:opacity-50`}
+            />
+          </Campo>
+        </div>
+      </fieldset>
 
       <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
         <button type="button" onClick={alCancelar} className={claseBoton.secundario}>

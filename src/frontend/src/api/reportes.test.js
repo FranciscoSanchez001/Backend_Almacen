@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { descargarExcel, obtenerKpis } from './reportes'
+import { descargarExcel, descargarPdf, obtenerKpis } from './reportes'
 
 let fetchSimulado
 
@@ -61,5 +61,20 @@ describe('descargarExcel', () => {
 
     expect(crear.mock.calls[0][0]).toBeInstanceOf(Blob)
     expect(revocar).toHaveBeenCalledWith('blob:informe')
+  })
+})
+
+describe('descargarPdf', () => {
+  it.each([
+    [{ tipo: 'mensual', desde: '2026-09-01', hasta: '2026-09-30' }, 'dashboard_kpi_2026-09_mensual.pdf'],
+    [{ tipo: 'personalizado', desde: '2026-09-10', hasta: '2026-09-20' }, 'dashboard_kpi_2026-09-10_a_2026-09-20_personalizado.pdf'],
+  ])('pide el PDF del período %j y lo nombra como el Excel', async (periodo, nombre) => {
+    const { descargas } = prepararDescarga()
+
+    await descargarPdf(periodo)
+
+    expect(url().pathname).toBe('/reportes/pdf')
+    expect(url().searchParams.get('desde')).toBe(periodo.desde)
+    expect(descargas).toEqual([{ nombre, href: 'blob:informe' }])
   })
 })

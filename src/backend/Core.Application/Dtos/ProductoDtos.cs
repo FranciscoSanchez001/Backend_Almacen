@@ -18,6 +18,11 @@ namespace Core.Application.Dtos
         int StockMaximo { get; }
         string? Ubicacion { get; }
         string UnidadMedida { get; }
+
+        // Oferta opcional: % de descuento con vigencia [desde, hasta). Sin porcentaje no hay oferta.
+        decimal? DescuentoPorcentaje { get; }
+        DateTime? DescuentoDesde { get; }
+        DateTime? DescuentoHasta { get; }
     }
 
     public record CrearProductoRequest(
@@ -32,7 +37,10 @@ namespace Core.Application.Dtos
         int StockMinimo = Producto.ValoresPorDefecto.StockMinimo,
         int StockMaximo = Producto.ValoresPorDefecto.StockMaximo,
         string? Ubicacion = null,
-        string UnidadMedida = Producto.ValoresPorDefecto.UnidadMedida) : IDatosProducto;
+        string UnidadMedida = Producto.ValoresPorDefecto.UnidadMedida,
+        decimal? DescuentoPorcentaje = null,
+        DateTime? DescuentoDesde = null,
+        DateTime? DescuentoHasta = null) : IDatosProducto;
 
     // StockDisponible es opcional: si viene y es distinto del actual, se registra como ajuste.
     public record ActualizarProductoRequest(
@@ -47,7 +55,10 @@ namespace Core.Application.Dtos
         int StockMinimo = Producto.ValoresPorDefecto.StockMinimo,
         int StockMaximo = Producto.ValoresPorDefecto.StockMaximo,
         string? Ubicacion = null,
-        string UnidadMedida = Producto.ValoresPorDefecto.UnidadMedida) : IDatosProducto;
+        string UnidadMedida = Producto.ValoresPorDefecto.UnidadMedida,
+        decimal? DescuentoPorcentaje = null,
+        DateTime? DescuentoDesde = null,
+        DateTime? DescuentoHasta = null) : IDatosProducto;
 
     // Lo que se guarda en auditoria.datos_antes / datos_despues.
     public record ProductoAuditoria(
@@ -63,10 +74,14 @@ namespace Core.Application.Dtos
         int StockMaximo,
         string? Ubicacion,
         string UnidadMedida,
-        bool Activo)
+        bool Activo,
+        decimal? DescuentoPorcentaje,
+        DateTime? DescuentoDesde,
+        DateTime? DescuentoHasta)
     {
         public static ProductoAuditoria De(Producto p) =>
             new(p.CodigoSku, p.Nombre, p.Descripcion, p.PrecioUsd, p.CostoUsd, p.ImagenUrl, p.CategoriaId,
-                p.StockDisponible, p.StockMinimo, p.StockMaximo, p.Ubicacion, p.UnidadMedida, p.Activo);
+                p.StockDisponible, p.StockMinimo, p.StockMaximo, p.Ubicacion, p.UnidadMedida, p.Activo,
+                p.DescuentoPorcentaje, p.DescuentoDesde, p.DescuentoHasta);
     }
 }

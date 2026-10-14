@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { listarEntregas } from '../../api/pedidos'
+import { listarMisEntregas } from '../../api/repartidor'
 import { useAuth } from '../../context/AuthContext'
 import Icono from '../../components/Icono'
 import { Aviso, EstadoCarga, EtiquetaEstado, Paginacion, Selector } from '../../components/ui'
@@ -31,7 +31,7 @@ export default function Inicio() {
     setCargando(true)
     setResultado(null)
     setError('')
-    listarEntregas({ historial, pagina, tamano: TAMANO }).then(datos => {
+    listarMisEntregas({ historial, pagina, tamano: TAMANO }).then(datos => {
       if (!activo) return
       const ultimaPagina = Math.max(1, Math.ceil(datos.total / TAMANO))
       if (pagina > ultimaPagina) { setParams({ vista: historial ? 'historial' : 'activas', pagina: String(ultimaPagina) }, { replace: true }); return }
@@ -40,6 +40,13 @@ export default function Inicio() {
       .finally(() => { if (activo) setCargando(false) })
     return () => { activo = false }
   }, [usuario?.id, usuario?.rol, historial, pagina, intento, setParams])
+
+  // Conserva la actualización automática de nuevas asignaciones.
+  useEffect(() => {
+    if (historial || usuario?.rol !== 'repartidor') return
+    const intervalo = setInterval(() => setIntento(actual => actual + 1), 60000)
+    return () => clearInterval(intervalo)
+  }, [historial, usuario?.rol])
 
   function cambiarVista(vista) {
     setSeleccionado(null)

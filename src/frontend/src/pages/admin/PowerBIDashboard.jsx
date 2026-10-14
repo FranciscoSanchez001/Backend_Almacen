@@ -1,7 +1,6 @@
-import Icono from '../../components/Icono'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { descargarExcel, obtenerKpis } from '../../api/reportes'
+import { descargarExcel, descargarPdf, obtenerKpis } from '../../api/reportes'
 import { listarTodosLosProductos } from '../../api/productos'
 import { listarInventario } from '../../api/inventario'
 import { listarPedidos } from '../../api/pedidos'
@@ -12,12 +11,16 @@ import { METODOS_PAGO, claseBoton, claseInput } from '../../utils/panel'
 import { BarrasHorizontales, Dona, GraficoLinea, MapaCalor, TarjetaGrafico, TarjetaKpi } from '../../components/dashboard/Graficos'
 import { formatoBs, formatoDia, formatoMinutos, formatoNumero, formatoPct, formatoUsd, hoyIso } from '../../utils/formato'
 import { alertaStock } from '../../utils/stock'
+import Icono from '../../components/Icono'
+import SeccionComportamiento from '../../components/dashboard/SeccionComportamiento'
 
 // Dashboard KPI del gerente (superadmin). Todos los indicadores de la especificación
 // salen de GET /kpis, con el filtro de período (hoy, semana, mes o rango). Se le suman:
 // - Valorización del almacén (costo vs. precio de venta) calculada con /productos.
 // - Alertas de stock crítico según los umbrales de cada producto, con /inventario.
-// "Descargar Excel" baja el informe del mismo período: los números coinciden con la pantalla.
+// - Comportamiento de los visitantes (búsquedas, embudo, carrito), con /analitica/comportamiento.
+// "Descargar Excel" y "Descargar PDF" bajan el informe del mismo período: los números coinciden
+// con la pantalla. El Excel trae el detalle completo; el PDF, el dashboard con formato.
 const PERIODOS = [
   ['diario', 'Hoy'],
   ['semanal', 'Esta semana'],
@@ -83,20 +86,20 @@ function AvisosDelDia({ inventario }) {
   return (
     <nav aria-label="Avisos del día" className="flex flex-wrap items-center gap-2">
       <Link to="/panel/pedidos" className={chip}>
-        <span aria-hidden><Icono nombre="recibo" /></span>
+        <Icono nombre="recibo" tono />
         <strong className="text-slate-900">{datos.pendientes.total}</strong> por revisar
         {urgente && <ContadorExpiracion expiraEn={urgente.expiraEn} />}
       </Link>
       <Link to="/panel/inventario" className={chip}>
-        <span aria-hidden><Icono nombre="agotado" /></span>
+        <Icono nombre="agotado" tono />
         <strong className={agotados > 0 ? 'text-red-700 dark:text-red-300' : 'text-slate-900'}>{agotados}</strong> agotados
       </Link>
       <Link to="/panel/inventario" className={chip}>
-        <span aria-hidden><Icono nombre="advertencia" /></span>
+        <Icono nombre="alerta" tono />
         <strong className="text-slate-900">{bajos}</strong> bajo el mínimo
       </Link>
       <Link to="/panel#avisos" className={chip}>
-        <span aria-hidden><Icono nombre="campana" /></span>
+        <Icono nombre="campana" tono />
         <strong className="text-slate-900">{datos.avisos.total}</strong> avisos sin leer
       </Link>
     </nav>
@@ -112,8 +115,8 @@ export default function PowerBIDashboard() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [rankingPor, setRankingPor] = useState('unidades')
-  const [descargando, setDescargando] = useState(false)
-  const [errorExcel, setErrorExcel] = useState('')
+  const [descargando, setDescargando] = useState(null) // 'excel' | 'pdf' | null
+  const [errorDescarga, setErrorDescarga] = useState('')
 
   // Parámetros que entiende la API para el período elegido.
   const periodo = useMemo(
@@ -152,15 +155,15 @@ export default function PowerBIDashboard() {
     cargarAlmacen()
   }, [cargarAlmacen])
 
-  async function alDescargar() {
-    setDescargando(true)
-    setErrorExcel('')
+  async function alDescargar(formato) {
+    setDescargando(formato)
+    setErrorDescarga('')
     try {
-      await descargarExcel(periodo)
+      await (formato === 'pdf' ? descargarPdf : descargarExcel)(periodo)
     } catch (e) {
-      setErrorExcel(e.message)
+      setErrorDescarga(e.message)
     } finally {
-      setDescargando(false)
+      setDescargando(null)
     }
   }
 
@@ -190,7 +193,7 @@ export default function PowerBIDashboard() {
         <div>
           <h2 className="text-2xl font-bold">Dashboard KPI</h2>
           <p className="mt-1 text-slate-600">
-            Ventas, inventario y operación.
+            Ventas, inventario, operación y comportamiento de los visitantes.
             {kpis && (
               <span className="text-slate-500">
                 {' '}
@@ -216,15 +219,33 @@ export default function PowerBIDashboard() {
               </label>
             </div>
           )}
-          <div className="flex items-center gap-2 lg:ml-auto">
-            {cargando && kpis && <span className="text-xs text-slate-500">Actualizando…</span>}
-            <button type="button" onClick={alDescargar} disabled={descargando || rangoInvalido} className={claseBoton.primario}>
-              {descargando ? 'Generando…' : <><Icono nombre="descargar" /> Descargar Excel</>}
-            </button>
+          <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+            {cargando && kpis && <span className="w-full text-xs text-slate-500 sm:w-auto">Actualizando…</span>}
+            {[
+              ['excel', 'Descargar Excel', claseBoton.primario],
+              ['pdf', 'Descargar PDF', claseBoton.secundario],
+            ].map(([formato, texto, clase]) => (
+              <button
+                key={formato}
+                type="button"
+                onClick={() => alDescargar(formato)}
+                disabled={descargando !== null || rangoInvalido}
+                className={`${clase} flex-1 sm:flex-none`}
+              >
+                {descargando === formato ? (
+                  'Generando…'
+                ) : (
+                  <>
+                    <Icono nombre="descargar" className="mr-1.5 h-4 w-4 align-[-3px]" />
+                    {texto}
+                  </>
+                )}
+              </button>
+            ))}
           </div>
         </div>
         {rangoInvalido && <p className="text-sm text-red-700 dark:text-red-300">Elige un rango válido: “desde” no puede ser posterior a “hasta”.</p>}
-        {errorExcel && <p className="text-sm text-red-700 dark:text-red-300">{errorExcel}</p>}
+        {errorDescarga && <p className="text-sm text-red-700 dark:text-red-300">{errorDescarga}</p>}
       </section>
 
       <EstadoCarga cargando={!kpis && !error} error={!kpis && error} alReintentar={cargarKpis}>
@@ -416,7 +437,7 @@ export default function PowerBIDashboard() {
                               </td>
                               <td className="py-2 pl-3">
                                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${p.alerta.clase}`}>
-                                  <span aria-hidden>{p.alerta.icono}</span> {p.alerta.texto}
+                                  <Icono nombre={p.alerta.icono} className="h-3.5 w-3.5" /> {p.alerta.texto}
                                 </span>
                               </td>
                             </tr>
@@ -444,7 +465,7 @@ export default function PowerBIDashboard() {
                         {rotacion.map((p) => (
                           <tr key={p.productoId}>
                             <td className="py-2">
-                              {p.producto} {p.agotado && <span className="text-xs font-semibold text-red-700 dark:text-red-300"><Icono nombre="agotado" /> agotado</span>}
+                              {p.producto} {p.agotado && <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-300"><Icono nombre="agotado" className="h-3.5 w-3.5" /> agotado</span>}
                             </td>
                             <td className="py-2 text-slate-600">{p.categoria}</td>
                             <td className="py-2 text-right">{p.unidadesVendidas}</td>
@@ -486,6 +507,9 @@ export default function PowerBIDashboard() {
           </div>
         )}
       </EstadoCarga>
+
+      {/* 6. Comportamiento de los visitantes: mismo período, carga aparte */}
+      {!rangoInvalido && <SeccionComportamiento periodo={periodo} />}
     </div>
   )
 }

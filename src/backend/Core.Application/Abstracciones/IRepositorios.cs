@@ -75,7 +75,9 @@ namespace Core.Application.Abstracciones
         Guid? CategoriaId = null,
         bool IncluirInactivos = false,
         // Catálogo público: solo activos con stock disponible.
-        bool SoloVisiblesEnTienda = false);
+        bool SoloVisiblesEnTienda = false,
+        // Solo productos con oferta vigente en este momento.
+        bool SoloEnOferta = false);
 
     public interface IProductoRepository
     {
@@ -162,6 +164,31 @@ namespace Core.Application.Abstracciones
         void Agregar(Pedido pedido);
     }
 
+    public record FiltroCupones(string? Texto = null, bool? Activo = null);
+
+    public interface ICuponRepository
+    {
+        // Los más recientes primero.
+        Task<Pagina<Cupon>> ListarAsync(FiltroCupones filtro, int pagina, int tamano, CancellationToken ct = default);
+        Task<Cupon?> ObtenerAsync(Guid id, CancellationToken ct = default);
+        Task<Cupon?> ObtenerPorCodigoAsync(string codigo, CancellationToken ct = default);
+        Task<Cupon?> ObtenerParaEditarAsync(Guid id, CancellationToken ct = default);
+        Task<bool> CodigoEnUsoAsync(string codigo, CancellationToken ct = default);
+
+        // ¿El cliente tiene un pedido vigente (ni rechazado ni expirado) con este cupón?
+        Task<bool> ClienteLoUsoAsync(Guid cuponId, Guid clienteId, CancellationToken ct = default);
+
+        // usos + 1 en un único UPDATE condicional, solo si el cupón sigue activo, vigente en
+        // `ahora` y con usos disponibles. Bloquea la fila hasta el fin de la transacción.
+        // Devuelve false si la condición no se cumplió.
+        Task<bool> ConsumirUsoAsync(Guid cuponId, DateTime ahora, CancellationToken ct = default);
+
+        // usos − 1 (pedido rechazado o expirado).
+        Task LiberarUsoAsync(Guid cuponId, CancellationToken ct = default);
+
+        void Agregar(Cupon cupon);
+    }
+
     public interface INotificacionRepository
     {
         Task<Pagina<Notificacion>> ListarAsync(bool soloNoLeidas, int pagina, int tamano, CancellationToken ct = default);
@@ -229,6 +256,33 @@ namespace Core.Application.Abstracciones
         // movimientos después (disponible_antes del primer movimiento posterior). Los que no
         // aparecen no cambiaron desde entonces: su stock es el actual.
         Task<Dictionary<Guid, int>> StockDisponibleEnAsync(DateTime momentoUtc, CancellationToken ct = default);
+    }
+
+    // Analítica de comportamiento en la tienda. Rangos en UTC sobre creado_en: desde inclusive,
+    // hasta exclusive. Las agregaciones se hacen en la base: los eventos pueden ser muchos.
+    public interface IAnaliticaRepository
+    {
+        void Agregar(IEnumerable<EventoAnalitica> eventos);
+
+        // Sesiones distintas con al menos un evento.
+        Task<int> ContarSesionesAsync(DateTime desdeUtc, DateTime hastaUtc, CancellationToken ct = default);
+        Task<List<ConteoEvento>> ContarPorTipoAsync(DateTime desdeUtc, DateTime hastaUtc, CancellationToken ct = default);
+        Task<List<BusquedaFrecuente>> ListarBusquedasAsync(DateTime desdeUtc, DateTime hastaUtc, bool soloSinResultados,
+            int limite, CancellationToken ct = default);
+
+        // Los más agregados al carrito, con las unidades vendidas en el período (pedidos que son venta).
+        Task<List<ProductoAgregado>> ListarProductosAgregadosAsync(DateTime desdeUtc, DateTime hastaUtc, int limite,
+            CancellationToken ct = default);
+        Task<List<CategoriaVisitada>> ListarCategoriasAsync(DateTime desdeUtc, DateTime hastaUtc, int limite,
+            CancellationToken ct = default);
+        Task<List<UsoCupon>> ListarCuponesAsync(DateTime desdeUtc, DateTime hastaUtc, CancellationToken ct = default);
+
+        // Solo los días con actividad, agrupados en la zona horaria de la tienda.
+        Task<List<ActividadDia>> ActividadPorDiaAsync(DateTime desdeUtc, DateTime hastaUtc, string zonaHoraria,
+            CancellationToken ct = default);
+
+        // Limpieza: borra los eventos anteriores a `limite`. Devuelve cuántos borró.
+        Task<int> EliminarAnterioresAsync(DateTime limiteUtc, CancellationToken ct = default);
     }
 
     public interface IDiagnosticoBaseDatos

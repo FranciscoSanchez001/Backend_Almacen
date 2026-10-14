@@ -11,7 +11,9 @@ namespace Infrastructure.Persistencia.Semillas
     // Datos que no pueden ir en HasData y se crean al arrancar, solo si faltan:
     // - la fila única de configuración;
     // - el primer superadmin (su contraseña se hashea con bcrypt y sale de la configuración,
-    //   sección "SuperadminInicial"). Sin él no habría quién cree al resto del personal.
+    //   sección "SuperadminInicial"). Sin él no habría quién cree al resto del personal;
+    // - las imágenes de demostración de los productos sembrados que aún no tienen imagen
+    //   (las que alguien haya puesto a mano no se tocan).
     public static class InicializadorBaseDatos
     {
         public static async Task InicializarBaseDatosAsync(this IServiceProvider services, IConfiguration configuracion)
@@ -45,6 +47,20 @@ namespace Infrastructure.Persistencia.Semillas
                     });
                     await db.SaveChangesAsync();
                     logger.LogInformation("Superadmin inicial creado: {Email}", email);
+                }
+
+                var skus = ImagenesProductos.PorSku.Keys.ToList();
+                var sinImagen = await db.Productos
+                    .Where(p => skus.Contains(p.CodigoSku) && (p.ImagenUrl == null || p.ImagenUrl == ""))
+                    .ToListAsync();
+                if (sinImagen.Count > 0)
+                {
+                    foreach (var p in sinImagen)
+                    {
+                        p.ImagenUrl = ImagenesProductos.Para(p.CodigoSku);
+                    }
+                    await db.SaveChangesAsync();
+                    logger.LogInformation("Imágenes de demostración asignadas a {Cantidad} productos.", sinImagen.Count);
                 }
             }
             catch (Exception ex)

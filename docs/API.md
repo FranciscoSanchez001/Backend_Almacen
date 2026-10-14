@@ -33,7 +33,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/catalogo` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Productos activos con stock. Filtros: `q` (texto), `categoriaId`, `pagina`, `tamano` (24 por defecto). Incluye el precio en USD y en Bs. |
+| `GET` | `/catalogo` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Productos activos con stock. Filtros: `q` (texto), `categoriaId`, `ofertas` (solo los que tienen oferta vigente), `pagina`, `tamano` (24 por defecto). `precioUsd`/`precioBs` ya traen la oferta aplicada; si hay oferta vigente, `precioOriginalUsd`, `descuentoPorcentaje` y `ofertaHasta` vienen con valor (si no, en `null`). |
 | `GET` | `/catalogo/{id}` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Detalle de un producto. |
 | `GET` | `/catalogo/inicio` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Inicio personalizado: los más vendidos y, si hay sesión de cliente, sus productos frecuentes y últimas compras. Parámetro: `limite` (10 por defecto, máximo 30). |
 | `GET` | `/catalogo/pago` | ![llave](../src/frontend/public/iconos/llave.svg) | Datos para pagar: cuentas de transferencia, pago móvil y wallet de Binance. |
@@ -53,7 +53,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | :--- | :--- | :---: | :--- |
 | `GET` | `/productos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Lista para el personal. Filtros: `q`, `categoriaId`, `incluirInactivos`, `pagina`, `tamano`. |
 | `GET` | `/productos/{id}` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Detalle de un producto. |
-| `POST` | `/productos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial` y, opcionales, `stockMinimo` (5), `stockMaximo` (100), `ubicacion`, `unidadMedida` (`unidad`). Validación: precio y costo `> 0`, stocks `>= 0`, `stockMaximo > stockMinimo`. Queda registrado en la auditoría. |
+| `POST` | `/productos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial` y, opcionales, `stockMinimo` (5), `stockMaximo` (100), `ubicacion`, `unidadMedida` (`unidad`) y la oferta: `descuentoPorcentaje` (mayor que 0 y menor que 100), `descuentoDesde`, `descuentoHasta`. Validación: precio y costo `> 0`, stocks `>= 0`, `stockMaximo > stockMinimo`, `descuentoHasta > descuentoDesde`. Queda registrado en la auditoría. |
 | `PUT` | `/productos/{id}` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Edita un producto (mismos campos, con `stockDisponible` opcional en lugar de `stockInicial`). Si cambia el stock disponible, se registra como ajuste de inventario. |
 | `DELETE` | `/productos/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Borrado lógico (el producto deja de aparecer en `/catalogo`, pero se conserva su historial). Un Employee (ventas) recibe `403`. |
 
@@ -99,6 +99,22 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | `direccionTexto` | texto | Sí | Dirección y punto de referencia (5 a 500 caracteres). |
 | `latitud`, `longitud` | número | No | Coordenadas de la dirección de entrega. |
 | `telefono` | texto | Sí | Formato venezolano `+58 4XX XXX XXXX`. |
+| `codigoCupon` | texto | No | Cupón de descuento. Si no aplica, `400` con el motivo; si se agotó mientras se confirmaba, `409`. |
+
+### Cotizar el carrito — `POST /pedidos/cotizar` ![carrito](../src/frontend/public/iconos/carrito.svg)
+
+Cuerpo: `{ "items": [{ "productoId", "cantidad" }], "codigoCupon": "VERANO10" | null }`. Devuelve lo que pagaría el cliente con los precios vigentes (ofertas incluidas) y el cupón: `lineas` (con `precioUsd`, `precioListaUsd`, `subtotalUsd` y el `stockDisponible` actual), `subtotalUsd`, `descuentoUsd`, `totalUsd`, `tasaBsUsd` y los mismos montos en Bs (en `null` si no hay tasa del día), y `cupon`. No reserva stock ni consume el cupón. Responde `400` con el motivo si el cupón no existe, no está vigente, no alcanza la compra mínima o el cliente ya lo usó.
+
+El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, `descuentoUsd`, `descuentoBs` y `codigoCupon`; cada ítem trae además `precioListaUsd` (precio sin oferta).
+
+## 7.1 Cupones — `/cupones`
+
+| Método | Ruta | Acceso | Descripción |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/cupones` | ![personal](../src/frontend/public/iconos/personal.svg) | Lista de cupones, los más recientes primero. Filtros: `q` (código o descripción), `activo`, `pagina`, `tamano`. Cada cupón trae `usosActuales` y `vigente`. |
+| `GET` | `/cupones/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Detalle de un cupón. |
+| `POST` | `/cupones` | ![personal](../src/frontend/public/iconos/personal.svg) | Crea un cupón. Cuerpo: `codigo` (3 a 30, letras, números, `-` y `_`; se guarda en mayúsculas), `descripcion`, `tipo` (`porcentaje` o `monto_fijo`), `valor` (> 0; hasta 100 si es porcentaje) y, opcionales, `compraMinimaUsd`, `validoDesde`, `validoHasta`, `usosMaximos`, `activo` (verdadero). `409` si el código ya existe. Queda en la auditoría. |
+| `PUT` | `/cupones/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Edita un cupón (mismos campos salvo `codigo`, que no cambia). `409` si `usosMaximos` queda por debajo de los usos ya hechos. Los cupones no se borran: se desactivan con `activo: false`. |
 
 ## 8. Clientes — `/clientes`
 
@@ -154,6 +170,7 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | :--- | :--- | :---: | :--- |
 | `GET` | `/kpis` | ![personal](../src/frontend/public/iconos/personal.svg) | Indicadores (KPIs) de ventas, productos, pagos, horas pico, zonas, inventario y operación, en JSON. |
 | `GET` | `/reportes/excel` | ![personal](../src/frontend/public/iconos/personal.svg) | Descarga el informe en Excel (`.xlsx`). |
+| `GET` | `/reportes/pdf` | ![personal](../src/frontend/public/iconos/personal.svg) | Descarga el dashboard KPI en PDF (KPIs y comportamiento de los visitantes, mismo período). |
 
 **Parámetros de período** (ambos endpoints). Las fechas van en formato `yyyy-MM-dd`, en hora local de la tienda, y ambas son inclusive:
 
@@ -166,6 +183,15 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 | Sin parámetros (solo `/kpis`) | El mes en curso. |
 
 Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los datos del Excel coinciden con los de `/kpis`**. El informe trae las hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos.
+
+## 14.1 Analítica de comportamiento — `/analitica`
+
+| Método | Ruta | Acceso | Descripción |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/analitica/eventos` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Lote de eventos de la tienda. Cuerpo: `{ "sesionId", "eventos": [{ "tipo", "ruta", "productoId", "categoriaId", "texto", "cantidad", "valor" }] }` (1 a 50 eventos; `sesionId` de 8 a 64 caracteres). Tipos: `pagina_vista`, `filtro_categoria`, `filtro_ofertas`, `abrir_carrito`, `agregar_carrito`, `quitar_carrito`, `inicio_checkout`, `cupon_aplicado`, `cupon_rechazado`, `pedido_confirmado` (`busqueda` no: la registra `/catalogo`). Responde `204`; los lotes del personal se descartan. Límite: 60 lotes por minuto por IP (`429`). |
+| `GET` | `/analitica/comportamiento` | ![personal](../src/frontend/public/iconos/personal.svg) | Resumen del período (mismos parámetros que `/kpis`: `tipo`, `desde`, `hasta`): visitas, búsquedas y % sin resultados, conversión, embudo, lo más buscado, lo buscado sin resultados, productos agregados al carrito vs. vendidos, categorías, cupones y actividad por día. |
+
+`GET /catalogo` con `q` registra la búsqueda (y cuántos resultados dio) si la petición trae el encabezado `X-Sesion-Analitica` con el id de la visita. Solo cuenta la primera página.
 
 ## 15. Diagnóstico — `/DbTest`
 

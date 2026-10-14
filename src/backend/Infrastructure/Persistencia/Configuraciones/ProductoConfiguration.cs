@@ -16,6 +16,10 @@ namespace Infrastructure.Persistencia.Configuraciones
                 t.HasCheckConstraint("ck_productos_stock_reservado", "stock_reservado >= 0");
                 t.HasCheckConstraint("ck_productos_stock_minimo", "stock_minimo >= 0");
                 t.HasCheckConstraint("ck_productos_stock_maximo", "stock_maximo > stock_minimo");
+                t.HasCheckConstraint("ck_productos_descuento",
+                    "descuento_porcentaje IS NULL OR (descuento_porcentaje > 0 AND descuento_porcentaje < 100)");
+                t.HasCheckConstraint("ck_productos_descuento_vigencia",
+                    "descuento_desde IS NULL OR descuento_hasta IS NULL OR descuento_hasta > descuento_desde");
             });
             builder.HasKey(p => p.Id);
 
@@ -27,6 +31,7 @@ namespace Infrastructure.Persistencia.Configuraciones
             builder.Property(p => p.ImagenUrl).HasMaxLength(500);
             builder.Property(p => p.PrecioUsd).HasPrecision(18, 2);
             builder.Property(p => p.CostoUsd).HasPrecision(18, 2);
+            builder.Property(p => p.DescuentoPorcentaje).HasPrecision(5, 2);
             builder.Property(p => p.CreadoPorId).HasColumnName("creado_por");
 
             // Valores por defecto también en la base. El centinela -1 hace que EF mande siempre el

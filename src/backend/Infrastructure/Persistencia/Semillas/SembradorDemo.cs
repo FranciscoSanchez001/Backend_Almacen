@@ -260,6 +260,7 @@ namespace Infrastructure.Persistencia.Semillas
                     Descripcion = d.Descripcion,
                     PrecioUsd = d.PrecioUsd,
                     CostoUsd = d.CostoUsd,
+                    ImagenUrl = ImagenesProductos.Para(d.Sku),
                     CategoriaId = d.CategoriaId,
                     StockDisponible = f.Random.Int(40, 120),
                     CreadoPorId = admin.Id,
@@ -436,6 +437,7 @@ namespace Infrastructure.Persistencia.Semillas
                     Cantidad = cantidad,
                     PrecioUsd = s.Producto.PrecioUsd,
                     PrecioBs = Math.Round(s.Producto.PrecioUsd * tasa, 2, MidpointRounding.AwayFromZero),
+                    PrecioListaUsd = s.Producto.PrecioUsd,
                 });
             }
             if (pedido.Items.Count == 0)

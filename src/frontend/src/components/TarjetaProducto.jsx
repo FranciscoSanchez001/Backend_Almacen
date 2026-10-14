@@ -1,22 +1,26 @@
-import Icono from './Icono'
 import { useState } from 'react'
 import { useCarrito } from '../context/CarritoContext'
-import { formatoBs, formatoUsd } from '../utils/formato'
+import { formatoBs, formatoNumero, formatoUsd } from '../utils/formato'
+import Icono from './Icono'
 
 // Tarjeta de un producto del catálogo: imagen, nombre, precio en USD (y Bs debajo)
 // y el botón para agregarlo al carrito, que se vuelve un selector de cantidad.
+// Todas las tarjetas miden lo mismo: la imagen llena un cuadro fijo (se recorta, no se
+// estira) y los textos tienen alto reservado, así una foto o un nombre largo no las descuadra.
 export default function TarjetaProducto({ producto }) {
   const { cantidadDe, cambiarCantidad } = useCarrito()
   const [sinImagen, setSinImagen] = useState(!producto.imagenUrl)
   const cantidad = cantidadDe(producto.id)
   const pocasUnidades = producto.stockDisponible <= 5
+  // La API manda precioOriginalUsd solo si hay una oferta vigente; precioUsd ya trae el descuento.
+  const enOferta = producto.precioOriginalUsd != null
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-superficie transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative aspect-square bg-slate-50">
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-superficie transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="relative aspect-square w-full overflow-hidden bg-slate-50">
         {sinImagen ? (
-          <div className="grid h-full place-items-center text-5xl text-slate-300" aria-hidden>
-            <Icono nombre="bolsa" />
+          <div className="grid h-full place-items-center text-slate-300">
+            <Icono nombre="bolsa" className="h-16 w-16" grosor={1.4} />
           </div>
         ) : (
           <img
@@ -24,7 +28,7 @@ export default function TarjetaProducto({ producto }) {
             alt={producto.nombre}
             loading="lazy"
             onError={() => setSinImagen(true)}
-            className="h-full w-full object-contain p-4 transition group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         )}
         {pocasUnidades && (
@@ -32,17 +36,30 @@ export default function TarjetaProducto({ producto }) {
             ¡Quedan {producto.stockDisponible}!
           </span>
         )}
+        {enOferta && (
+          <span className="absolute right-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+            −{formatoNumero(producto.descuentoPorcentaje)} %
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{producto.categoria}</p>
+        <p className="truncate text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{producto.categoria}</p>
         <h3 className="mt-0.5 line-clamp-2 min-h-10 text-sm font-semibold text-slate-800" title={producto.nombre}>
           {producto.nombre}
         </h3>
-        <p className="text-xs text-slate-400">Por {producto.unidadMedida}</p>
+        <p className="truncate text-xs text-slate-400">Por {producto.unidadMedida}</p>
 
-        <div className="mt-2">
-          <p className="text-lg font-extrabold text-slate-900">{formatoUsd(producto.precioUsd)}</p>
+        <div className="mt-2 min-h-[3.25rem]">
+          <p className={`flex flex-wrap items-baseline gap-x-2 text-lg font-extrabold ${enOferta ? 'text-red-600 dark:text-red-400' : 'text-slate-900'}`}>
+            {formatoUsd(producto.precioUsd)}
+            {enOferta && (
+              <span className="text-sm font-medium text-slate-400 line-through">
+                <span className="sr-only">Antes </span>
+                {formatoUsd(producto.precioOriginalUsd)}
+              </span>
+            )}
+          </p>
           {producto.precioBs != null && <p className="text-xs text-slate-500">{formatoBs(producto.precioBs)}</p>}
         </div>
 

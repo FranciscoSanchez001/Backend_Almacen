@@ -1,8 +1,8 @@
-import Icono from './Icono'
 import { urlArchivo } from '../api/cliente'
 import { formatoBs, formatoFechaHora, formatoUsd } from '../utils/formato'
 import { EtiquetaEstado } from './ui'
 import { ESTADOS_PEDIDO, METODOS_PAGO } from '../utils/panel'
+import Icono from './Icono'
 
 // Todo lo que el personal necesita ver de un pedido: productos, totales con la
 // tasa congelada, pago (captura y referencia), entrega (zona, dirección, mapa,
@@ -40,7 +40,12 @@ export default function DetallePedido({ pedido, children }) {
                     <span className="block text-xs text-slate-500">{it.categoria}</span>
                   </td>
                   <td className="px-3 py-2 text-right">{it.cantidad}</td>
-                  <td className="px-3 py-2 text-right">{formatoUsd(it.precioUsd)}</td>
+                  <td className="px-3 py-2 text-right">
+                    {formatoUsd(it.precioUsd)}
+                    {it.precioListaUsd > it.precioUsd && (
+                      <span className="block text-xs text-slate-400 line-through">{formatoUsd(it.precioListaUsd)}</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-right font-medium">{formatoUsd(it.subtotalUsd)}</td>
                 </tr>
               ))}
@@ -48,6 +53,14 @@ export default function DetallePedido({ pedido, children }) {
           </table>
         </div>
         <div className="mt-2 text-right">
+          {pedido.descuentoUsd > 0 && (
+            <div className="mb-1 space-y-0.5 text-slate-600">
+              <p>Subtotal: {formatoUsd(pedido.subtotalUsd)}</p>
+              <p className="text-emerald-700 dark:text-emerald-300">
+                Cupón <span className="font-mono font-semibold">{pedido.codigoCupon}</span>: −{formatoUsd(pedido.descuentoUsd)}
+              </p>
+            </div>
+          )}
           <p className="text-lg font-bold text-slate-900">{formatoUsd(pedido.totalUsd)}</p>
           <p className="text-xs text-slate-500">
             {formatoBs(pedido.totalBs)} · tasa congelada {pedido.tasaCambio}
@@ -102,7 +115,7 @@ export default function DetallePedido({ pedido, children }) {
                 rel="noreferrer"
                 className="mt-1 inline-block text-xs font-medium text-marca-700 dark:text-marca-200 hover:underline"
               >
-                Abrir en Google Maps <Icono nombre="enlace-externo" />
+                Abrir en Google Maps <Icono nombre="externo" className="h-3 w-3 align-[-1px]" />
               </a>
             </>
           )}

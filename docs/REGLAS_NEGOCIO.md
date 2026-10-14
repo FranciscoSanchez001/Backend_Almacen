@@ -65,13 +65,17 @@ Al confirmar la compra, el cliente envía (`POST /pedidos`):
 - **Referencia** del pago y **captura** del comprobante (obligatorias).
 - **Zona**, dirección con punto de referencia y, opcionalmente, coordenadas.
 - **Teléfono venezolano obligatorio** (`+58 4XX XXX XXXX`), validado en `Core.Domain/Reglas/Telefonos.cs`. Se guarda en el pedido, porque el cliente puede comprar para otra persona.
+- **Cupón** de descuento, opcional (ver sección 10).
+
+Antes de confirmar, el checkout consulta `POST /pedidos/cotizar`, que calcula el total con los mismos precios, ofertas y cupón que usará la creación. El precio nunca sale del navegador.
 
 El sistema entonces:
 1. Verifica que haya **tasa del día** cargada. Si no la hay, el pedido no se crea.
-2. **Congela** la tasa de cambio, el precio de cada producto (USD y Bs) y su categoría.
-3. **Reserva el stock** de todos los productos (ver sección 4). Si alguno no alcanza, el pedido no se crea.
-4. Fija la fecha de vencimiento: `expira_en = creado_en + horas_expiracion` (5 horas por defecto).
-5. Crea una notificación de **pedido nuevo** para el personal.
+2. **Congela** la tasa de cambio, el precio de cada producto (USD y Bs, **ya con la oferta vigente**), su precio de lista y su categoría.
+3. Si hay cupón, verifica que aplique y **congela el descuento** (USD y Bs). Total = subtotal − descuento.
+4. **Reserva el stock** de todos los productos (ver sección 4) y, después, **un uso del cupón**. Si algo no alcanza, el pedido no se crea.
+5. Fija la fecha de vencimiento: `expira_en = creado_en + horas_expiracion` (5 horas por defecto).
+6. Crea una notificación de **pedido nuevo** para el personal.
 
 ---
 
@@ -136,9 +140,10 @@ Reglas:
 
 ## 8. KPIs e Informe en Excel
 
-- Solo el **superadmin** accede a los KPIs (`GET /kpis`) y al informe (`GET /reportes/excel`).
+- Solo el **superadmin** accede a los KPIs (`GET /kpis`) y a los informes (`GET /reportes/excel` y `GET /reportes/pdf`). El PDF trae los mismos KPIs de la pantalla más el comportamiento de los visitantes.
 - **Solo cuentan como venta** los pedidos `aprobado`, `asignado`, `en_camino` y `entregado`. Los pendientes, rechazados y expirados no suman a los ingresos.
 - Los montos están en USD, con su equivalente en Bs según la tasa congelada de cada pedido.
+- Los **ingresos totales** (por día, método de pago y zona) usan el total del pedido, que ya descuenta el cupón. Los ingresos **por producto y categoría** usan el precio de cada ítem (con la oferta, sin prorratear el cupón), así que su suma puede superar el total cuando hubo cupones.
 - El período puede ser diario, semanal (lunes a domingo), mensual o personalizado, en hora local de la tienda.
 - Los KPIs y el Excel salen del mismo cálculo (`ReportesService`), así que siempre coinciden.
 - El informe trae 10 hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos. La hoja **Detalle de pedidos** trae los datos sin procesar, para que el gerente haga sus propios análisis.
@@ -150,3 +155,54 @@ Reglas:
 - Cada creación, edición o borrado de productos queda registrado en `auditoria`, con el usuario, la fecha y los datos **antes y después** en JSON.
 - Cada cambio de stock queda en `movimientos_inventario` (ver sección 4), también con el usuario que lo hizo.
 - El personal de ventas **no puede borrar** productos; el borrado es **lógico** (el producto se marca inactivo y se conserva el historial de ventas).
+
+---
+
+## 10. Ofertas y Cupones
+
+### Ofertas de producto
+
+- Cada producto puede tener un **% de descuento** (mayor que 0 y menor que 100) con fechas de inicio y fin **opcionales**. Sin fechas, la oferta aplica mientras tenga porcentaje. La vigencia es `[desde, hasta)`; en el panel se eligen días y "hasta" es inclusive.
+- Lo configuran ventas y el gerente al editar el producto; el cambio queda en la auditoría.
+- `/catalogo` devuelve el precio **ya rebajado** y, si la oferta está vigente, el precio original para mostrarlo tachado. `?ofertas=true` lista solo los productos en oferta.
+- La regla vive en `Producto.PrecioVigenteUsd(...)` (`Core.Domain/Entidades/Producto.cs`).
+
+### Cupones
+
+- Los crea y edita **solo el gerente** (`/admin/cupones`), porque afectan los ingresos. No se borran: se desactivan.
+- Tipos: **porcentaje** (hasta 100 %) o **monto fijo** en USD. El descuento nunca deja el total por debajo de 0.
+- Se aplican al **subtotal del pedido ya con las ofertas** (se acumulan con ellas).
+- Condiciones opcionales: **compra mínima** (sobre ese subtotal), **vigencia** y **límite de usos** entre todos los clientes.
+- **Un uso por cliente.** Los pedidos rechazados o expirados no cuentan: al rechazarse o expirar, el uso se devuelve y el cliente puede volver a usarlo.
+- **Sin sobreuso.** El uso se descuenta con un `UPDATE` condicional dentro de la transacción del pedido, y la base impide pasar del límite (`ck_cupones_usos`) y repetir cupón por cliente (`ux_pedidos_cupon_cliente_vigente`). Si dos pedidos compiten por el último uso, solo uno lo consigue.
+- Reglas en `Cupon.MotivoNoAplicable(...)` y `Cupon.CalcularDescuento(...)` (`Core.Domain/Entidades/Cupon.cs`); el flujo, en `PedidosService`.
+
+---
+
+## 11. Analítica de Comportamiento
+
+El gerente ve en `/admin/comportamiento` qué hacen los visitantes de la tienda: qué buscan, qué no encuentran, qué agregan al carrito y en qué paso abandonan la compra.
+
+**Qué se registra** (tabla `eventos_analitica`):
+
+| Evento | Quién lo registra | Datos |
+| :--- | :--- | :--- |
+| Búsqueda | La API, al responder `/catalogo?q=` (solo la primera página) | Texto normalizado y cantidad de resultados |
+| Página vista | El navegador | Ruta de la tienda |
+| Filtro por categoría / ofertas | El navegador | Categoría |
+| Abrir carrito, agregar y quitar productos | El navegador | Producto y unidades |
+| Inicio del pago, cupón aplicado o rechazado | El navegador | Código del cupón |
+| Pedido confirmado | El navegador | Total en USD |
+
+**Privacidad:**
+- Es **anónimo**: cada visita tiene un id aleatorio que el navegador renueva tras **30 minutos sin actividad**. No se guarda la IP ni datos personales; si el visitante inició sesión con Google, el evento queda asociado a su cuenta.
+- Se respeta **"No rastrear"** (Do Not Track): el navegador no envía nada.
+- El **personal** no se cuenta, aunque navegue la tienda.
+- Los eventos se **borran solos** a los 180 días (`Analitica:DiasRetencion`, job `LimpiezaAnaliticaJob`).
+
+**Cómo leer el resumen:**
+- **Visitas**: sesiones distintas con al menos un evento. **Conversión**: % de visitas con un pedido confirmado.
+- **Embudo**: visitaron → agregaron al carrito → iniciaron el pago → confirmaron el pedido, en sesiones.
+- **Agregados vs. vendidos**: unidades agregadas al carrito frente a unidades vendidas (pedidos que son venta) en el mismo período.
+- Los eventos llegan por lotes cada pocos segundos; un fallo de la analítica **nunca** afecta a la compra.
+- Las cifras son aproximadas: bloqueadores de anuncios o pestañas cerradas de golpe pueden perder eventos. Para las ventas reales, la fuente es el dashboard KPI.

@@ -10,7 +10,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.js'],
-    env: { VITE_API_URL: 'http://api.pruebas' },
+    env: { VITE_API_URL: 'http://api.pruebas', VITE_GOOGLE_CLIENT_ID: 'cliente-pruebas.apps.googleusercontent.com' },
     css: false,
     // Los formularios largos se rellenan tecla por tecla con userEvent; con todos los
     // archivos en paralelo, el límite de 5 s por defecto se queda corto.

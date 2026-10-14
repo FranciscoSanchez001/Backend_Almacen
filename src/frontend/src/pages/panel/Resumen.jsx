@@ -1,4 +1,3 @@
-import Icono from '../../components/Icono'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listarPedidos } from '../../api/pedidos'
@@ -9,6 +8,7 @@ import ContadorExpiracion from '../../components/ContadorExpiracion'
 import { EncabezadoPagina, EstadoCarga } from '../../components/ui'
 import { claseBoton } from '../../utils/panel'
 import { formatoFechaHora, formatoUsd } from '../../utils/formato'
+import Icono from '../../components/Icono'
 
 // Inicio del panel de ventas: lo que hay que atender ya. Pedidos pendientes (los
 // más cerca de vencer primero), alertas de stock y avisos sin leer.
@@ -16,7 +16,7 @@ import { formatoFechaHora, formatoUsd } from '../../utils/formato'
 const TIPOS_AVISO = {
   stock_agotado: { icono: 'agotado', texto: (n) => `Se agotó ${n.producto ?? 'un producto'}` },
   pedido_nuevo: { icono: 'carrito', texto: () => 'Llegó un pedido nuevo' },
-  pedido_por_expirar: { icono: 'temporizador', texto: () => 'Un pedido está por expirar' },
+  pedido_por_expirar: { icono: 'reloj', texto: () => 'Un pedido está por expirar' },
 }
 
 function Tarjeta({ titulo, valor, detalle, a, alerta }) {
@@ -68,7 +68,14 @@ export default function Resumen() {
 
   return (
     <div className="space-y-6">
-      <EncabezadoPagina titulo={<>Hola, {primerNombre} <Icono nombre="saludo" /></>} detalle="Esto es lo que necesita atención ahora.">
+      <EncabezadoPagina
+        titulo={
+          <>
+            Hola, {primerNombre} <Icono nombre="saludo" className="h-6 w-6 align-[-3px] text-amber-500" />
+          </>
+        }
+        detalle="Esto es lo que necesita atención ahora."
+      >
         <button type="button" onClick={cargar} className={claseBoton.secundario}>
           Actualizar
         </button>
@@ -129,7 +136,7 @@ export default function Resumen() {
                       return (
                         <li key={n.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
                           <span>
-                            <Icono nombre={tipo.icono} /> {tipo.texto(n)}
+                            <Icono nombre={tipo.icono} className="mr-0.5 h-4 w-4 align-[-3px]" tono /> {tipo.texto(n)}
                             <span className="block text-xs text-slate-500">{formatoFechaHora(n.creadoEn)}</span>
                           </span>
                           <button type="button" onClick={() => leer(n.id)} className={claseBoton.pequeno}>

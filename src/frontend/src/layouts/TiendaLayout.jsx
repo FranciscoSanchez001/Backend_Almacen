@@ -1,14 +1,13 @@
-import Icono from '../components/Icono'
 import { useCallback, useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { listarCategorias } from '../api/catalogo'
+import { registrarEvento } from '../utils/analitica'
 import { useCarrito } from '../context/CarritoContext'
 import BotonTema from '../components/BotonTema'
-import LoginCliente from '../components/LoginCliente'
-import Carrito from '../components/Carrito'
-import { useAuth } from '../context/AuthContext'
-import { INICIO_POR_ROL } from '../api/auth'
+import CarritoPanel from '../components/CarritoPanel'
+import MenuCliente from '../components/MenuCliente'
 import { formatoUsd } from '../utils/formato'
+import Icono from '../components/Icono'
 
 // Layout de la tienda al estilo de un supermercado en línea: franja de avisos,
 // encabezado con logo + buscador + carrito, y la barra de categorías.
@@ -16,16 +15,19 @@ import { formatoUsd } from '../utils/formato'
 // encabezado y la barra de categorías manejen la misma vista del catálogo.
 export default function TiendaLayout() {
   const [categorias, setCategorias] = useState([])
-  const [accesoAbierto, setAccesoAbierto] = useState(false)
-  const [carritoAbierto, setCarritoAbierto] = useState(false)
-  const [saliendo, setSaliendo] = useState(false)
-  const { usuario, logout } = useAuth()
-  const cerrarAcceso = useCallback(() => setAccesoAbierto(false), [])
-  const cerrarCarrito = useCallback(() => setCarritoAbierto(false), [])
   const [params] = useSearchParams()
   const navegar = useNavigate()
   const { totalUnidades, totalUsd } = useCarrito()
+  const [carritoAbierto, setCarritoAbierto] = useState(false)
+  const cerrarCarrito = useCallback(() => setCarritoAbierto(false), [])
   const categoriaActiva = params.get('categoria')
+  const enOfertas = params.get('ofertas') === '1'
+  const { pathname, search } = useLocation()
+
+  // Analítica: cada pantalla de la tienda que se abre (incluida la búsqueda y los filtros).
+  useEffect(() => {
+    registrarEvento('pagina_vista', { ruta: (pathname + search).slice(0, 200) })
+  }, [pathname, search])
 
   useEffect(() => {
     listarCategorias()
@@ -43,7 +45,9 @@ export default function TiendaLayout() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="bg-emerald-800 text-xs text-emerald-50">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-1.5">
-          <span><Icono nombre="camion" /> Entregas a domicilio en tu zona</span>
+          <span className="flex items-center gap-1.5">
+            <Icono nombre="camion" /> Entregas a domicilio en tu zona
+          </span>
           <span className="hidden sm:inline">Paga con transferencia, pago móvil o Binance</span>
         </div>
       </div>
@@ -51,7 +55,9 @@ export default function TiendaLayout() {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-superficie shadow-sm">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-xl"><Icono nombre="carrito" /></span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-white">
+              <Icono nombre="carrito" className="h-6 w-6" />
+            </span>
             <span className="leading-tight">
               <span className="block text-lg font-extrabold text-emerald-700 dark:text-emerald-300">Almacén</span>
               <span className="block text-xs text-slate-500">Supermercado en línea</span>
@@ -78,31 +84,17 @@ export default function TiendaLayout() {
 
           <div className="ml-auto flex items-center gap-4 sm:ml-0">
             <BotonTema />
-            {usuario ? (
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="max-w-32 truncate" title={usuario.email}>{usuario.nombre}</span>
-                {usuario.rol === 'cliente' && <Link to="/mis-pedidos" className="text-emerald-700 dark:text-emerald-300">Mis pedidos</Link>}
-                {INICIO_POR_ROL[usuario.rol] && <Link to={INICIO_POR_ROL[usuario.rol]} className="text-emerald-700 dark:text-emerald-300">Mi panel</Link>}
-                <button type="button" disabled={saliendo}
-                  onClick={async () => { setSaliendo(true); try { await logout() } finally { setSaliendo(false) } }}
-                  className="text-slate-600 hover:text-emerald-700 disabled:opacity-50">
-                  {saliendo ? 'Saliendo…' : 'Cerrar sesión'}
-                </button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => setAccesoAbierto(true)} aria-haspopup="dialog"
-                className="text-sm font-medium text-slate-700 hover:text-emerald-700 dark:hover:text-emerald-300">
-                Ingresar
-              </button>
-            )}
+            <MenuCliente />
             <button
               type="button"
+              onClick={() => {
+                setCarritoAbierto(true)
+                registrarEvento('abrir_carrito')
+              }}
               className="relative flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
               aria-label={`Carrito: ${totalUnidades} productos`}
-              aria-haspopup="dialog"
-              onClick={() => setCarritoAbierto(true)}
             >
-              <span aria-hidden><Icono nombre="cesta" /></span>
+              <Icono nombre="canasta" className="h-5 w-5" />
               <span>{formatoUsd(totalUsd)}</span>
               {totalUnidades > 0 && (
                 <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1 text-xs text-white">
@@ -120,11 +112,21 @@ export default function TiendaLayout() {
                 to="/"
                 end
                 className={`block whitespace-nowrap rounded-full px-3 py-1.5 font-medium ${
-                  !categoriaActiva ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-600 hover:bg-slate-100'
+                  !categoriaActiva && !enOfertas ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
                 Todo
               </NavLink>
+            </li>
+            <li>
+              <Link
+                to="/?ofertas=1"
+                className={`block whitespace-nowrap rounded-full px-3 py-1.5 font-semibold ${
+                  enOfertas ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300' : 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40'
+                }`}
+              >
+                Ofertas
+              </Link>
             </li>
             {categorias.map((c) => (
               <li key={c.id}>
@@ -142,8 +144,7 @@ export default function TiendaLayout() {
         </nav>
       </header>
 
-      {accesoAbierto && <LoginCliente alCerrar={cerrarAcceso} />}
-      {carritoAbierto && <Carrito alCerrar={cerrarCarrito} />}
+      <CarritoPanel abierto={carritoAbierto} alCerrar={cerrarCarrito} />
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <Outlet context={{ categorias }} />

@@ -1,8 +1,9 @@
-import Icono from '../../components/Icono'
 import { useEffect, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { listarCatalogo } from '../../api/catalogo'
 import TarjetaProducto from '../../components/TarjetaProducto'
+import Icono from '../../components/Icono'
+import { registrarEvento } from '../../utils/analitica'
 
 const TAMANO_PAGINA = 24
 
@@ -14,6 +15,7 @@ export default function Catalogo() {
   const [params, setParams] = useSearchParams()
   const q = params.get('q') ?? ''
   const categoriaId = params.get('categoria') ?? ''
+  const ofertas = params.get('ofertas') === '1'
   const pagina = Number(params.get('pagina')) || 1
 
   const [resultado, setResultado] = useState(null)
@@ -25,14 +27,22 @@ export default function Catalogo() {
     let vigente = true // Evita pintar la respuesta de una búsqueda que ya cambió.
     setCargando(true)
     setError(null)
-    listarCatalogo({ q, categoriaId, pagina, tamano: TAMANO_PAGINA })
+    listarCatalogo({ q, categoriaId, pagina, tamano: TAMANO_PAGINA, ...(ofertas && { ofertas: true }) })
       .then((datos) => vigente && setResultado(datos))
       .catch((e) => vigente && setError(e.message))
       .finally(() => vigente && setCargando(false))
     return () => {
       vigente = false
     }
-  }, [q, categoriaId, pagina, intento])
+  }, [q, categoriaId, ofertas, pagina, intento])
+
+  // Analítica: qué categorías y si las ofertas interesan. Las búsquedas las registra la API.
+  useEffect(() => {
+    if (categoriaId) registrarEvento('filtro_categoria', { categoriaId })
+  }, [categoriaId])
+  useEffect(() => {
+    if (ofertas) registrarEvento('filtro_ofertas')
+  }, [ofertas])
 
   function irAPagina(n) {
     const siguiente = new URLSearchParams(params)
@@ -42,9 +52,9 @@ export default function Catalogo() {
   }
 
   const categoria = categorias.find((c) => c.id === categoriaId)
-  const titulo = q ? `Resultados para “${q}”` : (categoria?.nombre ?? 'Todos los productos')
+  const titulo = q ? `Resultados para “${q}”` : (categoria?.nombre ?? (ofertas ? 'Ofertas' : 'Todos los productos'))
   const totalPaginas = resultado ? Math.max(1, Math.ceil(resultado.total / TAMANO_PAGINA)) : 1
-  const sinFiltros = !q && !categoriaId
+  const sinFiltros = !q && !categoriaId && !ofertas
 
   return (
     <div className="space-y-6">
@@ -86,9 +96,7 @@ export default function Catalogo() {
         </Grilla>
       ) : resultado.items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-superficie p-10 text-center">
-          <p className="text-4xl" aria-hidden>
-            <Icono nombre="buscar" />
-          </p>
+          <Icono nombre="buscar" className="mx-auto block h-10 w-10 text-slate-400" />
           <p className="mt-2 font-semibold text-slate-800">No encontramos productos</p>
           <p className="text-sm text-slate-500">Prueba con otra palabra o revisa otra categoría.</p>
         </div>
@@ -149,8 +157,8 @@ function Bienvenida() {
         <h2 className="mt-2 text-3xl font-extrabold leading-tight sm:text-4xl">Haz tu compra y te la llevamos</h2>
         <p className="mt-3 text-emerald-50">Precios en dólares y en bolívares a la tasa del día.</p>
       </div>
-      <div aria-hidden className="absolute -right-6 -bottom-10 select-none text-[9rem] leading-none opacity-30 sm:right-10 sm:opacity-90">
-        <Icono nombre="aguacate" /><Icono nombre="pan" />
+      <div aria-hidden className="absolute -right-6 -bottom-10 select-none opacity-30 sm:right-10 sm:opacity-60">
+        <Icono nombre="canasta" className="h-40 w-40 sm:h-48 sm:w-48" grosor={1.2} />
       </div>
     </section>
   )

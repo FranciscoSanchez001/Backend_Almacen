@@ -12,7 +12,9 @@ namespace Core.Application.Servicios
         Validacion,
         EstadoInvalido,
         SinStock,
-        NoDisponible
+        NoDisponible,
+        // El cupón dejó de servir entre la cotización y la confirmación (se agotó, venció...).
+        CuponNoDisponible
     }
 
     public record ResultadoPedido(Guid? PedidoId, ErrorPedido? Error = null, string? Mensaje = null)
@@ -23,6 +25,33 @@ namespace Core.Application.Servicios
 
     public record ItemNuevoPedido(Guid ProductoId, int Cantidad);
 
+    // Una línea del carrito con el precio que se cobraría ahora (oferta incluida).
+    public record LineaCotizada(Producto Producto, int Cantidad, decimal PrecioUsd, decimal PrecioListaUsd)
+    {
+        public decimal SubtotalUsd => PrecioUsd * Cantidad;
+    }
+
+    // Cuánto pagaría el cliente. Tasa null = la tienda todavía no cargó la tasa del día (no se
+    // pueden crear pedidos, pero sí mostrar los montos en USD).
+    public record Cotizacion(
+        IReadOnlyList<LineaCotizada> Lineas,
+        decimal? Tasa,
+        Cupon? Cupon,
+        decimal SubtotalUsd,
+        decimal DescuentoUsd)
+    {
+        public decimal TotalUsd => SubtotalUsd - DescuentoUsd;
+        public decimal? SubtotalBs => Tasa is null ? null : Lineas.Sum(l => TasaService.EnBs(l.PrecioUsd, Tasa)!.Value * l.Cantidad);
+        // Acotado al subtotal en Bs para que el redondeo nunca deje un total negativo.
+        public decimal? DescuentoBs => Tasa is null ? null : Math.Min(TasaService.EnBs(DescuentoUsd, Tasa)!.Value, SubtotalBs!.Value);
+        public decimal? TotalBs => SubtotalBs - DescuentoBs;
+    }
+
+    public record ResultadoCotizacion(Cotizacion? Cotizacion, ErrorPedido? Error = null, string? Mensaje = null)
+    {
+        public static ResultadoCotizacion Falla(ErrorPedido error, string mensaje) => new(null, error, mensaje);
+    }
+
     public record NuevoPedido(
         IReadOnlyList<ItemNuevoPedido> Items,
         MetodoPago MetodoPago,
@@ -32,7 +61,8 @@ namespace Core.Application.Servicios
         double? Latitud,
         double? Longitud,
         // Ya normalizado (+584XXXXXXXXX).
-        string Telefono);
+        string Telefono,
+        string? CodigoCupon = null);
 
     public record ArchivoSubido(Stream Contenido, string Nombre);
 
@@ -46,6 +76,7 @@ namespace Core.Application.Servicios
         IZonaRepository zonas,
         IConfiguracionRepository configuracion,
         INotificacionRepository notificaciones,
+        ICuponRepository cupones,
         IUnitOfWork unidad,
         InventarioService inventario,
         ColaWhatsapp whatsapp,
@@ -54,15 +85,66 @@ namespace Core.Application.Servicios
     {
         public const string MotivoRechazoPorDefecto = "el método de pago no procede";
 
+        // ---- Cotizar (checkout) ----
+
+        // Precios vigentes (con ofertas) y, si se indica, el descuento del cupón. No reserva nada:
+        // el stock y el cupón se vuelven a comprobar de forma atómica al crear el pedido.
+        public async Task<ResultadoCotizacion> CotizarAsync(Guid clienteId, IReadOnlyList<ItemNuevoPedido> items,
+            string? codigoCupon, CancellationToken ct = default)
+        {
+            var tasa = (await configuracion.ObtenerAsync(ct)).TasaBsUsd;
+            return await CotizarAsync(clienteId, Agrupar(items), codigoCupon, tasa, DateTime.UtcNow, ct);
+        }
+
+        private async Task<ResultadoCotizacion> CotizarAsync(Guid clienteId, Dictionary<Guid, int> cantidades,
+            string? codigoCupon, decimal? tasa, DateTime ahora, CancellationToken ct)
+        {
+            var encontrados = await productos.ObtenerActivosAsync(cantidades.Keys, ct);
+            var inexistentes = cantidades.Keys.Where(id => !encontrados.ContainsKey(id)).ToList();
+            if (inexistentes.Count > 0)
+            {
+                return ResultadoCotizacion.Falla(ErrorPedido.Validacion,
+                    $"Estos productos ya no están disponibles: {string.Join(", ", inexistentes)}.");
+            }
+
+            // Orden por producto: todas las transacciones bloquean productos en el mismo orden (sin deadlocks).
+            var lineas = cantidades.OrderBy(c => c.Key)
+                .Select(c => new LineaCotizada(encontrados[c.Key], c.Value,
+                    encontrados[c.Key].PrecioVigenteUsd(ahora), encontrados[c.Key].PrecioUsd))
+                .ToList();
+            var subtotal = lineas.Sum(l => l.SubtotalUsd);
+
+            Cupon? cupon = null;
+            var descuento = 0m;
+            if (!string.IsNullOrWhiteSpace(codigoCupon))
+            {
+                cupon = await cupones.ObtenerPorCodigoAsync(Cupon.NormalizarCodigo(codigoCupon), ct);
+                if (cupon is null)
+                {
+                    return ResultadoCotizacion.Falla(ErrorPedido.Validacion, "El cupón no existe.");
+                }
+                if (cupon.MotivoNoAplicable(subtotal, ahora) is { } motivo)
+                {
+                    return ResultadoCotizacion.Falla(ErrorPedido.Validacion, motivo);
+                }
+                if (await cupones.ClienteLoUsoAsync(cupon.Id, clienteId, ct))
+                {
+                    return ResultadoCotizacion.Falla(ErrorPedido.Validacion, "Ya usaste este cupón en otro pedido.");
+                }
+                descuento = cupon.CalcularDescuento(subtotal);
+            }
+
+            return new ResultadoCotizacion(new Cotizacion(lineas, tasa, cupon, subtotal, descuento));
+        }
+
+        private static Dictionary<Guid, int> Agrupar(IEnumerable<ItemNuevoPedido> items) =>
+            items.GroupBy(i => i.ProductoId).ToDictionary(g => g.Key, g => g.Sum(i => i.Cantidad));
+
         // ---- Crear ----
 
         public async Task<ResultadoPedido> CrearAsync(Guid clienteId, NuevoPedido datos, ArchivoSubido captura,
             CancellationToken ct = default)
         {
-            var cantidades = datos.Items
-                .GroupBy(i => i.ProductoId)
-                .ToDictionary(g => g.Key, g => g.Sum(i => i.Cantidad));
-
             var config = await configuracion.ObtenerAsync(ct);
             if (config.TasaBsUsd is not decimal tasa)
             {
@@ -75,15 +157,13 @@ namespace Core.Application.Servicios
                 return ResultadoPedido.Falla(ErrorPedido.Validacion, "La zona de entrega no existe o no está activa.");
             }
 
-            var encontrados = await productos.ObtenerActivosAsync(cantidades.Keys, ct);
-            var inexistentes = cantidades.Keys.Where(id => !encontrados.ContainsKey(id)).ToList();
-            if (inexistentes.Count > 0)
+            var ahora = DateTime.UtcNow;
+            var cotizado = await CotizarAsync(clienteId, Agrupar(datos.Items), datos.CodigoCupon, tasa, ahora, ct);
+            if (cotizado.Cotizacion is not { } cotizacion)
             {
-                return ResultadoPedido.Falla(ErrorPedido.Validacion,
-                    $"Estos productos ya no están disponibles: {string.Join(", ", inexistentes)}.");
+                return ResultadoPedido.Falla(cotizado.Error!.Value, cotizado.Mensaje!);
             }
 
-            var ahora = DateTime.UtcNow;
             var pedido = new Pedido
             {
                 Id = Guid.CreateVersion7(),
@@ -101,22 +181,24 @@ namespace Core.Application.Servicios
                 TelefonoContacto = datos.Telefono,
                 CreatedAt = ahora,
                 ExpiraEn = ahora.AddHours(config.HorasExpiracion),
+                CuponId = cotizacion.Cupon?.Id,
+                DescuentoUsd = cotizacion.DescuentoUsd,
+                DescuentoBs = cotizacion.DescuentoBs!.Value,
+                TotalUsd = cotizacion.TotalUsd,
+                TotalBs = cotizacion.TotalBs!.Value,
             };
-            // Orden por producto: todas las transacciones bloquean productos en el mismo orden (sin deadlocks).
-            foreach (var (productoId, cantidad) in cantidades.OrderBy(c => c.Key))
+            foreach (var linea in cotizacion.Lineas)
             {
-                var producto = encontrados[productoId];
                 pedido.Items.Add(new PedidoItem
                 {
-                    ProductoId = productoId,
-                    CategoriaId = producto.CategoriaId,
-                    Cantidad = cantidad,
-                    PrecioUsd = producto.PrecioUsd,
-                    PrecioBs = TasaService.EnBs(producto.PrecioUsd, tasa)!.Value,
+                    ProductoId = linea.Producto.Id,
+                    CategoriaId = linea.Producto.CategoriaId,
+                    Cantidad = linea.Cantidad,
+                    PrecioUsd = linea.PrecioUsd,
+                    PrecioBs = TasaService.EnBs(linea.PrecioUsd, tasa)!.Value,
+                    PrecioListaUsd = linea.PrecioListaUsd,
                 });
             }
-            pedido.TotalUsd = pedido.Items.Sum(i => i.PrecioUsd * i.Cantidad);
-            pedido.TotalBs = pedido.Items.Sum(i => i.PrecioBs * i.Cantidad);
             pedido.RegistrarCreacion(clienteId, ahora);
 
             // La captura se sube antes de abrir la transacción, para no tener productos bloqueados
@@ -128,16 +210,35 @@ namespace Core.Application.Servicios
                 await using var tx = await unidad.IniciarTransaccionAsync(ct);
                 pedidos.Agregar(pedido);
 
-                foreach (var item in pedido.Items)
+                foreach (var linea in cotizacion.Lineas)
                 {
-                    if (!await inventario.ReservarAsync(item.ProductoId, item.Cantidad, pedido.Id, clienteId, ct))
+                    if (!await inventario.ReservarAsync(linea.Producto.Id, linea.Cantidad, pedido.Id, clienteId, ct))
                     {
                         await tx.RevertirAsync(ct);
                         unidad.LimpiarSeguimiento();
-                        var quedan = (await productos.ObtenerAsync(item.ProductoId, ct: ct))?.StockDisponible ?? 0;
+                        var quedan = (await productos.ObtenerAsync(linea.Producto.Id, ct: ct))?.StockDisponible ?? 0;
                         return ResultadoPedido.Falla(ErrorPedido.SinStock,
-                            $"No hay suficiente stock de \"{encontrados[item.ProductoId].Nombre}\": " +
-                            $"pediste {item.Cantidad} y quedan {quedan}. Ajusta tu carrito e inténtalo de nuevo.");
+                            $"No hay suficiente stock de \"{linea.Producto.Nombre}\": " +
+                            $"pediste {linea.Cantidad} y quedan {quedan}. Ajusta tu carrito e inténtalo de nuevo.");
+                    }
+                }
+
+                // El cupón va después de los productos, en el mismo orden que al liberar (rechazo o
+                // expiración), para no cruzar bloqueos. El UPDATE deja la fila del cupón bloqueada:
+                // otro pedido del mismo cliente con el mismo cupón espera aquí y, cuando este
+                // confirma, ya ve este pedido en la consulta de uso por cliente.
+                if (cotizacion.Cupon is { } cupon)
+                {
+                    var motivo = !await cupones.ConsumirUsoAsync(cupon.Id, ahora, ct)
+                        ? "El cupón se agotó o dejó de estar vigente mientras confirmabas. Quítalo e inténtalo de nuevo."
+                        : await cupones.ClienteLoUsoAsync(cupon.Id, clienteId, ct)
+                            ? "Ya usaste este cupón en otro pedido."
+                            : null;
+                    if (motivo is not null)
+                    {
+                        await tx.RevertirAsync(ct);
+                        unidad.LimpiarSeguimiento();
+                        return ResultadoPedido.Falla(ErrorPedido.CuponNoDisponible, motivo);
                     }
                 }
 
@@ -351,11 +452,16 @@ namespace Core.Application.Servicios
             await unidad.GuardarCambiosAsync(ct);
         }
 
+        // Devuelve el stock reservado y, si el pedido usó cupón, su uso (el cliente puede volver a usarlo).
         private async Task LiberarStockAsync(Pedido pedido, Guid? usuarioId, CancellationToken ct)
         {
             foreach (var item in pedido.Items.OrderBy(i => i.ProductoId))
             {
                 await inventario.LiberarAsync(item.ProductoId, item.Cantidad, pedido.Id, usuarioId, ct);
+            }
+            if (pedido.CuponId is Guid cuponId)
+            {
+                await cupones.LiberarUsoAsync(cuponId, ct);
             }
         }
 

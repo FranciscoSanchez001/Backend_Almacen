@@ -19,8 +19,16 @@ namespace Core.Domain.Entidades
 
         // Tasa Bs/USD congelada al crear el pedido.
         public decimal TasaCambio { get; set; }
+
+        // Total a pagar = subtotal de los ítems − descuento del cupón.
         public decimal TotalUsd { get; set; }
         public decimal TotalBs { get; set; }
+
+        // Cupón usado y lo que descontó, congelado al crear el pedido (0 si no hubo cupón).
+        public Guid? CuponId { get; set; }
+        public Cupon? Cupon { get; set; }
+        public decimal DescuentoUsd { get; set; }
+        public decimal DescuentoBs { get; set; }
 
         public string? ReferenciaPago { get; set; }
         public string? CapturaUrl { get; set; }

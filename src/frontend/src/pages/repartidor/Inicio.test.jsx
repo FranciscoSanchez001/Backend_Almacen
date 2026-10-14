@@ -2,11 +2,13 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Inicio from './Inicio'
 import { renderizar } from '../../test/renderizar'
-import { listarEntregas, obtenerPedido, marcarEnCamino, marcarEntregado } from '../../api/pedidos'
+import { obtenerPedido, marcarEnCamino, marcarEntregado } from '../../api/pedidos'
+import { listarMisEntregas } from '../../api/repartidor'
 import { ErrorApi } from '../../api/cliente'
 
+vi.mock('../../api/repartidor', () => ({ listarMisEntregas: vi.fn() }))
 vi.mock('../../api/pedidos', () => ({
-  listarEntregas: vi.fn(), obtenerPedido: vi.fn(), marcarEnCamino: vi.fn(), marcarEntregado: vi.fn(),
+  obtenerPedido: vi.fn(), marcarEnCamino: vi.fn(), marcarEntregado: vi.fn(),
 }))
 
 const asignado = {
@@ -22,7 +24,7 @@ const pagina = (items, total = items.length) => ({ items, total })
 const montar = (ruta = '/repartidor', rol = 'repartidor') => renderizar(<Inicio />, { ruta, rol })
 
 beforeEach(() => {
-  vi.mocked(listarEntregas).mockReset().mockResolvedValue(pagina([asignado]))
+  vi.mocked(listarMisEntregas).mockReset().mockResolvedValue(pagina([asignado]))
   vi.mocked(obtenerPedido).mockReset().mockResolvedValue(asignado)
   vi.mocked(marcarEnCamino).mockReset().mockResolvedValue(enCamino)
   vi.mocked(marcarEntregado).mockReset().mockResolvedValue(entregado)
@@ -42,38 +44,38 @@ describe('Entregas del repartidor', () => {
     expect(tarjeta).toHaveTextContent('María')
     expect(tarjeta).toHaveTextContent('Centro · Casa azul #2')
     expect(tarjeta).toHaveTextContent('Asignado')
-    expect(listarEntregas).toHaveBeenCalledWith({ historial: false, pagina: 1, tamano: 20 })
+    expect(listarMisEntregas).toHaveBeenCalledWith({ historial: false, pagina: 1, tamano: 20 })
     expect(screen.queryByText('Por construir')).not.toBeInTheDocument()
   })
 
   it('el gerente accede al panel general sin llamar al endpoint exclusivo del repartidor', () => {
     montar('/repartidor', 'superadmin')
     expect(screen.getByRole('link', { name: 'Ir a pedidos' })).toHaveAttribute('href', '/panel/pedidos')
-    expect(listarEntregas).not.toHaveBeenCalled()
+    expect(listarMisEntregas).not.toHaveBeenCalled()
   })
 
   it('cambia de página y reinicia la paginación al abrir el historial', async () => {
-    vi.mocked(listarEntregas).mockResolvedValue(pagina([asignado], 21))
+    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([asignado], 21))
     const { user } = montar()
     await screen.findByRole('button', { name: 'Ver pedido #42' })
     await user.click(screen.getByRole('button', { name: /Siguiente/ }))
-    await waitFor(() => expect(listarEntregas).toHaveBeenLastCalledWith({ historial: false, pagina: 2, tamano: 20 }))
+    await waitFor(() => expect(listarMisEntregas).toHaveBeenLastCalledWith({ historial: false, pagina: 2, tamano: 20 }))
     await screen.findByRole('button', { name: 'Ver pedido #42' })
-    vi.mocked(listarEntregas).mockResolvedValue(pagina([entregado]))
+    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([entregado]))
     await user.click(screen.getByRole('button', { name: 'Historial', exact: true }))
-    await waitFor(() => expect(listarEntregas).toHaveBeenLastCalledWith({ historial: true, pagina: 1, tamano: 20 }))
+    await waitFor(() => expect(listarMisEntregas).toHaveBeenLastCalledWith({ historial: true, pagina: 1, tamano: 20 }))
     expect(await screen.findByRole('button', { name: 'Ver pedido #42' })).toHaveTextContent('Entregado')
   })
 
   it('recupera la última página válida si ya no hay pedidos en la página actual', async () => {
-    vi.mocked(listarEntregas).mockResolvedValueOnce(pagina([])).mockResolvedValue(pagina([asignado]))
+    vi.mocked(listarMisEntregas).mockResolvedValueOnce(pagina([])).mockResolvedValue(pagina([asignado]))
     montar('/repartidor?pagina=2')
     await screen.findByRole('button', { name: 'Ver pedido #42' })
-    expect(listarEntregas).toHaveBeenLastCalledWith({ historial: false, pagina: 1, tamano: 20 })
+    expect(listarMisEntregas).toHaveBeenLastCalledWith({ historial: false, pagina: 1, tamano: 20 })
   })
 
   it('muestra un listado vacío y permite reintentar tras un error', async () => {
-    vi.mocked(listarEntregas).mockRejectedValueOnce(new Error('Sin conexión')).mockResolvedValue(pagina([]))
+    vi.mocked(listarMisEntregas).mockRejectedValueOnce(new Error('Sin conexión')).mockResolvedValue(pagina([]))
     const { user } = montar()
     expect(await screen.findByText('Sin conexión')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Reintentar' }))
@@ -111,7 +113,7 @@ describe('Entregas del repartidor', () => {
     await user.click(screen.getByRole('button', { name: 'Confirmar salida' }))
     expect(await screen.findByRole('button', { name: 'Marcar entregado' })).toBeInTheDocument()
     expect(marcarEnCamino).toHaveBeenCalledWith('p1')
-    vi.mocked(listarEntregas).mockResolvedValue(pagina([]))
+    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([]))
     await user.click(screen.getByRole('button', { name: 'Marcar entregado' }))
     expect(marcarEntregado).not.toHaveBeenCalled()
     await user.click(screen.getByRole('button', { name: 'Confirmar entrega' }))
@@ -119,7 +121,7 @@ describe('Entregas del repartidor', () => {
     expect(marcarEntregado).toHaveBeenCalledWith('p1')
     expect(await screen.findByText('No tienes pedidos pendientes de entrega.')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Pedido #42 entregado.')
-    vi.mocked(listarEntregas).mockResolvedValue(pagina([entregado]))
+    vi.mocked(listarMisEntregas).mockResolvedValue(pagina([entregado]))
     vi.mocked(obtenerPedido).mockResolvedValue(entregado)
     await user.click(screen.getByRole('button', { name: 'Historial', exact: true }))
     await user.click(await screen.findByRole('button', { name: 'Ver pedido #42' }))
@@ -175,7 +177,7 @@ describe('Entregas del repartidor', () => {
 
   it('ignora una respuesta de la pestaña anterior cuando el usuario abre el historial', async () => {
     let resolverAnterior
-    vi.mocked(listarEntregas).mockReturnValueOnce(new Promise(resolve => { resolverAnterior = resolve })).mockResolvedValue(pagina([entregado]))
+    vi.mocked(listarMisEntregas).mockReturnValueOnce(new Promise(resolve => { resolverAnterior = resolve })).mockResolvedValue(pagina([entregado]))
     const { user } = montar()
     await user.click(screen.getByRole('button', { name: 'Historial', exact: true }))
     expect(await screen.findByRole('button', { name: 'Ver pedido #42' })).toHaveTextContent('Entregado')

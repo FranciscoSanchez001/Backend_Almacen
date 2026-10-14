@@ -1,7 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PowerBIDashboard from './PowerBIDashboard'
-import { descargarExcel, obtenerKpis } from '../../api/reportes'
+import { descargarExcel, descargarPdf, obtenerKpis } from '../../api/reportes'
+import { obtenerComportamiento } from '../../api/analitica'
 import { listarTodosLosProductos } from '../../api/productos'
 import { listarInventario } from '../../api/inventario'
 import { listarPedidos } from '../../api/pedidos'
@@ -10,7 +11,8 @@ import { ErrorApi } from '../../api/cliente'
 import { formatoDia } from '../../utils/formato'
 import { renderizar } from '../../test/renderizar'
 
-vi.mock('../../api/reportes', () => ({ obtenerKpis: vi.fn(), descargarExcel: vi.fn() }))
+vi.mock('../../api/reportes', () => ({ obtenerKpis: vi.fn(), descargarExcel: vi.fn(), descargarPdf: vi.fn() }))
+vi.mock('../../api/analitica', () => ({ obtenerComportamiento: vi.fn() }))
 vi.mock('../../api/productos', () => ({ listarTodosLosProductos: vi.fn() }))
 vi.mock('../../api/inventario', () => ({ listarInventario: vi.fn() }))
 vi.mock('../../api/pedidos', () => ({ listarPedidos: vi.fn() }))
@@ -101,6 +103,12 @@ beforeEach(() => {
   vi.setSystemTime(new Date(2026, 9, 15, 10, 0))
   vi.mocked(obtenerKpis).mockReset().mockResolvedValue(kpisDePrueba())
   vi.mocked(descargarExcel).mockReset().mockResolvedValue(undefined)
+  vi.mocked(descargarPdf).mockReset().mockResolvedValue(undefined)
+  vi.mocked(obtenerComportamiento).mockReset().mockResolvedValue({
+    desde: HOY, hasta: HOY, zonaHoraria: 'America/Caracas', visitas: 50, busquedas: 10, busquedasSinResultados: 2,
+    porcentajeSinResultados: 20, tasaConversion: 6, embudo: [{ paso: 'Visitaron la tienda', sesiones: 50, porcentaje: 100 }],
+    masBuscado: [], sinResultados: [], productos: [], categorias: [], cupones: [], porDia: [],
+  })
   vi.mocked(listarTodosLosProductos).mockReset().mockResolvedValue(productosAlmacen)
   vi.mocked(listarInventario).mockReset().mockResolvedValue(inventario)
   vi.mocked(listarPedidos).mockReset().mockResolvedValue({ items: [{ id: 'p1', expiraEn: '2026-10-15T15:00:00' }], total: 3 })
@@ -280,6 +288,31 @@ describe('PowerBIDashboard: avisos y alertas de stock', () => {
     montar()
 
     expect(await screen.findByText('Todo el inventario está dentro de sus umbrales.')).toBeInTheDocument()
+  })
+})
+
+describe('PowerBIDashboard: PDF y comportamiento', () => {
+  it('descarga el PDF del mismo período sin bloquear el resto de la pantalla', async () => {
+    let terminar
+    vi.mocked(descargarPdf).mockReturnValue(new Promise((resolver) => (terminar = resolver)))
+    const { user } = montar()
+    await screen.findByText('$1,234.50')
+
+    await user.click(screen.getByRole('button', { name: 'Descargar PDF' }))
+
+    expect(descargarPdf).toHaveBeenCalledWith({ tipo: 'mensual', desde: HOY })
+    expect(descargarExcel).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Descargar Excel' })).toBeDisabled()
+    terminar()
+    expect(await screen.findByRole('button', { name: 'Descargar PDF' })).toBeEnabled()
+  })
+
+  it('muestra el comportamiento de los visitantes con el mismo período', async () => {
+    montar()
+
+    expect(await screen.findByRole('heading', { name: 'Comportamiento de los visitantes' })).toBeInTheDocument()
+    expect(await screen.findByText('sesiones distintas')).toBeInTheDocument()
+    expect(obtenerComportamiento).toHaveBeenCalledWith({ tipo: 'mensual', desde: HOY })
   })
 })
 

@@ -8,6 +8,17 @@ const leche = { id: 'p2', nombre: 'Leche', precioUsd: 2.25, stockDisponible: 3 }
 const usarCarrito = () => renderHook(() => useCarrito(), { wrapper: CarritoProvider }).result
 
 describe('CarritoContext', () => {
+  it('retira unidades compradas sin eliminar lo agregado durante el envío', () => {
+    const carrito = usarCarrito()
+    act(() => carrito.current.cambiarCantidad(arroz, 3))
+    act(() => carrito.current.cambiarCantidad(leche, 1))
+    act(() => carrito.current.retirarComprados([{ productoId: arroz.id, cantidad: 2 }]))
+    expect(carrito.current.cantidadDe(arroz.id)).toBe(1)
+    expect(carrito.current.cantidadDe(leche.id)).toBe(1)
+    act(() => carrito.current.retirarComprados([{ productoId: arroz.id, cantidad: 2 }]))
+    expect(carrito.current.cantidadDe(arroz.id)).toBe(0)
+    expect(carrito.current.cantidadDe(leche.id)).toBe(1)
+  })
   it('arranca vacío', () => {
     const carrito = usarCarrito()
 
@@ -80,5 +91,23 @@ describe('CarritoContext', () => {
     const carrito = usarCarrito()
 
     expect(carrito.current.lineas).toEqual([])
+  })
+
+  it('quitar elimina la línea, vaciar deja el carrito vacío e items arma lo que espera la API', () => {
+    const carrito = usarCarrito()
+
+    act(() => carrito.current.cambiarCantidad(arroz, 2))
+    act(() => carrito.current.cambiarCantidad(leche, 1))
+    expect(carrito.current.items).toEqual([
+      { productoId: 'p1', cantidad: 2 },
+      { productoId: 'p2', cantidad: 1 },
+    ])
+
+    act(() => carrito.current.quitar('p1'))
+    expect(carrito.current.items).toEqual([{ productoId: 'p2', cantidad: 1 }])
+
+    act(() => carrito.current.vaciar())
+    expect(carrito.current.lineas).toEqual([])
+    expect(JSON.parse(localStorage.getItem('almacen.carrito'))).toEqual({})
   })
 })

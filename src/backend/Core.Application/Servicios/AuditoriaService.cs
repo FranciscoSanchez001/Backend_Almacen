@@ -15,6 +15,7 @@ namespace Core.Application.Servicios
         public const string Zona = "zona";
         public const string Reporte = "reporte";
         public const string Configuracion = "configuracion";
+        public const string Cupon = "cupon";
     }
 
     public class AuditoriaService(IAuditoriaRepository auditoria)

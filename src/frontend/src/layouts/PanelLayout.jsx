@@ -6,8 +6,9 @@ import { useAuth } from '../context/AuthContext'
 import { listarNotificaciones } from '../api/notificaciones'
 
 // Layout de los paneles del personal (ventas y gerente).
-// - Escritorio (lg+): barra lateral fija a la izquierda.
-// - Móvil: la barra lateral se abre como cajón con el botón de menú.
+// - Escritorio (lg+): barra lateral fija a la izquierda, que se puede ocultar con el botón ☰
+//   para dar más ancho al contenido (p. ej. al dashboard). La preferencia se recuerda.
+// - Móvil: la barra lateral se abre como cajón con el botón ☰.
 // El menú se arma según el rol: ventas ve "Ventas"; el gerente (superadmin)
 // ve todo lo de ventas más "Administración" (ver especificación, roles y permisos).
 const icono = (d) => (
@@ -32,8 +33,9 @@ const SECCIONES = [
     titulo: 'Administración',
     roles: ['superadmin'],
     opciones: [
-      { ruta: '/admin', fin: true, titulo: 'Dashboard KPI', detalle: 'Indicadores y Excel', icono: icono('M4 20V10m6 10V4m6 16v-7m4 7H2') },
+      { ruta: '/admin', fin: true, titulo: 'Dashboard KPI', detalle: 'Indicadores, Excel y PDF', icono: icono('M4 20V10m6 10V4m6 16v-7m4 7H2') },
       { ruta: '/admin/personal', titulo: 'Personal', detalle: 'Vendedores y repartidores', icono: icono('M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm13 9v-1a4 4 0 0 0-3-3.87M16 4.13a3 3 0 0 1 0 5.74') },
+      { ruta: '/admin/cupones', titulo: 'Cupones', detalle: 'Códigos de descuento', icono: icono('M7 7h.01M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9Z') },
       { ruta: '/admin/auditoria', titulo: 'Auditoría', detalle: 'Quién cambió qué', icono: icono('M9 12l2 2 4-4m5 2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z') },
       { ruta: '/admin/configuracion', titulo: 'Configuración', detalle: 'Tasa, zonas y pagos', icono: icono('M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-2-1.2L14.5 3h-4l-.4 2.6a7.5 7.5 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7.5 7.5 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z') },
     ],
@@ -120,10 +122,30 @@ function Campana() {
   )
 }
 
+const CLAVE_LATERAL = 'panel.lateralOculto'
+
+// localStorage puede no estar disponible (modo privado, bloqueado): entonces no se recuerda.
+function leerLateralOculto() {
+  try {
+    return localStorage.getItem(CLAVE_LATERAL) === '1'
+  } catch {
+    return false
+  }
+}
+
 export default function PanelLayout() {
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [lateralOculto, setLateralOculto] = useState(leerLateralOculto)
   const { pathname } = useLocation()
   const { usuario } = useAuth()
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CLAVE_LATERAL, lateralOculto ? '1' : '0')
+    } catch {
+      // Sin almacenamiento la preferencia dura hasta recargar.
+    }
+  }, [lateralOculto])
 
   // Al cambiar de página se cierra el cajón en móvil.
   useEffect(() => setMenuAbierto(false), [pathname])
@@ -143,7 +165,10 @@ export default function PanelLayout() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       {/* Barra lateral fija (escritorio) */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-200 bg-superficie lg:flex">
+      <aside
+        id="menu-lateral"
+        className={`fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-200 bg-superficie ${lateralOculto ? '' : 'lg:flex'}`}
+      >
         <div className="flex h-16 shrink-0 items-center border-b border-slate-200 px-5">
           <Marca rol={usuario.rol} />
         </div>
@@ -174,7 +199,7 @@ export default function PanelLayout() {
       )}
 
       {/* Contenido */}
-      <div className="lg:pl-64">
+      <div className={lateralOculto ? '' : 'lg:pl-64'}>
         <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-slate-200 bg-superficie px-4">
           <button
             type="button"
@@ -187,7 +212,20 @@ export default function PanelLayout() {
               <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="lg:hidden">
+          <button
+            type="button"
+            onClick={() => setLateralOculto((v) => !v)}
+            aria-label={lateralOculto ? 'Mostrar menú lateral' : 'Ocultar menú lateral'}
+            aria-controls="menu-lateral"
+            aria-expanded={!lateralOculto}
+            title={lateralOculto ? 'Mostrar menú' : 'Ocultar menú'}
+            className="hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:inline-flex"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6" aria-hidden="true">
+              <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div className={lateralOculto ? '' : 'lg:hidden'}>
             <Marca rol={usuario.rol} />
           </div>
           <div className="ml-auto flex items-center gap-1">

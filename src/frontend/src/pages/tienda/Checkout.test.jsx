@@ -1,158 +1,357 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Checkout from './Checkout'
 import { renderizar } from '../../test/renderizar'
-import { obtenerDatosPago, listarZonasEntrega, obtenerProductoCatalogo } from '../../api/catalogo'
-import { crearPedido } from '../../api/pedidos'
+import { listarZonasEntrega, obtenerDatosPago } from '../../api/catalogo'
+import { cotizarPedido, crearPedido } from '../../api/pedidos'
 import { ErrorApi } from '../../api/cliente'
-import { useCarrito } from '../../context/CarritoContext'
+import { enviarEventos, registrarEvento } from '../../utils/analitica'
 
-vi.mock('../../api/catalogo', () => ({ obtenerDatosPago: vi.fn(), listarZonasEntrega: vi.fn(), obtenerProductoCatalogo: vi.fn() }))
-vi.mock('../../api/pedidos', () => ({ crearPedido: vi.fn() }))
+vi.mock('../../api/catalogo', () => ({ listarZonasEntrega: vi.fn(), obtenerDatosPago: vi.fn() }))
+vi.mock('../../api/pedidos', () => ({ cotizarPedido: vi.fn(), crearPedido: vi.fn() }))
+vi.mock('../../utils/analitica', () => ({ registrarEvento: vi.fn(), enviarEventos: vi.fn() }))
 
-const producto = { id: 'p1', nombre: 'Arroz', precioUsd: 2, precioBs: 99, stockDisponible: 5 }
-const pago = { tasaBsUsd: 50, datosTransferencia: 'Banco de prueba, cuenta 123', datosPagoMovil: 'Banco, teléfono 04121234567', walletBinance: 'wallet-pruebas' }
-const montar = (rol = 'cliente') => renderizar(<Checkout />, { ruta: '/checkout', rol })
-beforeEach(() => {
-  vi.mocked(obtenerDatosPago).mockReset().mockResolvedValue(pago)
-  vi.mocked(listarZonasEntrega).mockReset().mockResolvedValue([{ id: 'z1', nombre: 'Centro' }])
-  vi.mocked(obtenerProductoCatalogo).mockReset().mockResolvedValue(producto)
-  vi.mocked(crearPedido).mockReset().mockResolvedValue({ numero: 123, totalUsd: 4, totalBs: 200 })
-  localStorage.setItem('almacen.carrito', JSON.stringify({ p1: { producto: { ...producto, precioUsd: 1 }, cantidad: 2 } }))
+const arroz = { id: 'p1', nombre: 'Arroz', precioUsd: 1.5, precioOriginalUsd: 2, stockDisponible: 10 }
+const cafe = { id: 'p2', nombre: 'Café', precioUsd: 5, stockDisponible: 10 }
+
+const linea = (producto, cantidad, extra = {}) => ({
+  productoId: producto.id,
+  nombre: producto.nombre,
+  cantidad,
+  stockDisponible: producto.stockDisponible,
+  precioUsd: producto.precioUsd,
+  precioListaUsd: producto.precioOriginalUsd ?? producto.precioUsd,
+  subtotalUsd: producto.precioUsd * cantidad,
+  ...extra,
 })
 
-async function completar(user) {
-  await user.selectOptions(await screen.findByLabelText('Zona de entrega'), 'z1')
-  await user.type(screen.getByLabelText('Dirección y referencia'), 'Casa azul, calle principal')
-  await user.type(screen.getByLabelText('Teléfono de contacto'), '0412 123 4567')
-  await user.selectOptions(screen.getByLabelText('Método de pago'), 'pago_movil')
-  await user.type(screen.getByLabelText('Referencia del pago'), 'REF-123')
-  await user.upload(screen.getByLabelText('Comprobante de pago'), new File(['imagen'], 'pago.png', { type: 'image/png' }))
+const cotizacion = (extra = {}) => ({
+  lineas: [linea(arroz, 2), linea(cafe, 1)],
+  subtotalUsd: 8,
+  descuentoUsd: 0,
+  totalUsd: 8,
+  tasaBsUsd: 40,
+  subtotalBs: 320,
+  descuentoBs: 0,
+  totalBs: 320,
+  cupon: null,
+  ...extra,
+})
+
+const conCupon = cotizacion({
+  descuentoUsd: 0.8,
+  totalUsd: 7.2,
+  descuentoBs: 32,
+  totalBs: 288,
+  cupon: { codigo: 'VERANO10', tipo: 'porcentaje', valor: 10 },
+})
+
+function guardarCarrito(lineas = [[arroz, 2], [cafe, 1]]) {
+  localStorage.setItem(
+    'almacen.carrito',
+    JSON.stringify(Object.fromEntries(lineas.map(([producto, cantidad]) => [producto.id, { producto, cantidad }]))),
+  )
 }
 
-describe('Checkout', () => {
-  it('pide acceso de cliente sin consultar datos bancarios al visitante', () => {
-    montar(null)
-    expect(screen.getByRole('button', { name: 'Ingresar con Google' })).toBeInTheDocument()
-    expect(obtenerDatosPago).not.toHaveBeenCalled()
-  })
+const abrir = (opciones = { rol: 'cliente' }) => renderizar(<Checkout />, { ruta: '/checkout', ...opciones })
 
-  it('bloquea compras desde una cuenta del personal', () => {
-    montar('superadmin')
-    expect(screen.getByText(/Cierra la sesión del personal/)).toBeInTheDocument()
-    expect(obtenerDatosPago).not.toHaveBeenCalled()
+beforeEach(() => {
+  vi.clearAllMocks()
+  vi.mocked(listarZonasEntrega).mockResolvedValue([
+    { id: 'z1', nombre: 'Centro' },
+    { id: 'z2', nombre: 'Barrio Obrero' },
+  ])
+  vi.mocked(obtenerDatosPago).mockResolvedValue({
+    tasaBsUsd: 40,
+    datosPagoMovil: 'Banco de Venezuela · 0414-0000000 · V-12345678',
+    datosTransferencia: 'Cuenta 0102-0000-00-0000000000',
+    walletBinance: 'binance-pay-123',
+    numeroSoporte: '+584140000000',
   })
+  vi.mocked(cotizarPedido).mockResolvedValue(cotizacion())
+})
 
-  it('muestra el carrito vacío sin cargar datos de pago', () => {
-    localStorage.removeItem('almacen.carrito')
-    montar()
+describe('Checkout: acceso', () => {
+  it('con el carrito vacío invita a ver el catálogo', () => {
+    abrir()
+
     expect(screen.getByRole('heading', { name: 'Tu carrito está vacío' })).toBeInTheDocument()
-    expect(obtenerDatosPago).not.toHaveBeenCalled()
+    expect(screen.getByRole('link', { name: 'Ver el catálogo' })).toHaveAttribute('href', '/')
   })
 
-  it('usa precios actuales y muestra el monto en Bs o USDT según el método', async () => {
-    const { user } = montar()
-    await screen.findByLabelText('Método de pago')
-    expect(screen.getByText('Total: $4.00')).toBeInTheDocument()
-    await user.selectOptions(screen.getByLabelText('Método de pago'), 'transferencia')
-    expect(screen.getByText('Monto a pagar: Bs 200,00')).toBeInTheDocument()
-    await user.selectOptions(screen.getByLabelText('Método de pago'), 'binance')
-    expect(screen.getByText('Monto a pagar: 4.00 USDT')).toBeInTheDocument()
-    expect(screen.getByText('wallet-pruebas')).toBeInTheDocument()
+  it('sin sesión pide entrar con Google y conserva el carrito', () => {
+    guardarCarrito()
+    abrir({})
+
+    expect(screen.getByRole('heading', { name: 'Ingresa para terminar tu compra' })).toBeInTheDocument()
+    expect(cotizarPedido).not.toHaveBeenCalled()
+    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
   })
 
-  it('confirma una sola vez y vacía el carrito únicamente después de recibir el pedido', async () => {
-    let resolver
-    vi.mocked(crearPedido).mockReturnValue(new Promise(resolve => { resolver = resolve }))
-    const { user } = montar()
-    await completar(user)
-    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
-    fireEvent.submit(screen.getByLabelText('Teléfono de contacto').closest('form'))
+  it('el personal no puede comprar', () => {
+    guardarCarrito()
+    abrir({ rol: 'ventas' })
+
+    expect(screen.getByRole('heading', { name: 'Las compras son para clientes' })).toBeInTheDocument()
+  })
+})
+
+describe('Checkout: resumen y cupón', () => {
+  it('cotiza el carrito con la API y muestra el total en USD y Bs', async () => {
+    guardarCarrito()
+    abrir()
+
+    const resumen = await screen.findByRole('complementary')
+    expect(await within(resumen).findByText('2 × Arroz')).toBeInTheDocument()
+    expect(within(resumen).getByText('oferta')).toBeInTheDocument()
+    expect(within(resumen).getAllByText('$8.00')).toHaveLength(2) // subtotal y total
+    expect(within(resumen).getByText('Bs 320,00')).toBeInTheDocument()
+    expect(cotizarPedido).toHaveBeenCalledWith({
+      items: [
+        { productoId: 'p1', cantidad: 2 },
+        { productoId: 'p2', cantidad: 1 },
+      ],
+      codigoCupon: null,
+    })
+  })
+
+  it('aplicar un cupón válido muestra el descuento y el nuevo total', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    vi.mocked(cotizarPedido).mockResolvedValue(conCupon)
+
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'verano10')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+
+    expect(await screen.findByText('VERANO10')).toBeInTheDocument()
+    expect(screen.getByText('−$0.80')).toBeInTheDocument()
+    expect(screen.getByText('$7.20')).toBeInTheDocument()
+    expect(cotizarPedido).toHaveBeenCalledWith(expect.objectContaining({ codigoCupon: 'verano10' }))
+  })
+
+  it('un cupón inválido muestra el motivo de la API y no cambia el total', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    vi.mocked(cotizarPedido).mockRejectedValueOnce(new ErrorApi('El cupón ya venció.', 400, null))
+
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'VIEJO')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+
+    expect(await screen.findByText('El cupón ya venció.')).toBeInTheDocument()
+    expect(screen.queryByText('Descuento')).not.toBeInTheDocument()
+  })
+
+  it('quitar el cupón vuelve a cotizar sin él', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    vi.mocked(cotizarPedido).mockResolvedValue(conCupon)
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'VERANO10')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+    await screen.findByText('−$0.80')
+
+    vi.mocked(cotizarPedido).mockResolvedValue(cotizacion())
+    await user.click(screen.getByRole('button', { name: 'Quitar' }))
+
+    await waitFor(() => expect(screen.queryByText('−$0.80')).not.toBeInTheDocument())
+    expect(screen.getByLabelText('¿Tienes un cupón?')).toHaveValue('')
+  })
+
+  it('avisa si un producto ya no tiene stock suficiente y permite ajustar el carrito', async () => {
+    guardarCarrito()
+    vi.mocked(cotizarPedido).mockResolvedValue(cotizacion({ lineas: [linea(arroz, 2, { stockDisponible: 1 }), linea(cafe, 1)] }))
+    const { user } = abrir()
+
+    expect(await screen.findByText('Arroz: quedan 1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Ajustar mi carrito' }))
+
+    await waitFor(() => expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(1))
+  })
+
+  it('sin tasa del día no deja confirmar', async () => {
+    guardarCarrito()
+    vi.mocked(cotizarPedido).mockResolvedValue(cotizacion({ tasaBsUsd: null, subtotalBs: null, descuentoBs: null, totalBs: null }))
+    abrir()
+
+    expect(await screen.findByText(/todavía no cargó la tasa del día/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
+  })
+})
+
+describe('Checkout: pago y envío', () => {
+  async function llenarFormulario(user) {
+    await screen.findByRole('option', { name: 'Centro' })
+    await user.selectOptions(screen.getByLabelText('Zona'), 'z1')
+    await user.type(screen.getByLabelText('Teléfono de contacto'), '0414 123 4567')
+    await user.type(screen.getByLabelText('Dirección y punto de referencia'), 'Calle 10, portón azul')
+    await user.type(screen.getByLabelText('Referencia del pago'), '987654')
+    await user.upload(screen.getByLabelText('Captura del comprobante'), new File(['img'], 'pago.png', { type: 'image/png' }))
+  }
+
+  it('bloquea envíos duplicados mientras espera la respuesta del pedido', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockReturnValue(new Promise(() => {}))
+    const { user } = abrir()
+    await llenarFormulario(user)
+    const boton = screen.getByRole('button', { name: 'Confirmar pedido' })
+    await user.click(boton)
+    fireEvent.submit(boton.closest('form'))
     expect(crearPedido).toHaveBeenCalledOnce()
-    expect(crearPedido).toHaveBeenCalledWith(expect.objectContaining({ metodoPago: 'pago_movil', zonaId: 'z1', telefono: '+584121234567', referenciaPago: 'REF-123', captura: expect.any(File) }))
+    expect(screen.getByRole('button', { name: 'Enviando tu pedido…' })).toBeDisabled()
     expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
-    expect(screen.getByRole('button', { name: 'Registrando pedido…' })).toBeDisabled()
-    await act(async () => resolver({ numero: 123, totalUsd: 4, totalBs: 200 }))
-    expect(await screen.findByRole('heading', { name: 'Pedido #123 recibido' })).toBeInTheDocument()
-    expect(localStorage.getItem('almacen.carrito')).toBe('{}')
-    expect(screen.getByRole('link', { name: 'Ver mis pedidos' })).toHaveAttribute('href', '/mis-pedidos')
   })
 
-  it('con un rechazo de stock conserva productos y datos del formulario', async () => {
-    vi.mocked(crearPedido).mockRejectedValue(new ErrorApi('No hay suficiente stock.', 409))
-    const { user } = montar()
-    await completar(user)
-    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('No hay suficiente stock.')
-    expect(screen.getByLabelText('Referencia del pago')).toHaveValue('REF-123')
-    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
-    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeEnabled()
-  })
-
-  it('conserva unidades añadidas mientras se envía el pedido', async () => {
-    let resolver
-    vi.mocked(crearPedido).mockReturnValue(new Promise(resolve => { resolver = resolve }))
-    function AgregarDuranteEnvio() {
-      const { cambiarCantidad } = useCarrito()
-      return <button type="button" onClick={() => cambiarCantidad(producto, 3)}>Agregar mientras se envía</button>
-    }
-    const { user } = renderizar(<><Checkout /><AgregarDuranteEnvio /></>, { ruta: '/checkout', rol: 'cliente' })
-    await completar(user)
-    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
-    await user.click(screen.getByRole('button', { name: 'Agregar mientras se envía' }))
-    await act(async () => resolver({ numero: 123, totalUsd: 4, totalBs: 200 }))
-    expect(await screen.findByRole('heading', { name: 'Pedido #123 recibido' })).toBeInTheDocument()
-    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(1)
-  })
-
-  it('si se pierde la respuesta dirige a revisar pedidos antes de repetir', async () => {
-    vi.mocked(crearPedido).mockRejectedValue(new ErrorApi('No se pudo conectar.', 0))
-    const { user } = montar()
-    await completar(user)
+  it('con una respuesta perdida conserva el carrito y dirige a consultar pedidos', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockRejectedValue(new ErrorApi('Sin conexión.', 0, null))
+    const { user } = abrir()
+    await llenarFormulario(user)
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
     expect(await screen.findByRole('link', { name: /Revisa tus pedidos/ })).toHaveAttribute('href', '/mis-pedidos')
     expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
-    expect(localStorage.getItem('almacen.carrito')).not.toBe('{}')
+    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
   })
 
-  it('detecta productos con stock insuficiente antes de mostrar las instrucciones de pago', async () => {
-    vi.mocked(obtenerProductoCatalogo).mockResolvedValue({ ...producto, stockDisponible: 1 })
-    montar()
-    expect(await screen.findByRole('alert')).toHaveTextContent('Solo quedan 1 unidades de Arroz')
-    expect(screen.queryByLabelText('Método de pago')).not.toBeInTheDocument()
-  })
-
-  it('oculta métodos que no tienen datos configurados', async () => {
-    vi.mocked(obtenerDatosPago).mockResolvedValue({ ...pago, datosPagoMovil: '', walletBinance: null })
-    montar()
-    await screen.findByLabelText('Método de pago')
-    expect(screen.queryByRole('option', { name: 'Binance' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: 'Pago móvil' })).not.toBeInTheDocument()
-  })
-
-  it('permite reintentar cuando no se cargan los datos del checkout', async () => {
-    vi.mocked(obtenerDatosPago).mockRejectedValueOnce(new Error('Sin conexión'))
-    const { user } = montar()
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sin conexión')
-    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
-    expect(await screen.findByLabelText('Zona de entrega')).toBeInTheDocument()
-  })
-
-  it('rechaza un teléfono inválido antes de crear el pedido', async () => {
-    const { user } = montar()
-    await completar(user)
-    fireEvent.change(screen.getByLabelText('Teléfono de contacto'), { target: { value: '123' } })
+  it('rechaza un comprobante vacío', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await llenarFormulario(user)
+    await user.upload(screen.getByLabelText('Captura del comprobante'), new File([], 'vacio.png', { type: 'image/png' }))
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('celular venezolano válido')
+    expect(screen.getByText('La captura debe pesar entre 1 byte y 5 MB.')).toBeInTheDocument()
     expect(crearPedido).not.toHaveBeenCalled()
   })
 
-  it('rechaza un comprobante con formato inválido', async () => {
-    const { user } = montar()
-    await completar(user)
-    fireEvent.change(screen.getByLabelText('Comprobante de pago'), { target: { files: [new File(['pdf'], 'pago.pdf', { type: 'application/pdf' })] } })
+  it('no permite pagar con un método sin datos configurados', async () => {
+    guardarCarrito()
+    vi.mocked(obtenerDatosPago).mockResolvedValue({ tasaBsUsd: 40, datosPagoMovil: '', walletBinance: 'wallet' })
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    expect(screen.getByLabelText('Pago móvil')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeDisabled()
+    await user.click(screen.getByLabelText('Binance (USDT)'))
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeEnabled()
+  })
+
+  it('muestra los datos del método elegido y el monto en Bs o en USDT', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+
+    expect(await screen.findByText(/Banco de Venezuela/)).toBeInTheDocument()
+    expect(await screen.findByText('Bs 320,00', { selector: 'strong' })).toBeInTheDocument()
+
+    await user.click(screen.getByLabelText('Binance (USDT)'))
+
+    expect(screen.getByText('binance-pay-123')).toBeInTheDocument()
+    expect(screen.getByText('8.00 USDT')).toBeInTheDocument()
+  })
+
+  it('no envía si faltan datos y marca cada campo', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+
+    await user.type(screen.getByLabelText('Teléfono de contacto'), '0212 555 1234')
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('JPG, PNG o WEBP'))
+
+    expect(screen.getByText('Elige tu zona.')).toBeInTheDocument()
+    expect(screen.getByText('Debe ser un celular venezolano: 04XX XXX XXXX.')).toBeInTheDocument()
+    expect(screen.getByText('Escribe la referencia del pago.')).toBeInTheDocument()
+    expect(screen.getByText('Adjunta la captura del pago.')).toBeInTheDocument()
     expect(crearPedido).not.toHaveBeenCalled()
+  })
+
+  it('confirma el pedido con el cupón aplicado, vacía el carrito y va a "Mis pedidos"', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockResolvedValue({ id: 'n1', numero: 42 })
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    vi.mocked(cotizarPedido).mockResolvedValue(conCupon)
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'verano10')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+    await screen.findByText('−$0.80')
+    await llenarFormulario(user)
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    expect(await screen.findByTestId('ubicacion')).toHaveTextContent('/mis-pedidos')
+    expect(crearPedido).toHaveBeenCalledWith(
+      expect.objectContaining({
+        items: [
+          { productoId: 'p1', cantidad: 2 },
+          { productoId: 'p2', cantidad: 1 },
+        ],
+        zonaId: 'z1',
+        telefono: '0414 123 4567',
+        direccionTexto: 'Calle 10, portón azul',
+        metodoPago: 'pago_movil',
+        referenciaPago: '987654',
+        codigoCupon: 'VERANO10',
+        captura: expect.any(File),
+      }),
+    )
+    expect(JSON.parse(localStorage.getItem('almacen.carrito'))).toEqual({})
+  })
+
+  it('si la API rechaza por stock muestra el mensaje y vuelve a cotizar', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockRejectedValue(new ErrorApi('No hay suficiente stock de "Arroz".', 409, { mensaje: 'x' }))
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    await llenarFormulario(user)
+    const cotizacionesAntes = vi.mocked(cotizarPedido).mock.calls.length
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No hay suficiente stock de "Arroz".')
+    await waitFor(() => expect(vi.mocked(cotizarPedido).mock.calls.length).toBeGreaterThan(cotizacionesAntes))
+    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(2)
+  })
+})
+
+describe('Checkout: analítica', () => {
+  const eventos = () => vi.mocked(registrarEvento).mock.calls.map(([tipo, datos]) => (datos ? [tipo, datos] : [tipo]))
+
+  it('registra el inicio del pago y los cupones aplicados y rechazados', async () => {
+    guardarCarrito()
+    const { user } = abrir()
+    await screen.findByText('2 × Arroz')
+    expect(eventos()).toContainEqual(['inicio_checkout'])
+
+    vi.mocked(cotizarPedido).mockRejectedValueOnce(new ErrorApi('El cupón no existe.', 400, null))
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'falso')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+    await screen.findByText('El cupón no existe.')
+
+    vi.mocked(cotizarPedido).mockResolvedValue(conCupon)
+    await user.clear(screen.getByLabelText('¿Tienes un cupón?'))
+    await user.type(screen.getByLabelText('¿Tienes un cupón?'), 'verano10')
+    await user.click(screen.getByRole('button', { name: 'Aplicar' }))
+    await screen.findByText('−$0.80')
+
+    expect(eventos()).toContainEqual(['cupon_rechazado', { texto: 'falso' }])
+    expect(eventos()).toContainEqual(['cupon_aplicado', { texto: 'verano10' }])
+  })
+
+  it('al confirmar registra el pedido con su total y envía los eventos enseguida', async () => {
+    guardarCarrito()
+    vi.mocked(crearPedido).mockResolvedValue({ id: 'n1', numero: 42, totalUsd: 8 })
+    const { user } = abrir()
+    await screen.findByRole('option', { name: 'Centro' })
+    await user.selectOptions(screen.getByLabelText('Zona'), 'z1')
+    await user.type(screen.getByLabelText('Teléfono de contacto'), '0414 123 4567')
+    await user.type(screen.getByLabelText('Dirección y punto de referencia'), 'Calle 10, portón azul')
+    await user.type(screen.getByLabelText('Referencia del pago'), '987654')
+    await user.upload(screen.getByLabelText('Captura del comprobante'), new File(['img'], 'pago.png', { type: 'image/png' }))
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    await screen.findByTestId('ubicacion')
+    expect(eventos()).toContainEqual(['pedido_confirmado', { valor: 8 }])
+    expect(enviarEventos).toHaveBeenCalled()
   })
 })

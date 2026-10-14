@@ -31,3 +31,23 @@ export function hoyIso() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+// Vigencias por día (ofertas y cupones). En pantalla se elige "desde" y "hasta" inclusive, en
+// hora local; la API guarda [desde, hasta) en UTC. Por eso "hasta" se manda como la medianoche
+// del día siguiente, y al mostrarlo se le resta ese día.
+const dosDigitos = (n) => String(n).padStart(2, '0');
+
+// "2026-10-20" → ISO UTC de la medianoche local de ese día (o del siguiente si fin = true).
+export function diaAIso(yyyyMmDd, { fin = false } = {}) {
+  if (!yyyyMmDd) return null;
+  const [a, m, d] = yyyyMmDd.split('-').map(Number);
+  return new Date(a, m - 1, d + (fin ? 1 : 0)).toISOString();
+}
+
+// Inverso de diaAIso: ISO de la API → "yyyy-MM-dd" para un <input type="date">.
+export function isoADia(iso, { fin = false } = {}) {
+  if (!iso) return '';
+  const f = new Date(iso);
+  if (fin) f.setDate(f.getDate() - 1);
+  return `${f.getFullYear()}-${dosDigitos(f.getMonth() + 1)}-${dosDigitos(f.getDate())}`;
+}

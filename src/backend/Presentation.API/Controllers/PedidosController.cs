@@ -44,7 +44,8 @@ namespace Presentation.API.Controllers
                 form.DireccionTexto,
                 form.Latitud,
                 form.Longitud,
-                Telefonos.NormalizarVenezolano(form.Telefono)!), new ArchivoSubido(contenido, captura.FileName), ct);
+                Telefonos.NormalizarVenezolano(form.Telefono)!,
+                form.CodigoCupon), new ArchivoSubido(contenido, captura.FileName), ct);
 
             if (resultado.Error is not null)
             {
@@ -52,6 +53,19 @@ namespace Presentation.API.Controllers
             }
             var pedido = await repositorio.ObtenerDetalleAsync(resultado.PedidoId!.Value, ct);
             return CreatedAtAction(nameof(Obtener), new { id = pedido!.Id }, PedidoResponse.De(pedido));
+        }
+
+        // Checkout: cuánto pagará con las ofertas vigentes y, si escribió uno, con el cupón. Si el
+        // cupón no aplica responde 400 con el motivo. No reserva stock ni consume el cupón.
+        [HttpPost("cotizar")]
+        [Authorize(Roles = Roles.Cliente)]
+        public async Task<ActionResult<CotizacionResponse>> Cotizar(CotizarPedidoRequest req, CancellationToken ct)
+        {
+            var resultado = await pedidos.CotizarAsync(User.GetUsuarioId(),
+                req.Items.Select(i => new ItemNuevoPedido(i.ProductoId, i.Cantidad)).ToList(), req.CodigoCupon, ct);
+            return resultado.Cotizacion is { } cotizacion
+                ? CotizacionResponse.De(cotizacion)
+                : Error(new ResultadoPedido(null, resultado.Error, resultado.Mensaje));
         }
 
         // Mis pedidos: estado de cada uno e historial completo.

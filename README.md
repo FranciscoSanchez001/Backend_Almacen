@@ -35,17 +35,18 @@ auditoría e indicadores de negocio.
 
 1. [Información académica](#1-información-académica)
 2. [Descripción general](#2-descripción-general)
-3. [Componentes del repositorio](#3-componentes-del-repositorio)
-4. [Arquitectura del sistema](#4-arquitectura-del-sistema)
-5. [Stack tecnológico](#5-stack-tecnológico)
-6. [Requisitos previos](#6-requisitos-previos)
-7. [Puesta en marcha con Docker](#7-puesta-en-marcha-con-docker)
-8. [Ejecución sin Docker](#8-ejecución-sin-docker)
-9. [Credenciales de prueba](#9-credenciales-de-prueba)
-10. [Pruebas automatizadas](#10-pruebas-automatizadas)
-11. [Base de datos](#11-base-de-datos)
-12. [Estructura del repositorio](#12-estructura-del-repositorio)
-13. [Documentación](#13-documentación)
+3. [Capturas de pantalla](#3-capturas-de-pantalla)
+4. [Componentes del repositorio](#4-componentes-del-repositorio)
+5. [Arquitectura del sistema](#5-arquitectura-del-sistema)
+6. [Stack tecnológico](#6-stack-tecnológico)
+7. [Requisitos previos](#7-requisitos-previos)
+8. [Puesta en marcha con Docker](#8-puesta-en-marcha-con-docker)
+9. [Ejecución sin Docker](#9-ejecución-sin-docker)
+10. [Credenciales de prueba](#10-credenciales-de-prueba)
+11. [Pruebas automatizadas](#11-pruebas-automatizadas)
+12. [Base de datos](#12-base-de-datos)
+13. [Estructura del repositorio](#13-estructura-del-repositorio)
+14. [Documentación](#14-documentación)
 
 ---
 
@@ -79,8 +80,10 @@ El sistema permite a los clientes de un supermercado comprar en línea y al pers
 - Pedidos con pago por transferencia, pago móvil o Binance y comprobante adjunto.
 - Inventario con reserva de stock al crear el pedido y liberación automática si se rechaza o expira.
 - Aprobación de pedidos por el área de ventas con asignación de repartidor.
+- Área del repartidor, pensada para el celular: sus entregas con dirección, navegación (Google Maps o Waze), llamada o WhatsApp al cliente, y los botones "Salí a entregar" y "Marcar entregado".
 - Seguimiento de la entrega y notificaciones al cliente por WhatsApp en cada cambio de estado.
-- Auditoría de cambios, dashboard de indicadores (KPIs) e informe descargable en Excel.
+- Auditoría de cambios y dashboard de indicadores (KPIs) que incluye el comportamiento de los visitantes (búsquedas, embudo de compra, carrito), con informe descargable en **Excel** y en **PDF**.
+- Imágenes de demostración en todos los productos sembrados (fotos libres de Wikimedia Commons, ver [`docs/CREDITOS_IMAGENES.md`](docs/CREDITOS_IMAGENES.md)).
 
 **Perfiles de usuario**
 
@@ -104,7 +107,51 @@ El detalle de las reglas de negocio está en [`docs/REGLAS_NEGOCIO.md`](docs/REG
 
 ---
 
-## 3. Componentes del repositorio
+## 3. Capturas de pantalla
+
+Capturas tomadas con la aplicación corriendo en Docker (`docker compose up -d --build`) y los datos de demostración. Están en [`docs/capturas/`](docs/capturas/).
+
+### Catálogo de productos (cliente)
+
+![Catálogo de productos](docs/capturas/catalogo.png)
+
+Tienda pública en `/`. Cada producto se muestra en una tarjeta del mismo tamaño, con su foto, categoría, unidad de venta y precio en dólares y en bolívares según la tasa del día. Arriba están el buscador y los filtros por categoría y ofertas. El botón **Agregar** se convierte en un selector de cantidad cuando el producto ya está en el carrito.
+
+<p align="center"><img src="docs/capturas/catalogo_movil.png" alt="Catálogo en el celular" width="280"></p>
+
+En el celular el catálogo pasa a dos columnas; las tarjetas e imágenes se ajustan al ancho de la pantalla sin desbordarse.
+
+### Carrito con compras
+
+![Carrito con productos](docs/capturas/carrito.png)
+
+El carrito se abre como panel lateral desde el botón del total. Lista cada producto con su foto, precio unitario, cantidad editable y subtotal, permite quitar productos y muestra el subtotal de la compra. **Ir a pagar** lleva al checkout, donde el cliente inicia sesión con Google, elige la zona, escribe la dirección con un punto de referencia (obligatorios), el teléfono, el método de pago y adjunta el comprobante.
+
+### Dashboard de KPIs (administrador)
+
+![Dashboard de KPIs](docs/capturas/dashboard_kpi.png)
+
+Pantalla principal del gerente (`/admin`). Arriba muestra los avisos del día (pedidos por revisar, productos agotados y bajo el mínimo, avisos sin leer) y el filtro de período: hoy, esta semana, este mes o un rango personalizado. Los botones **Descargar Excel** y **Descargar PDF** bajan el informe del mismo período, con los mismos números de la pantalla. Debajo están los indicadores de ventas comparados con el período anterior, las ventas y el ticket promedio por día, los productos más y menos vendidos, las categorías, los métodos de pago, las horas pico, las zonas, el inventario (valorización, rotación y alertas de stock) y la operación (aprobados, rechazados, expirados, tiempos y entregas por repartidor). El menú lateral se puede ocultar con el botón ☰ para dar más espacio a los gráficos.
+
+![Comportamiento de los visitantes en el dashboard](docs/capturas/dashboard_comportamiento.png)
+
+Al final del mismo dashboard está el **comportamiento de los visitantes** de la tienda: visitas, búsquedas, porcentaje de búsquedas sin resultados, conversión, embudo de compra con el abandono entre pasos, lo más buscado, lo buscado sin resultados, productos agregados al carrito frente a vendidos, categorías visitadas y cupones. Los datos son anónimos.
+
+### Bandeja de pedidos (ventas)
+
+![Bandeja de pedidos de ventas](docs/capturas/pedidos_ventas.png)
+
+Pantalla de pedidos del área de ventas (`/panel/pedidos`). Las pestañas filtran por estado: pendiente, asignado, en camino, entregado, rechazado y expirado. Cada tarjeta muestra el número de pedido, el cliente, la fecha, la zona, el método de pago, la cantidad de productos, el repartidor y el total en USD y Bs. Al abrir un pedido pendiente, ventas revisa el comprobante y lo aprueba asignando un repartidor, o lo rechaza indicando el motivo.
+
+### Entregas (repartidor)
+
+<p align="center"><img src="docs/capturas/repartidor.png" alt="Área del repartidor en el celular" width="300"></p>
+
+Área del repartidor (`/repartidor`), pensada para el celular. Muestra los pedidos que tiene asignados, con la dirección y la zona, el cliente y el total ya pagado. Puede abrir la ruta en **Google Maps** o **Waze**, **llamar** o escribir por **WhatsApp** al cliente y ver los productos. Un solo botón grande indica el siguiente paso: **Salí a entregar** (pasa el pedido a "en camino") y **Marcar entregado**, que pide confirmación. En cada paso se notifica al cliente por WhatsApp. La pestaña **Historial** lista sus entregas ya hechas.
+
+---
+
+## 4. Componentes del repositorio
 
 Cada componente tiene su propia documentación detallada:
 
@@ -114,12 +161,12 @@ Cada componente tiene su propia documentación detallada:
 | **Frontend** | [`src/frontend/`](src/frontend) | SPA en React 19, Vite y Tailwind CSS: tienda, panel de ventas, administración y entregas | [README del frontend](src/frontend/README.md) |
 | **Pruebas** | [`tests/`](tests) y `src/frontend/src/` | Backend: pruebas unitarias, de arquitectura y de integración con xUnit. Frontend: pruebas de servicios, componentes y pantallas con Vitest | [README de las pruebas](tests/README.md) |
 | **Base de datos** | [`database/`](database) | Script SQL del esquema, volcado con datos sembrados y consultas de verificación | [Evidencias de base de datos](docs/evidencias/base-datos.md) |
-| **Documentación** | [`docs/`](docs) | Arquitectura, modelo de datos, API, reglas de negocio, gestión del proyecto y evidencias | [Sección 13](#13-documentación) |
-| **Orquestación** | [`docker-compose.yml`](docker-compose.yml) | Despliegue local de la aplicación completa | [Sección 7](#7-puesta-en-marcha-con-docker) |
+| **Documentación** | [`docs/`](docs) | Arquitectura, modelo de datos, API, reglas de negocio, gestión del proyecto y evidencias | [Sección 14](#14-documentación) |
+| **Orquestación** | [`docker-compose.yml`](docker-compose.yml) | Despliegue local de la aplicación completa | [Sección 8](#8-puesta-en-marcha-con-docker) |
 
 ---
 
-## 4. Arquitectura del sistema
+## 5. Arquitectura del sistema
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -156,12 +203,13 @@ Cada componente tiene su propia documentación detallada:
 
 ---
 
-## 5. Stack tecnológico
+## 6. Stack tecnológico
 
 | Capa | Tecnologías |
 | :--- | :--- |
 | Backend | .NET 10 (C# 14), ASP.NET Core Web API, FluentValidation |
 | Persistencia | Entity Framework Core 10, Npgsql, PostgreSQL 16 |
+| Reportes | ClosedXML (Excel), QuestPDF (PDF) |
 | Seguridad | JWT Bearer (HMAC-SHA256), refresh tokens, BCrypt, Google Sign-In |
 | Frontend | React 19, Vite 6, Tailwind CSS 4, React Router 6, Recharts |
 | Pruebas | xUnit, Moq, NetArchTest.Rules, Testcontainers, Postman, Vitest, React Testing Library |
@@ -171,7 +219,7 @@ Las versiones exactas de cada paquete están en el [stack del backend](src/backe
 
 ---
 
-## 6. Requisitos previos
+## 7. Requisitos previos
 
 | Herramienta | Versión | Necesaria para |
 | :--- | :---: | :--- |
@@ -183,7 +231,7 @@ Las versiones exactas de cada paquete están en el [stack del backend](src/backe
 
 ---
 
-## 7. Puesta en marcha con Docker
+## 8. Puesta en marcha con Docker
 
 ```bash
 git clone https://github.com/FranciscoSanchez001/Backend_Almacen.git
@@ -216,7 +264,7 @@ El personal accede por <http://localhost:8080/internal-login>.
 
 ---
 
-## 8. Ejecución sin Docker
+## 9. Ejecución sin Docker
 
 Para desarrollar sobre cada componente de forma independiente:
 
@@ -244,7 +292,7 @@ npm run dev
 
 ---
 
-## 9. Credenciales de prueba
+## 10. Credenciales de prueba
 
 | Rol | Correo | Contraseña | Disponible |
 | :--- | :--- | :--- | :--- |
@@ -264,7 +312,7 @@ Los clientes se autentican con su cuenta de Google. Ver [Datos semilla y credenc
 
 ---
 
-## 10. Pruebas automatizadas
+## 11. Pruebas automatizadas
 
 | Proyecto | Tipo | Herramientas | Pruebas |
 | :--- | :--- | :--- | :---: |
@@ -286,7 +334,7 @@ Además, las colecciones de [Postman](docs/postman) cubren los endpoints de la A
 
 ---
 
-## 11. Base de datos
+## 12. Base de datos
 
 El esquema se define con EF Core Code-First (Fluent API) y se crea mediante migraciones. La carpeta [`database/`](database) contiene artefactos generados a partir de ellas:
 
@@ -300,7 +348,7 @@ El modelo entidad-relación completo está en [`docs/MODELO_DATOS.md`](docs/MODE
 
 ---
 
-## 12. Estructura del repositorio
+## 13. Estructura del repositorio
 
 ```
 Backend_Almacen/
@@ -330,7 +378,7 @@ Backend_Almacen/
 
 ---
 
-## 13. Documentación
+## 14. Documentación
 
 **Documentación por componente**
 
@@ -349,6 +397,7 @@ Backend_Almacen/
 | [`docs/API.md`](docs/API.md) | Endpoints, roles requeridos, códigos de respuesta y ejemplos |
 | [`docs/REGLAS_NEGOCIO.md`](docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
 | [`docs/GESTION_PROYECTO.md`](docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
+| [`docs/CREDITOS_IMAGENES.md`](docs/CREDITOS_IMAGENES.md) | Autores y licencias de las imágenes de demostración de los productos |
 
 **Pruebas y evidencias**
 

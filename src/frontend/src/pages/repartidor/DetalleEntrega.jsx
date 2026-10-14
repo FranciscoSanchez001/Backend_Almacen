@@ -96,6 +96,7 @@ export default function DetalleEntrega({ pedidoId, alCerrar, alActualizar }) {
             <p className="mt-1">{pedido.zona.nombre} · {pedido.direccionTexto}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <a href={`tel:${pedido.telefonoContacto}`} className={claseBoton.secundario}>Llamar al cliente</a>
+              <a href={`https://wa.me/${pedido.telefonoContacto.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className={claseBoton.secundario}>WhatsApp <Icono nombre="enlace-externo" /></a>
               <a href={mapas.google} target="_blank" rel="noreferrer" className={claseBoton.secundario}>Google Maps <Icono nombre="enlace-externo" /></a>
               <a href={mapas.waze} target="_blank" rel="noreferrer" className={claseBoton.secundario}>Waze <Icono nombre="enlace-externo" /></a>
             </div>

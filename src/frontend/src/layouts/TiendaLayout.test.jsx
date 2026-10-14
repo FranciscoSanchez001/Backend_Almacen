@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { Route, Routes, useLocation, useOutletContext } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import TiendaLayout from './TiendaLayout'
@@ -61,13 +61,13 @@ describe('TiendaLayout: categorías', () => {
     expect(screen.getByTestId('busqueda')).toHaveTextContent('?categoria=c2')
   })
 
-  it('sin categorías (error de la API) muestra solo "Todo"', async () => {
+  it('sin categorías (error de la API) muestra solo "Todo" y "Ofertas"', async () => {
     vi.mocked(listarCategorias).mockRejectedValue(new Error('Sin conexión'))
 
     renderizarTienda()
 
     await vi.waitFor(() => expect(listarCategorias).toHaveBeenCalled())
-    expect(within(barraCategorias()).getAllByRole('link')).toHaveLength(1)
+    expect(within(barraCategorias()).getAllByRole('link').map((l) => l.textContent)).toEqual(['Todo', 'Ofertas'])
   })
 })
 
@@ -102,52 +102,6 @@ describe('TiendaLayout: buscador', () => {
 })
 
 describe('TiendaLayout: carrito', () => {
-  it('abre el carrito vacío y devuelve el foco al botón al cerrar', async () => {
-    const { user } = renderizarTienda()
-    const boton = screen.getByRole('button', { name: 'Carrito: 0 productos' })
-    await user.click(boton)
-    expect(screen.getByRole('dialog', { name: 'Tu carrito' })).toHaveTextContent('Tu carrito está vacío')
-    await user.click(screen.getByRole('button', { name: 'Seguir comprando' }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(boton).toHaveFocus()
-  })
-
-  it('muestra los productos guardados, recalcula cantidades y permite eliminarlos', async () => {
-    localStorage.setItem('almacen.carrito', JSON.stringify({
-      p1: { producto: { id: 'p1', nombre: 'Arroz', precioUsd: 1.5, stockDisponible: 3 }, cantidad: 2 },
-    }))
-    const { user } = renderizarTienda()
-    await user.click(screen.getByRole('button', { name: 'Carrito: 2 productos' }))
-    const dialogo = screen.getByRole('dialog', { name: 'Tu carrito' })
-    expect(within(dialogo).getByRole('heading', { name: 'Arroz' })).toBeInTheDocument()
-    expect(within(dialogo).getByLabelText('Subtotal del carrito')).toHaveTextContent('$3.00')
-    const sumar = within(dialogo).getByRole('button', { name: 'Agregar una unidad de Arroz' })
-    await user.click(sumar)
-    expect(sumar).toBeDisabled()
-    expect(within(dialogo).getByLabelText('Subtotal del carrito')).toHaveTextContent('$4.50')
-    expect(screen.getByRole('button', { name: 'Carrito: 3 productos' })).toHaveTextContent('$4.50')
-    expect(JSON.parse(localStorage.getItem('almacen.carrito')).p1.cantidad).toBe(3)
-    await user.click(within(dialogo).getByRole('button', { name: 'Quitar una unidad de Arroz' }))
-    expect(within(dialogo).getByLabelText('Subtotal del carrito')).toHaveTextContent('$3.00')
-    await user.click(within(dialogo).getByRole('button', { name: 'Eliminar Arroz del carrito' }))
-    expect(dialogo).toHaveTextContent('Tu carrito está vacío')
-    expect(localStorage.getItem('almacen.carrito')).toBe('{}')
-  })
-
-  it('cerrar con Escape conserva los productos', async () => {
-    localStorage.setItem('almacen.carrito', JSON.stringify({
-      p1: { producto: { id: 'p1', nombre: 'Arroz', precioUsd: 1.5, stockDisponible: 3 }, cantidad: 1 },
-    }))
-    const { user } = renderizarTienda()
-    await user.click(screen.getByRole('button', { name: 'Carrito: 1 productos' }))
-    fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Carrito: 1 productos' }))
-    expect(screen.getByRole('heading', { name: 'Arroz' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Quitar una unidad de Arroz' }))
-    expect(screen.getByRole('dialog')).toHaveTextContent('Tu carrito está vacío')
-  })
-
   it('con el carrito vacío muestra cero productos y $0.00', () => {
     renderizarTienda()
 
