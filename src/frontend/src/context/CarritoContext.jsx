@@ -37,6 +37,16 @@ export function CarritoProvider({ children }) {
       lineas: lista,
       cantidadDe: (id) => lineas[id]?.cantidad ?? 0,
       cambiarCantidad,
+      retirarComprados: (compradas) => setLineas(actual => {
+        const siguiente = { ...actual }
+        for (const { producto, cantidad } of compradas) {
+          const linea = siguiente[producto.id]
+          if (!linea) continue
+          if (linea.cantidad <= cantidad) delete siguiente[producto.id]
+          else siguiente[producto.id] = { ...linea, cantidad: linea.cantidad - cantidad }
+        }
+        return siguiente
+      }),
       totalUnidades: lista.reduce((suma, l) => suma + l.cantidad, 0),
       totalUsd: lista.reduce((suma, l) => suma + l.cantidad * l.producto.precioUsd, 0),
     }

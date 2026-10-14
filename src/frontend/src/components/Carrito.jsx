@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCarrito } from '../context/CarritoContext'
 import { formatoUsd } from '../utils/formato'
 import Icono from './Icono'
 
 export default function Carrito({ alCerrar }) {
   const dialogo = useRef(null)
+  const navegar = useNavigate()
   const { lineas, cambiarCantidad, totalUnidades, totalUsd } = useCarrito()
 
   useEffect(() => {
@@ -70,7 +72,9 @@ export default function Carrito({ alCerrar }) {
           <p className="text-sm text-slate-500">Subtotal · {totalUnidades} {totalUnidades === 1 ? 'unidad' : 'unidades'}</p>
           <p className="text-xl font-bold" aria-label="Subtotal del carrito">{formatoUsd(totalUsd)}</p>
         </div>}
-        <button type="button" onClick={alCerrar} className="w-full rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">Seguir comprando</button>
+        {lineas.length > 0 && <button type="button" onClick={() => { alCerrar(); navegar('/checkout') }}
+          className="mb-2 w-full rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">Finalizar compra</button>}
+        <button type="button" onClick={alCerrar} className="w-full rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold hover:bg-slate-100">Seguir comprando</button>
       </div>
     </dialog>
   )

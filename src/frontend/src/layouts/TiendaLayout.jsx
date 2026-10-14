@@ -81,6 +81,7 @@ export default function TiendaLayout() {
             {usuario ? (
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="max-w-32 truncate" title={usuario.email}>{usuario.nombre}</span>
+                {usuario.rol === 'cliente' && <Link to="/mis-pedidos" className="text-emerald-700 dark:text-emerald-300">Mis pedidos</Link>}
                 {INICIO_POR_ROL[usuario.rol] && <Link to={INICIO_POR_ROL[usuario.rol]} className="text-emerald-700 dark:text-emerald-300">Mi panel</Link>}
                 <button type="button" disabled={saliendo}
                   onClick={async () => { setSaliendo(true); try { await logout() } finally { setSaliendo(false) } }}

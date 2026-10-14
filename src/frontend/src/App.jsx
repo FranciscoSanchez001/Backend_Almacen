@@ -20,6 +20,8 @@ const Personal = lazy(() => import('./pages/admin/Personal'))
 const Auditoria = lazy(() => import('./pages/admin/Auditoria'))
 const Configuracion = lazy(() => import('./pages/admin/Configuracion'))
 const RepartidorInicio = lazy(() => import('./pages/repartidor/Inicio'))
+const Checkout = lazy(() => import('./pages/tienda/Checkout'))
+const MisPedidos = lazy(() => import('./pages/tienda/MisPedidos'))
 
 // Las 4 áreas del sistema (ver especificación). Cada área del personal está
 // protegida por rol (RutaProtegida); la API vuelve a validar el rol en cada endpoint.
@@ -31,6 +33,8 @@ function App() {
         {/* Tienda (cliente) → / */}
         <Route element={<TiendaLayout />}>
           <Route index element={<Catalogo />} />
+          <Route path="checkout" element={<Checkout />} />
+          <Route path="mis-pedidos" element={<MisPedidos />} />
         </Route>
 
         {/* Panel del personal: ventas → /panel, gerente → /panel y /admin */}

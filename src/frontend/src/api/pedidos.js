@@ -1,6 +1,21 @@
 // Pedidos: bandeja del personal, aprobar/rechazar y seguimiento.
 import { pedir } from './cliente';
 
+export function crearPedido({ lineas, metodoPago, referenciaPago, zonaId, direccionTexto, telefono, captura }) {
+  const formulario = new FormData();
+  lineas.forEach(({ producto, cantidad }, indice) => {
+    formulario.append(`items[${indice}].productoId`, producto.id);
+    formulario.append(`items[${indice}].cantidad`, String(cantidad));
+  });
+  for (const [campo, valor] of Object.entries({ metodoPago, referenciaPago, zonaId, direccionTexto, telefono })) {
+    formulario.append(campo, valor.trim());
+  }
+  formulario.append('captura', captura);
+  return pedir('/pedidos', { metodo: 'POST', cuerpo: formulario });
+}
+
+export const listarMisPedidos = ({ pagina = 1, tamano = 20 } = {}) => pedir('/pedidos/mios', { consulta: { pagina, tamano } });
+
 // estado: pendiente | asignado | en_camino | entregado | rechazado | expirado.
 // Con estado=pendiente la API ordena primero los más cerca de vencer.
 export function listarPedidos({ estado, zonaId, pagina = 1, tamano = 20 } = {}) {

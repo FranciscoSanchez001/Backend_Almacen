@@ -10,3 +10,7 @@ export function listarCatalogo({ q, categoriaId, pagina = 1, tamano = 24 } = {})
 export function listarCategorias() {
   return pedir('/categorias');
 }
+
+export const obtenerProductoCatalogo = (id) => pedir(`/catalogo/${id}`);
+export const obtenerDatosPago = () => pedir('/catalogo/pago');
+export const listarZonasEntrega = () => pedir('/catalogo/zonas');

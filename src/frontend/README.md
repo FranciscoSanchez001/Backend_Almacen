@@ -92,7 +92,7 @@ Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma.
 
 | Área | Ruta | Perfil | Estado |
 | :--- | :--- | :--- | :--- |
-| Tienda | `/` | Cliente (público) | Catálogo, carrito y acceso de clientes con Google; checkout en desarrollo |
+| Tienda | `/`, `/checkout`, `/mis-pedidos` | Cliente | Catálogo, carrito, acceso con Google, checkout con comprobante e historial de pedidos |
 | Panel de ventas | `/panel` | `ventas`, `superadmin` | Disponible |
 | Administración | `/admin` | `superadmin` | Disponible |
 | Entregas | `/repartidor` | `repartidor`, `superadmin` | En desarrollo (maqueta de las secciones previstas) |
@@ -323,6 +323,18 @@ primera visita. La sesión se conserva al recargar y **Cerrar sesión** revoca e
 token. Configura `VITE_GOOGLE_CLIENT_ID` en `.env` o `.env.local` con el mismo valor de
 `Google:ClientId` del backend. Si falta la configuración o falla la carga de Google,
 el diálogo muestra un mensaje; los errores de conexión permiten reintentar.
+
+Desde el carrito, **Finalizar compra** abre `/checkout`. El cliente inicia sesión,
+elige una zona de entrega, indica su dirección y teléfono, y paga con uno de los
+métodos configurados por el administrador. El checkout consulta precios y stock
+actuales y muestra el importe en Bs para transferencia/pago móvil o USDT para
+Binance. Se adjunta un comprobante JPG, PNG o WEBP de hasta 5 MB y la referencia.
+**Confirmar pedido** envía el formulario a `POST /pedidos`; solo después de la
+respuesta se retiran del carrito las unidades compradas y se muestra el número del pedido,
+pendiente de revisión. Se conservan los productos añadidos durante el envío.
+Los errores conservan el carrito y los datos ingresados. `/mis-pedidos` permite
+consultar el historial paginado y actualizar sus estados. Si se pierde la respuesta
+del envío, se pide revisar ese historial antes de intentar crear otro pedido.
 
 ---
 
