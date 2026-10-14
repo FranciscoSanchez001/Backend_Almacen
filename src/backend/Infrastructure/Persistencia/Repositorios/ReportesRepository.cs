@@ -56,7 +56,8 @@ namespace Infrastructure.Persistencia.Repositorios
             db.Productos.AsNoTracking()
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Nombre)
-                .Select(p => new ProductoStock(p.Id, p.Nombre, p.Categoria.Nombre, p.StockDisponible, p.StockReservado))
+                .Select(p => new ProductoStock(p.Id, p.Nombre, p.Categoria.Nombre, p.StockDisponible, p.StockReservado,
+                    p.StockMaximo))
                 .ToListAsync(ct);
 
         // Los movimientos en el mismo instante que `momento` ya son del período, así que se toma

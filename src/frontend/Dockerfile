@@ -4,23 +4,24 @@
 # ============================================================================
 
 # =========================================================
-# ETAPA DE COMPILACIÓN (Node.js 20 LTS)
+# ETAPA DE COMPILACIÓN (Node.js 24 LTS)
 # =========================================================
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 
 # 1) Copiar solo los manifiestos e instalar dependencias.
-#    (Se cachea: npm install solo se repite si cambian package*.json)
+#    (Se cachea: npm ci solo se repite si cambian package*.json). npm ci instala exactamente
+#    las versiones de package-lock.json, así la imagen es reproducible.
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # 2) Copiar el resto del código fuente.
 COPY . .
 
 # 3) Dirección de la API. Vite "hornea" las variables VITE_* dentro del
 #    JavaScript en tiempo de compilación, así que se definen ANTES del build.
-#    El navegador (que corre en tu máquina) llega al backend por localhost:5085.
-ARG VITE_API_URL=http://localhost:5085
+#    El navegador (que corre en tu máquina) llega al backend por localhost:5000.
+ARG VITE_API_URL=http://localhost:5000
 ARG VITE_GOOGLE_CLIENT_ID=
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID

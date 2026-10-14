@@ -15,7 +15,7 @@ auditoría e indicadores de negocio.
 <br><br>
 
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
@@ -26,6 +26,8 @@ auditoría e indicadores de negocio.
 ![Errores](https://img.shields.io/badge/Errores-RFC_7807-informational?style=flat-square)
 ![Pruebas](https://img.shields.io/badge/Pruebas-505-success?style=flat-square)
 ![Metodología](https://img.shields.io/badge/Metodología-Scrum-informational?style=flat-square)
+
+[![CI Pipeline](https://github.com/FranciscoSanchez001/Backend_Almacen/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/FranciscoSanchez001/Backend_Almacen/actions/workflows/ci.yml)
 
 </div>
 
@@ -131,7 +133,7 @@ El carrito se abre como panel lateral desde el botón del total. Lista cada prod
 
 ![Dashboard de KPIs](docs/capturas/dashboard_kpi.png)
 
-Pantalla principal del gerente (`/admin`). Arriba muestra los avisos del día (pedidos por revisar, productos agotados y bajo el mínimo, avisos sin leer) y el filtro de período: hoy, esta semana, este mes o un rango personalizado. Los botones **Descargar Excel** y **Descargar PDF** bajan el informe del mismo período, con los mismos números de la pantalla. Debajo están los indicadores de ventas comparados con el período anterior, las ventas y el ticket promedio por día, los productos más y menos vendidos, las categorías, los métodos de pago, las horas pico, las zonas, el inventario (valorización, rotación y alertas de stock) y la operación (aprobados, rechazados, expirados, tiempos y entregas por repartidor). El menú lateral se puede ocultar con el botón ☰ para dar más espacio a los gráficos.
+Pantalla principal del gerente (`/admin`). Arriba muestra los avisos del día (pedidos por revisar, productos agotados y bajo el mínimo, avisos sin leer) y el filtro de período: hoy, esta semana, este mes o un rango personalizado. Los botones **Descargar Excel** y **Descargar PDF** bajan el informe del mismo período, con los mismos números de la pantalla. Debajo están los indicadores de ventas comparados con el período anterior, las ventas y el ticket promedio por día, los productos más y menos vendidos, las categorías, los métodos de pago, las horas pico, las zonas, el inventario (valorización, **ocupación del almacén** global, por categoría y por producto con semáforo baja / óptima / alta / saturada, rotación y alertas de stock) y la operación (aprobados, rechazados, expirados, tiempos y entregas por repartidor). El menú lateral se puede ocultar con el botón ☰ para dar más espacio a los gráficos.
 
 ![Comportamiento de los visitantes en el dashboard](docs/capturas/dashboard_comportamiento.png)
 
@@ -193,7 +195,7 @@ Cada componente tiene su propia documentación detallada:
 └──────────────────────────┬─────────────────────────────┘
                            │
                   ┌────────▼────────┐
-                  │  PostgreSQL 16  │
+                  │  PostgreSQL 15  │
                   └─────────────────┘
 ```
 
@@ -208,7 +210,7 @@ Cada componente tiene su propia documentación detallada:
 | Capa | Tecnologías |
 | :--- | :--- |
 | Backend | .NET 10 (C# 14), ASP.NET Core Web API, FluentValidation |
-| Persistencia | Entity Framework Core 10, Npgsql, PostgreSQL 16 |
+| Persistencia | Entity Framework Core 10, Npgsql, PostgreSQL 15 |
 | Reportes | ClosedXML (Excel), QuestPDF (PDF) |
 | Seguridad | JWT Bearer (HMAC-SHA256), refresh tokens, BCrypt, Google Sign-In |
 | Frontend | React 19, Vite 6, Tailwind CSS 4, React Router 6, Recharts |
@@ -226,7 +228,7 @@ Las versiones exactas de cada paquete están en el [stack del backend](src/backe
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | — | Levantar la aplicación completa (recomendado) y ejecutar las pruebas de integración |
 | [Git](https://git-scm.com/) | — | Clonar el repositorio |
 | [SDK de .NET](https://dotnet.microsoft.com/download) | 10 | Ejecutar el backend y las pruebas sin Docker |
-| [Node.js](https://nodejs.org/) | 20 LTS o superior | Ejecutar el frontend sin Docker |
+| [Node.js](https://nodejs.org/) | 24 LTS | Ejecutar el frontend sin Docker |
 | [PostgreSQL](https://www.postgresql.org/download/) | 16 | Solo si la base de datos no se ejecuta en Docker |
 
 ---
@@ -244,13 +246,17 @@ El [`docker-compose.yml`](docker-compose.yml) define los siguientes servicios, q
 
 | Servicio | Contenedor | Descripción | Dirección |
 | :--- | :--- | :--- | :--- |
-| `db` | `postgres_db` | PostgreSQL 16 con verificación de estado | `localhost:5432` |
+| `db` | `postgres_db` | PostgreSQL 15 con verificación de estado | `localhost:5432` |
 | `migraciones` | `almacen_migraciones` | Aplica las migraciones de EF Core y finaliza | — |
-| `api` | `almacen_api` | API REST | <http://localhost:5085> |
+| `api` | `almacen_api` | API REST con verificación de estado (`/health`) | <http://localhost:5000> |
 | `spa` | `almacen_spa` | Frontend servido por Nginx | <http://localhost:8080> |
 | `postgrest` | `postgrest_api` | API REST generada automáticamente sobre la base de datos | <http://localhost:3000> |
 
-`api` y `postgrest` esperan a que `migraciones` finalice correctamente, y `migraciones` espera a que `db` esté disponible. Es normal que `almacen_migraciones` aparezca con estado `Exited (0)`.
+**Orden de arranque** (`depends_on` con condiciones): `db` debe estar *healthy* (`pg_isready`) → `migraciones` debe terminar correctamente → `api` debe estar *healthy* (`GET /health`, que comprueba la conexión con PostgreSQL) → arranca `spa`. Es normal que `almacen_migraciones` aparezca con estado `Exited (0)`. Con `docker ps`, `postgres_db`, `almacen_api` y `almacen_spa` deben mostrar `(healthy)`.
+
+**Redes:** `backend` une `db`, `migraciones`, `api` y `postgrest`; `frontend` une `api` y `spa`. La SPA no tiene acceso a la base de datos: solo la API participa de las dos redes.
+
+**Volúmenes persistentes:** `postgres15_data` guarda los datos de PostgreSQL y `capturas_pago` las capturas de pago subidas por los clientes. Ambos sobreviven a `docker compose down`.
 
 El personal accede por <http://localhost:8080/internal-login>.
 
@@ -261,6 +267,25 @@ El personal accede por <http://localhost:8080/internal-login>.
 | `docker compose logs -f api` | Ver los registros de la API |
 | `docker compose down` | Detener y eliminar los contenedores (conserva los datos) |
 | `docker compose down -v` | Detener y eliminar también el volumen de la base de datos |
+
+**Imágenes multietapa**
+
+Los dos Dockerfiles separan la compilación de la ejecución: el SDK de .NET y Node.js solo existen en la etapa `build` y se descartan; la imagen final lleva únicamente el runtime y los archivos publicados.
+
+| Imagen | Etapa de compilación | Imagen final | Tamaño real | Comprimida |
+| :--- | :--- | :--- | ---: | ---: |
+| API ([`Dockerfile`](src/backend/Presentation.API/Dockerfile)) | `dotnet/sdk:10.0` | `dotnet/aspnet:10.0-alpine` | 155 MB | ~70 MB |
+| SPA ([`Dockerfile`](src/frontend/Dockerfile)) | `node:24-alpine` | `nginx:alpine` | 65 MB | ~25 MB |
+
+Optimizaciones de la imagen de la API:
+- **Alpine** en lugar de Ubuntu: de 243 MB a 155 MB (−36 %).
+- **Publicación para `linux-musl`**: QuestPDF trae librerías nativas para todas las plataformas; al indicar la plataforma solo se copian las de Alpine.
+- **Una sola compilación** (`dotnet publish` sin un `dotnet build` previo) y solo las traducciones en español de las librerías (`SatelliteResourceLanguages=es`).
+- **Usuario sin privilegios** (`app`) en lugar de root.
+
+> **Sobre el límite de 120 MB en la API.** Solo la imagen base `aspnet:10.0-alpine` ocupa unos 113 MB (el runtime de .NET son 105 MB), y la aplicación suma 39 MB por QuestPDF (motor Skia), ClosedXML/OpenXML y EF Core. La única forma de bajar de 120 MB es recortar el runtime (*trimming*, self-contained sobre `runtime-deps`): se probó y la imagen baja a 90 MB, pero la API **falla al arrancar**, porque ASP.NET Core MVC y EF Core no son compatibles con el recorte ([documentación de Microsoft](https://aka.ms/aspnet/trimming)). Se priorizó una imagen estable; comprimida (lo que se descarga de un registro) pesa ~70 MB.
+>
+> Con el almacén de imágenes de containerd de Docker Desktop, `docker images` muestra una cifra mayor (≈243 MB) porque suma las capas comprimidas y descomprimidas.
 
 ---
 
@@ -361,7 +386,7 @@ Backend_Almacen/
 │   │   └── Backend_Almacen.slnx    Solución de .NET (incluye los proyectos de tests/)
 │   └── frontend/                   SPA en React                            -> README propio
 │       ├── src/                    Páginas, layouts, componentes, contextos y cliente HTTP
-│       ├── Dockerfile              Imagen multietapa (Node.js 20 + Nginx)
+│       ├── Dockerfile              Imagen multietapa (Node.js 24 + Nginx)
 │       └── nginx.conf              Servidor web con fallback de rutas
 ├── tests/                          Pruebas automatizadas                   -> README propio
 │   ├── UnitTests/                  xUnit + Moq
@@ -410,6 +435,7 @@ Backend_Almacen/
 | [`docs/evidencias/seguridad-fase3.md`](docs/evidencias/seguridad-fase3.md) | JWT, RBAC y FluentValidation |
 | [`docs/evidencias/errores-rfc7807.md`](docs/evidencias/errores-rfc7807.md) | Respuestas de error en formato Problem Details |
 | [`docs/evidencias/base-datos.md`](docs/evidencias/base-datos.md) | Tablas, restricciones y datos sembrados en PostgreSQL |
+| [`docs/evidencias/docker-cicd.md`](docs/evidencias/docker-cicd.md) | Pila Docker Compose *healthy* (`docker ps`), redes, volúmenes, imágenes y pipeline CI/CD |
 
 ---
 

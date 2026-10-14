@@ -14,7 +14,7 @@ desarrolladas con xUnit sobre .NET 10.
 ![Moq](https://img.shields.io/badge/Moq-4.20.72-2E7D32?style=for-the-badge)
 ![NetArchTest](https://img.shields.io/badge/NetArchTest.Rules-1.3.2-00599C?style=for-the-badge)
 ![Testcontainers](https://img.shields.io/badge/Testcontainers-4.15.0-291A3F?style=for-the-badge)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
 ![Pruebas](https://img.shields.io/badge/Pruebas-50_Passed-success?style=flat-square)
 ![Unitarias](https://img.shields.io/badge/Unitarias-17-informational?style=flat-square)
@@ -68,7 +68,7 @@ Las pruebas del frontend no están en esta carpeta: se ubican junto al código d
 | Moq | 4.20.72 | Objetos simulados de repositorios y unidad de trabajo en las pruebas unitarias |
 | NetArchTest.Rules | 1.3.2 | Reglas sobre los ensamblados compilados en las pruebas de arquitectura |
 | Microsoft.AspNetCore.Mvc.Testing | 10.0.12 | `WebApplicationFactory`: la API completa servida en memoria |
-| Testcontainers.PostgreSql | 4.15.0 | Contenedor de PostgreSQL 16 efímero para las pruebas de integración |
+| Testcontainers.PostgreSql | 4.15.0 | Contenedor de PostgreSQL 15 efímero para las pruebas de integración |
 | coverlet.collector | 6.0.4 | Recolección de cobertura de código |
 
 ---
@@ -201,7 +201,7 @@ Las pruebas ejercitan la API de punta a punta: `Program.cs`, middleware, autenti
 
 **[`ApiFactory`](IntegrationTests/Infraestructura/ApiFactory.cs)** (`WebApplicationFactory<Program>` + `IAsyncLifetime`)
 
-1. Inicia un contenedor **PostgreSQL 16** con Testcontainers, el mismo motor que usa `docker-compose.yml`. Se necesita un PostgreSQL real porque el esquema usa enums nativos y el inventario utiliza `UPDATE` condicionales y `SELECT ... FOR UPDATE`, que una base en memoria no reproduce.
+1. Inicia un contenedor **PostgreSQL 15** con Testcontainers, el mismo motor que usa `docker-compose.yml`. Se necesita un PostgreSQL real porque el esquema usa enums nativos y el inventario utiliza `UPDATE` condicionales y `SELECT ... FOR UPDATE`, que una base en memoria no reproduce.
 2. Aplica las migraciones de EF Core antes de arrancar la API, ya que al iniciar `Program.cs` crea la fila de configuración y el superadmin inicial.
 3. Arranca la API en el entorno `Testing` con su propia cadena de conexión, clave JWT y superadmin (`admin@pruebas.local`).
 4. Elimina los servicios en segundo plano (`IHostedService`): el job de expiración de pedidos y el worker de WhatsApp, para que no modifiquen la base durante las pruebas.
@@ -272,7 +272,7 @@ Archivo [`SeguridadTests.cs`](IntegrationTests/SeguridadTests.cs) (8 pruebas). E
 | [SDK de .NET](https://dotnet.microsoft.com/download) | 10 | Todas las pruebas |
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | — | Solo las pruebas de integración; debe estar en ejecución |
 
-La primera ejecución de las pruebas de integración descarga la imagen `postgres:16` si no está disponible localmente.
+La primera ejecución de las pruebas de integración descarga la imagen `postgres:15` si no está disponible localmente.
 
 ---
 
@@ -362,7 +362,7 @@ tests/
 │   └── ArchitectureTests.csproj           xUnit + NetArchTest.Rules
 ├── IntegrationTests/
 │   ├── Infraestructura/
-│   │   ├── ApiFactory.cs                  API en memoria + PostgreSQL 16 (Testcontainers)
+│   │   ├── ApiFactory.cs                  API en memoria + PostgreSQL 15 (Testcontainers)
 │   │   └── ApiTestBase.cs                 Clientes por rol y utilidades comunes
 │   ├── AutenticacionTests.cs              4 pruebas de login, sesión y refresh tokens
 │   ├── ProductosTests.cs                  8 pruebas del ciclo de vida del producto

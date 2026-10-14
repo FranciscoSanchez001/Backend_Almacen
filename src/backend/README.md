@@ -17,7 +17,7 @@ inventario con reserva de stock, logística de entrega, notificaciones por Whats
 ![C#](https://img.shields.io/badge/C%23-14-239120?style=for-the-badge&logo=dotnet&logoColor=white)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-Web_API-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![EF Core](https://img.shields.io/badge/EF_Core-10-6C3483?style=for-the-badge&logo=dotnet&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
 ![JWT](https://img.shields.io/badge/JWT-HMAC--SHA256-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 ![Google](https://img.shields.io/badge/Google-Sign--In-4285F4?style=for-the-badge&logo=google&logoColor=white)
@@ -399,7 +399,7 @@ docker compose up -d --build
 | Servicio | Dirección |
 | :--- | :--- |
 | Frontend (React + Nginx) | <http://localhost:8080> |
-| API REST | <http://localhost:5085> |
+| API REST | <http://localhost:5000> |
 | PostgREST | <http://localhost:3000> |
 | PostgreSQL | `localhost:5432` (`midatabase`) |
 
@@ -473,7 +473,7 @@ Resultado: **13 pruebas, 0 fallos**.
 
 ### Pruebas de integración (WebApplicationFactory + Testcontainers)
 
-[`tests/IntegrationTests`](../../tests/IntegrationTests) levanta la API completa en memoria (middleware, JWT, filtros, EF Core) contra un **PostgreSQL 16 real en Docker**, con las migraciones aplicadas. No se usa el proveedor InMemory porque el esquema depende de enums nativos de PostgreSQL y de `UPDATE` condicionales y `SELECT ... FOR UPDATE`. **Requiere Docker en ejecución**.
+[`tests/IntegrationTests`](../../tests/IntegrationTests) levanta la API completa en memoria (middleware, JWT, filtros, EF Core) contra un **PostgreSQL 15 real en Docker**, con las migraciones aplicadas. No se usa el proveedor InMemory porque el esquema depende de enums nativos de PostgreSQL y de `UPDATE` condicionales y `SELECT ... FOR UPDATE`. **Requiere Docker en ejecución**.
 
 | Área | Escenarios |
 | :--- | :--- |

@@ -1,4 +1,5 @@
 using Core.Domain.Enums;
+using Core.Domain.Reglas;
 
 namespace Core.Application.Modelos
 {
@@ -56,7 +57,8 @@ namespace Core.Application.Modelos
         decimal PrecioBs);
 
     // Productos activos con su stock actual.
-    public record ProductoStock(Guid Id, string Nombre, string Categoria, int StockDisponible, int StockReservado);
+    public record ProductoStock(Guid Id, string Nombre, string Categoria, int StockDisponible, int StockReservado,
+        int StockMaximo);
 
     // ---- Resultado: KPIs ----
 
@@ -145,11 +147,18 @@ namespace Core.Application.Modelos
 
     // Rotación = unidades vendidas ÷ stock disponible promedio del período (promedio entre el
     // stock al inicio y al final). Null si el stock promedio es 0.
+    // Ocupación = (disponible + reservado) ÷ StockMaximo × 100 (OcupacionAlmacen).
     public record InventarioProducto(Guid ProductoId, string Producto, string Categoria, int StockDisponible,
-        int StockReservado, int UnidadesVendidas, decimal StockPromedio, decimal? Rotacion, bool Agotado);
+        int StockReservado, int UnidadesVendidas, decimal StockPromedio, decimal? Rotacion, bool Agotado,
+        int StockMaximo, decimal? Ocupacion, NivelOcupacion? NivelOcupacion);
+
+    // Ocupación del espacio de una categoría: suma de unidades ÷ suma de capacidades.
+    public record OcupacionCategoria(string Categoria, int Productos, int Unidades, int Capacidad, decimal? Ocupacion,
+        NivelOcupacion? NivelOcupacion);
 
     public record InventarioKpis(IReadOnlyList<InventarioProducto> Productos, IReadOnlyList<InventarioProducto> SinStock,
-        decimal? RotacionGlobal);
+        decimal? RotacionGlobal, decimal? OcupacionGlobal, NivelOcupacion? NivelOcupacionGlobal,
+        IReadOnlyList<OcupacionCategoria> OcupacionPorCategoria, int ProductosSaturados);
 
     public record EntregasRepartidor(Guid RepartidorId, string Repartidor, int Entregas, double? TiempoPromedioEntregaMin);
 

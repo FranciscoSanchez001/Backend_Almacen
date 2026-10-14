@@ -59,7 +59,8 @@ describe('descargarExcel', () => {
 
     await descargarExcel({ tipo: 'diario', desde: '2026-10-05', hasta: '2026-10-05' })
 
-    expect(crear.mock.calls[0][0]).toBeInstanceOf(Blob)
+    // Blob de Node o de jsdom según la versión de Node: ver cliente.test.js.
+    expect(Object.prototype.toString.call(crear.mock.calls[0][0])).toBe('[object Blob]')
     expect(revocar).toHaveBeenCalledWith('blob:informe')
   })
 })

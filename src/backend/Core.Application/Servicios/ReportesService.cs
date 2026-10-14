@@ -290,16 +290,39 @@ namespace Core.Application.Servicios
                     var fin = stockFin.TryGetValue(p.Id, out var sf) ? sf : p.StockDisponible;
                     var promedio = (inicio + fin) / 2m;
                     var unidades = vendidas.GetValueOrDefault(p.Id);
+                    var ocupacion = OcupacionAlmacen.Porcentaje(p.StockDisponible + p.StockReservado, p.StockMaximo);
                     return new InventarioProducto(p.Id, p.Nombre, p.Categoria, p.StockDisponible, p.StockReservado, unidades,
-                        promedio, promedio == 0 ? null : Math.Round(unidades / promedio, 2), p.StockDisponible == 0);
+                        promedio, promedio == 0 ? null : Math.Round(unidades / promedio, 2), p.StockDisponible == 0,
+                        p.StockMaximo, ocupacion, Nivel(ocupacion));
                 })
                 .OrderByDescending(p => p.Agotado).ThenByDescending(p => p.Rotacion ?? 0).ThenBy(p => p.Producto)
                 .ToList();
 
             var stockPromedioTotal = filas.Sum(f => f.StockPromedio);
+            var ocupacionGlobal = OcupacionAlmacen.Porcentaje(
+                productos.Sum(p => p.StockDisponible + p.StockReservado), productos.Sum(p => p.StockMaximo));
             return new InventarioKpis(filas, filas.Where(f => f.Agotado).ToList(),
-                stockPromedioTotal == 0 ? null : Math.Round(filas.Sum(f => f.UnidadesVendidas) / stockPromedioTotal, 2));
+                stockPromedioTotal == 0 ? null : Math.Round(filas.Sum(f => f.UnidadesVendidas) / stockPromedioTotal, 2),
+                ocupacionGlobal, Nivel(ocupacionGlobal), OcupacionPorCategoria(productos),
+                filas.Count(f => f.NivelOcupacion == NivelOcupacion.Saturada));
         }
+
+        // Categorías de mayor a menor ocupación.
+        private static List<OcupacionCategoria> OcupacionPorCategoria(List<ProductoStock> productos) =>
+            productos
+                .GroupBy(p => p.Categoria)
+                .Select(g =>
+                {
+                    var unidades = g.Sum(p => p.StockDisponible + p.StockReservado);
+                    var capacidad = g.Sum(p => p.StockMaximo);
+                    var ocupacion = OcupacionAlmacen.Porcentaje(unidades, capacidad);
+                    return new OcupacionCategoria(g.Key, g.Count(), unidades, capacidad, ocupacion, Nivel(ocupacion));
+                })
+                .OrderByDescending(c => c.Ocupacion ?? -1).ThenBy(c => c.Categoria)
+                .ToList();
+
+        private static NivelOcupacion? Nivel(decimal? ocupacion) =>
+            ocupacion is null ? null : OcupacionAlmacen.Clasificar(ocupacion.Value);
 
         private static List<EntregasRepartidor> Repartidores(List<PedidoReporte> pedidos) =>
             Entregados(pedidos)
