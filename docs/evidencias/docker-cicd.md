@@ -72,7 +72,7 @@ Verificaciones realizadas:
 | Imagen | Compilación | Final | Tamaño real | Comprimida |
 | :--- | :--- | :--- | ---: | ---: |
 | `backend_almacen-api` | `dotnet/sdk:10.0` | `dotnet/aspnet:10.0-alpine` | 155 MB | ~70 MB |
-| `backend_almacen-spa` | `node:20-alpine` | `nginx:alpine` | 65 MB | ~25 MB |
+| `backend_almacen-spa` | `node:24-alpine` | `nginx:alpine` | 65 MB | ~25 MB |
 
 `docker images` muestra 245 MB y 95 MB porque el almacén de containerd de Docker Desktop suma las capas comprimidas y descomprimidas. La justificación del tamaño de la API está en la sección 8 del [README](../../README.md#8-puesta-en-marcha-con-docker).
 

@@ -228,7 +228,7 @@ Las versiones exactas de cada paquete están en el [stack del backend](src/backe
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | — | Levantar la aplicación completa (recomendado) y ejecutar las pruebas de integración |
 | [Git](https://git-scm.com/) | — | Clonar el repositorio |
 | [SDK de .NET](https://dotnet.microsoft.com/download) | 10 | Ejecutar el backend y las pruebas sin Docker |
-| [Node.js](https://nodejs.org/) | 20 LTS o superior | Ejecutar el frontend sin Docker |
+| [Node.js](https://nodejs.org/) | 24 LTS | Ejecutar el frontend sin Docker |
 | [PostgreSQL](https://www.postgresql.org/download/) | 16 | Solo si la base de datos no se ejecuta en Docker |
 
 ---
@@ -275,7 +275,7 @@ Los dos Dockerfiles separan la compilación de la ejecución: el SDK de .NET y N
 | Imagen | Etapa de compilación | Imagen final | Tamaño real | Comprimida |
 | :--- | :--- | :--- | ---: | ---: |
 | API ([`Dockerfile`](src/backend/Presentation.API/Dockerfile)) | `dotnet/sdk:10.0` | `dotnet/aspnet:10.0-alpine` | 155 MB | ~70 MB |
-| SPA ([`Dockerfile`](src/frontend/Dockerfile)) | `node:20-alpine` | `nginx:alpine` | 65 MB | ~25 MB |
+| SPA ([`Dockerfile`](src/frontend/Dockerfile)) | `node:24-alpine` | `nginx:alpine` | 65 MB | ~25 MB |
 
 Optimizaciones de la imagen de la API:
 - **Alpine** en lugar de Ubuntu: de 243 MB a 155 MB (−36 %).
@@ -386,7 +386,7 @@ Backend_Almacen/
 │   │   └── Backend_Almacen.slnx    Solución de .NET (incluye los proyectos de tests/)
 │   └── frontend/                   SPA en React                            -> README propio
 │       ├── src/                    Páginas, layouts, componentes, contextos y cliente HTTP
-│       ├── Dockerfile              Imagen multietapa (Node.js 20 + Nginx)
+│       ├── Dockerfile              Imagen multietapa (Node.js 24 + Nginx)
 │       └── nginx.conf              Servidor web con fallback de rutas
 ├── tests/                          Pruebas automatizadas                   -> README propio
 │   ├── UnitTests/                  xUnit + Moq

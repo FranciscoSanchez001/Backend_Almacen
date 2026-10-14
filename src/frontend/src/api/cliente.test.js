@@ -88,8 +88,11 @@ describe('pedir: respuestas correctas', () => {
 
     const archivo = await pedir('/reportes/excel')
 
-    expect(archivo).toBeInstanceOf(Blob)
+    // No toBeInstanceOf(Blob): según la versión de Node, Response.blob() devuelve el Blob de
+    // Node y no el de jsdom (son clases distintas). toString identifica a cualquiera de los dos.
+    expect(Object.prototype.toString.call(archivo)).toBe('[object Blob]')
     expect(archivo.type).toBe(tipoExcel)
+    expect(archivo.size).toBe('contenido'.length) // el Blob de jsdom no tiene text()
   })
 })
 

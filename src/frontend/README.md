@@ -260,7 +260,7 @@ docker compose up -d --build
 | Frontend (React + Nginx) | <http://localhost:8080> |
 | API REST | <http://localhost:5000> |
 
-La imagen se construye en dos etapas: Node.js 20 compila la aplicación y Nginx publica el contenido de `dist/`. Las variables `VITE_*` se incorporan al código durante la compilación, por lo que se definen como argumentos de construcción en el `docker-compose.yml`.
+La imagen se construye en dos etapas: Node.js 24 compila la aplicación y Nginx publica el contenido de `dist/`. Las variables `VITE_*` se incorporan al código durante la compilación, por lo que se definen como argumentos de construcción en el `docker-compose.yml`.
 
 ### 10.2 Ejecutar en modo desarrollo
 
@@ -408,7 +408,7 @@ src/frontend/
 │   ├── index.css               Tailwind CSS, paleta institucional y modo oscuro
 │   └── **/*.test.{js,jsx}      Pruebas, junto al código que prueban (46 archivos)
 ├── .env.example                Variables de entorno de ejemplo
-├── Dockerfile                  Imagen multietapa (Node.js 20 + Nginx)
+├── Dockerfile                  Imagen multietapa (Node.js 24 + Nginx)
 ├── nginx.conf                  Servidor web con fallback de rutas para la SPA
 ├── eslint.config.js
 ├── vite.config.js              Configuración de Vite y de Vitest
