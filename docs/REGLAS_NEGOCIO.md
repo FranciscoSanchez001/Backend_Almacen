@@ -140,7 +140,7 @@ Reglas:
 
 ## 8. KPIs e Informe en Excel
 
-- Solo el **superadmin** accede a los KPIs (`GET /kpis`) y al informe (`GET /reportes/excel`).
+- Solo el **superadmin** accede a los KPIs (`GET /kpis`) y a los informes (`GET /reportes/excel` y `GET /reportes/pdf`). El PDF trae los mismos KPIs de la pantalla más el comportamiento de los visitantes.
 - **Solo cuentan como venta** los pedidos `aprobado`, `asignado`, `en_camino` y `entregado`. Los pendientes, rechazados y expirados no suman a los ingresos.
 - Los montos están en USD, con su equivalente en Bs según la tasa congelada de cada pedido.
 - Los **ingresos totales** (por día, método de pago y zona) usan el total del pedido, que ya descuenta el cupón. Los ingresos **por producto y categoría** usan el precio de cada ítem (con la oferta, sin prorratear el cupón), así que su suma puede superar el total cuando hubo cupones.

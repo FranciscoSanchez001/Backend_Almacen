@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.API.Controllers
 {
-    // Dashboard de KPIs e informe en Excel (solo superadmin). Los dos salen del mismo cálculo
-    // (ReportesService), así que el Excel coincide con lo que se ve en pantalla.
+    // Dashboard de KPIs e informes en Excel y PDF (solo superadmin). Todos salen del mismo cálculo
+    // (ReportesService y AnaliticaService), así que los archivos coinciden con lo que se ve en pantalla.
     //
     // Fechas locales de la tienda (yyyy-MM-dd), ambas inclusive:
     //   tipo=diario|semanal|mensual toma el día, la semana (lunes a domingo) o el mes de `desde`
@@ -20,6 +20,8 @@ namespace Presentation.API.Controllers
     public class ReportesController(
         ReportesService reportes,
         IGeneradorExcel excel,
+        IGeneradorPdf pdf,
+        AnaliticaService analitica,
         IUnitOfWork unidad,
         AuditoriaService auditoria) : ControllerBase
     {
@@ -66,6 +68,36 @@ namespace Presentation.API.Controllers
             await unidad.GuardarCambiosAsync(ct);
 
             return File(contenido, TipoXlsx, archivo);
+        }
+
+        // PDF del dashboard: los mismos KPIs de /kpis más el comportamiento de los visitantes.
+        [HttpGet("reportes/pdf")]
+        public async Task<IActionResult> Pdf(
+            [FromQuery] TipoReporte? tipo,
+            [FromQuery] DateOnly? desde,
+            [FromQuery] DateOnly? hasta,
+            CancellationToken ct)
+        {
+            if (tipo is null)
+            {
+                return PeriodoInvalido("Indica el tipo de informe: diario, semanal, mensual o personalizado.");
+            }
+            var resultado = reportes.ResolverPeriodo(tipo, desde, hasta);
+            if (resultado.Periodo is not { } periodo)
+            {
+                return PeriodoInvalido(resultado.Error!);
+            }
+
+            var kpis = await reportes.CalcularKpisAsync(periodo, ct);
+            var comportamiento = await analitica.CalcularAsync(periodo, ct);
+            var contenido = pdf.Generar(kpis, comportamiento);
+            var archivo = Path.ChangeExtension(NombreArchivo(periodo), ".pdf").Replace("informe_ventas_", "dashboard_kpi_");
+
+            auditoria.Registrar(User.GetUsuarioId(), Entidades.Reporte, null, AccionAuditoria.DescargarReporte, null,
+                new { Tipo = periodo.Tipo, periodo.Desde, periodo.Hasta, Archivo = archivo });
+            await unidad.GuardarCambiosAsync(ct);
+
+            return File(contenido, "application/pdf", archivo);
         }
 
         // informe_ventas_2026-09_mensual.xlsx, informe_ventas_2026-09-23_diario.xlsx,

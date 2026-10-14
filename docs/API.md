@@ -170,6 +170,7 @@ El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, 
 | :--- | :--- | :---: | :--- |
 | `GET` | `/kpis` | 👔 | Indicadores (KPIs) de ventas, productos, pagos, horas pico, zonas, inventario y operación, en JSON. |
 | `GET` | `/reportes/excel` | 👔 | Descarga el informe en Excel (`.xlsx`). |
+| `GET` | `/reportes/pdf` | 👔 | Descarga el dashboard KPI en PDF (KPIs y comportamiento de los visitantes, mismo período). |
 
 **Parámetros de período** (ambos endpoints). Las fechas van en formato `yyyy-MM-dd`, en hora local de la tienda, y ambas son inclusive:
 

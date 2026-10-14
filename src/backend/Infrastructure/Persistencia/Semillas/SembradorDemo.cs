@@ -260,6 +260,7 @@ namespace Infrastructure.Persistencia.Semillas
                     Descripcion = d.Descripcion,
                     PrecioUsd = d.PrecioUsd,
                     CostoUsd = d.CostoUsd,
+                    ImagenUrl = ImagenesProductos.Para(d.Sku),
                     CategoriaId = d.CategoriaId,
                     StockDisponible = f.Random.Int(40, 120),
                     CreadoPorId = admin.Id,

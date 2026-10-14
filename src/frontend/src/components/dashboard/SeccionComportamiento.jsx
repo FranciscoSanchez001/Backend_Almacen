@@ -1,20 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { obtenerComportamiento } from '../../api/analitica'
-import { EncabezadoPagina, EstadoCarga, Selector } from '../../components/ui'
-import { BarrasHorizontales, GraficoLinea, TarjetaGrafico, TarjetaKpi } from '../../components/dashboard/Graficos'
-import { claseInput } from '../../utils/panel'
-import { formatoDia, formatoNumero, formatoPct, hoyIso } from '../../utils/formato'
+import { EstadoCarga } from '../ui'
+import { BarrasHorizontales, GraficoLinea, TarjetaGrafico, TarjetaKpi } from './Graficos'
+import { formatoDia, formatoNumero, formatoPct } from '../../utils/formato'
 
 // Comportamiento de los visitantes de la tienda (GET /analitica/comportamiento): qué buscan,
 // qué no encuentran, cuántos llegan a comprar y qué agregan al carrito sin comprarlo.
-// Los datos son anónimos; el personal no se cuenta. Mismos períodos que el dashboard KPI.
-const PERIODOS = [
-  ['diario', 'Hoy'],
-  ['semanal', 'Esta semana'],
-  ['mensual', 'Este mes'],
-  ['personalizado', 'Personalizado'],
-]
-
+// Los datos son anónimos; el personal no se cuenta. Se muestra dentro del Dashboard KPI.
 function Seccion({ titulo, children }) {
   return (
     <section className="space-y-3">
@@ -62,23 +55,23 @@ function Tabla({ titulo, detalle, columnas, filas, vacio }) {
   )
 }
 
-export default function Comportamiento() {
-  const [tipo, setTipo] = useState('semanal')
-  const [desde, setDesde] = useState(hoyIso())
-  const [hasta, setHasta] = useState(hoyIso())
+// Sección del Dashboard KPI. Recibe el período del filtro del dashboard (el mismo de los demás
+// KPIs) y carga sus datos por separado: si la analítica falla, el resto del dashboard sigue.
+export default function SeccionComportamiento({ periodo }) {
   const [datos, setDatos] = useState(null)
   const [error, setError] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [intento, setIntento] = useState(0)
+  const seccion = useRef(null)
+  const { hash } = useLocation()
+  const hayDatos = datos !== null
 
-  const periodo = useMemo(
-    () => (tipo === 'personalizado' ? { tipo, desde, hasta } : { tipo, desde: hoyIso() }),
-    [tipo, desde, hasta],
-  )
-  const rangoInvalido = tipo === 'personalizado' && (!desde || !hasta || desde > hasta)
+  // El enlace viejo /admin/comportamiento llega como /admin#comportamiento: al cargar se baja aquí.
+  useEffect(() => {
+    if (hayDatos && hash === '#comportamiento') seccion.current?.scrollIntoView?.({ behavior: 'smooth' })
+  }, [hayDatos, hash])
 
   useEffect(() => {
-    if (rangoInvalido) return
     let vigente = true
     setCargando(true)
     setError(null)
@@ -89,36 +82,20 @@ export default function Comportamiento() {
     return () => {
       vigente = false
     }
-  }, [periodo, rangoInvalido, intento])
+  }, [periodo, intento])
 
   return (
-    <div className="space-y-6">
-      <EncabezadoPagina
-        titulo="Comportamiento en la tienda"
-        detalle="Qué buscan los visitantes, qué no encuentran y en qué paso abandonan la compra."
-      />
-
-      <div className="flex flex-wrap items-end gap-3">
-        <Selector etiqueta="Período" opciones={PERIODOS} valor={tipo} alCambiar={setTipo} />
-        {tipo === 'personalizado' && (
-          <>
-            <label className="text-sm">
-              <span className="mb-1 block text-xs text-slate-500">Desde</span>
-              <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} className={claseInput(rangoInvalido)} />
-            </label>
-            <label className="text-sm">
-              <span className="mb-1 block text-xs text-slate-500">Hasta</span>
-              <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} className={claseInput(rangoInvalido)} />
-            </label>
-            {rangoInvalido && <p className="text-xs text-red-600 dark:text-red-300">El inicio debe ser anterior o igual al fin.</p>}
-          </>
-        )}
+    <section ref={seccion} id="comportamiento" aria-labelledby="titulo-comportamiento" className="scroll-mt-20 space-y-6">
+      <div>
+        <h3 id="titulo-comportamiento" className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Comportamiento de los visitantes
+        </h3>
+        <p className="text-sm text-slate-500">Qué buscan, qué no encuentran y en qué paso abandonan la compra.</p>
       </div>
-
       <EstadoCarga cargando={cargando && !datos} error={error} alReintentar={() => setIntento((n) => n + 1)}>
         {datos && <Resumen datos={datos} atenuado={cargando} />}
       </EstadoCarga>
-    </div>
+    </section>
   )
 }
 

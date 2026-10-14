@@ -1,9 +1,9 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { useState } from 'react'
+import { screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import Comportamiento from './Comportamiento'
+import SeccionComportamiento from './SeccionComportamiento'
 import { renderizar } from '../../test/renderizar'
 import { obtenerComportamiento } from '../../api/analitica'
-import { hoyIso } from '../../utils/formato'
 
 vi.mock('../../api/analitica', () => ({ obtenerComportamiento: vi.fn() }))
 
@@ -34,19 +34,21 @@ const datos = (extra = {}) => ({
   ...extra,
 })
 
-const abrir = () => renderizar(<Comportamiento />, { ruta: '/admin/comportamiento', rol: 'superadmin' })
+const periodo = { tipo: 'semanal', desde: '2026-10-13' }
+const abrir = (p = periodo) => renderizar(<SeccionComportamiento periodo={p} />, { ruta: '/admin', rol: 'superadmin' })
 
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(obtenerComportamiento).mockResolvedValue(datos())
 })
 
-describe('Comportamiento', () => {
-  it('pide la semana actual por defecto y muestra los indicadores', async () => {
+describe('SeccionComportamiento', () => {
+  it('pide el período del dashboard y muestra los indicadores', async () => {
     abrir()
 
+    expect(await screen.findByRole('heading', { name: 'Comportamiento de los visitantes' })).toBeInTheDocument()
     expect(await screen.findByText('sesiones distintas')).toBeInTheDocument()
-    expect(obtenerComportamiento).toHaveBeenCalledWith({ tipo: 'semanal', desde: hoyIso() })
+    expect(obtenerComportamiento).toHaveBeenCalledWith(periodo)
     const tarjeta = (titulo) => screen.getByText(titulo, { selector: 'p' }).parentElement
     expect(tarjeta('Visitas')).toHaveTextContent('200')
     expect(tarjeta('Búsquedas sin resultados')).toHaveTextContent('25 %20 búsquedas')
@@ -86,18 +88,23 @@ describe('Comportamiento', () => {
     expect(screen.getByText('Nadie agregó productos al carrito en este período.')).toBeInTheDocument()
   })
 
-  it('el período personalizado manda desde y hasta, y no consulta un rango invertido', async () => {
-    const { user } = abrir()
+  it('vuelve a consultar cuando el dashboard cambia de período', async () => {
+    const otro = { tipo: 'personalizado', desde: '2026-09-01', hasta: '2026-09-30' }
+    function ConFiltro() {
+      const [p, setP] = useState(periodo)
+      return (
+        <>
+          <button type="button" onClick={() => setP(otro)}>Cambiar período</button>
+          <SeccionComportamiento periodo={p} />
+        </>
+      )
+    }
+    const { user } = renderizar(<ConFiltro />, { ruta: '/admin', rol: 'superadmin' })
     await screen.findByText('sesiones distintas')
 
-    await user.click(screen.getByRole('button', { name: 'Personalizado' }))
-    await waitFor(() => expect(obtenerComportamiento).toHaveBeenLastCalledWith({ tipo: 'personalizado', desde: hoyIso(), hasta: hoyIso() }))
-    const llamadas = vi.mocked(obtenerComportamiento).mock.calls.length
+    await user.click(screen.getByRole('button', { name: 'Cambiar período' }))
 
-    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2999-01-01' } })
-
-    expect(screen.getByText('El inicio debe ser anterior o igual al fin.')).toBeInTheDocument()
-    expect(obtenerComportamiento).toHaveBeenCalledTimes(llamadas)
+    await vi.waitFor(() => expect(obtenerComportamiento).toHaveBeenLastCalledWith(otro))
   })
 
   it('si la API falla muestra el error y permite reintentar', async () => {

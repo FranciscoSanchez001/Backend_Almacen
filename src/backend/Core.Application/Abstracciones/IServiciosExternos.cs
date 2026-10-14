@@ -8,6 +8,13 @@ namespace Core.Application.Abstracciones
         byte[] Generar(DatosReporte datos);
     }
 
+    // Arma el PDF del dashboard KPI: los mismos indicadores que se ven en pantalla, incluido el
+    // comportamiento de los visitantes, con formato para imprimir o compartir.
+    public interface IGeneradorPdf
+    {
+        byte[] Generar(Kpis kpis, Comportamiento comportamiento);
+    }
+
     // Dónde se guardan las capturas de pago (Cloudinary o disco local).
     public interface IAlmacenamientoArchivos
     {
