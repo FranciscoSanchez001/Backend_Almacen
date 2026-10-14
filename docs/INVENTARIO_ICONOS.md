@@ -6,6 +6,8 @@ Se incluyen también los símbolos de enlace externo, descarga y confirmación u
 
 Los componentes usan `Icono.jsx`, con trazos propios y un catálogo complementario en `src/frontend/src/assets/iconos.json`, color heredado y SVG ocultos a lectores de pantalla cuando acompañan texto. La documentación usa los SVG de `src/frontend/public/iconos/` con texto alternativo. Las pruebas buscan los nombres de las acciones sin depender del dibujo. Este inventario conserva las ubicaciones de la sustitución original; el PR también conserva las funciones incorporadas después en `master`.
 
+Los SVG enlazados desde Markdown tienen colores explícitos: azul para los iconos generales, verde para confirmación, rojo para errores y ámbar para advertencias. Así se distinguen sobre fondos claros y oscuros cuando GitHub los carga como imágenes, donde `currentColor` no hereda el color del texto del documento. Los colores alcanzan un contraste mínimo de 3:1 sobre blanco y los fondos oscuros `#0d1117` y `#161b22`.
+
 | Código Unicode original | SVG | Apariciones |
 | :--- | :--- | ---: |
 | U+1F310 | ![mundo](../src/frontend/public/iconos/mundo.svg) `mundo` | 8 |
