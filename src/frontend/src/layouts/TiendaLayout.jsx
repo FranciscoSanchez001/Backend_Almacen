@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { listarCategorias } from '../api/catalogo'
 import { useCarrito } from '../context/CarritoContext'
 import BotonTema from '../components/BotonTema'
+import LoginCliente from '../components/LoginCliente'
+import { useAuth } from '../context/AuthContext'
+import { INICIO_POR_ROL } from '../api/auth'
 import { formatoUsd } from '../utils/formato'
 
 // Layout de la tienda al estilo de un supermercado en línea: franja de avisos,
@@ -11,6 +14,10 @@ import { formatoUsd } from '../utils/formato'
 // encabezado y la barra de categorías manejen la misma vista del catálogo.
 export default function TiendaLayout() {
   const [categorias, setCategorias] = useState([])
+  const [accesoAbierto, setAccesoAbierto] = useState(false)
+  const [saliendo, setSaliendo] = useState(false)
+  const { usuario, logout } = useAuth()
+  const cerrarAcceso = useCallback(() => setAccesoAbierto(false), [])
   const [params] = useSearchParams()
   const navegar = useNavigate()
   const { totalUnidades, totalUsd } = useCarrito()
@@ -67,9 +74,22 @@ export default function TiendaLayout() {
 
           <div className="ml-auto flex items-center gap-4 sm:ml-0">
             <BotonTema />
-            <button type="button" className="text-sm font-medium text-slate-700 hover:text-emerald-700 dark:hover:text-emerald-300">
-              Ingresar
-            </button>
+            {usuario ? (
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="max-w-32 truncate" title={usuario.email}>{usuario.nombre}</span>
+                {INICIO_POR_ROL[usuario.rol] && <Link to={INICIO_POR_ROL[usuario.rol]} className="text-emerald-700 dark:text-emerald-300">Mi panel</Link>}
+                <button type="button" disabled={saliendo}
+                  onClick={async () => { setSaliendo(true); try { await logout() } finally { setSaliendo(false) } }}
+                  className="text-slate-600 hover:text-emerald-700 disabled:opacity-50">
+                  {saliendo ? 'Saliendo…' : 'Cerrar sesión'}
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setAccesoAbierto(true)} aria-haspopup="dialog"
+                className="text-sm font-medium text-slate-700 hover:text-emerald-700 dark:hover:text-emerald-300">
+                Ingresar
+              </button>
+            )}
             <button
               type="button"
               className="relative flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
@@ -114,6 +134,8 @@ export default function TiendaLayout() {
           </ul>
         </nav>
       </header>
+
+      {accesoAbierto && <LoginCliente alCerrar={cerrarAcceso} />}
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <Outlet context={{ categorias }} />

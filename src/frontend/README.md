@@ -92,7 +92,7 @@ Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma.
 
 | Área | Ruta | Perfil | Estado |
 | :--- | :--- | :--- | :--- |
-| Tienda | `/` | Cliente (público) | Catálogo y carrito disponibles; inicio de sesión con Google y checkout en desarrollo |
+| Tienda | `/` | Cliente (público) | Catálogo, carrito y acceso de clientes con Google; checkout en desarrollo |
 | Panel de ventas | `/panel` | `ventas`, `superadmin` | Disponible |
 | Administración | `/admin` | `superadmin` | Disponible |
 | Entregas | `/repartidor` | `repartidor`, `superadmin` | En desarrollo (maqueta de las secciones previstas) |
@@ -316,6 +316,13 @@ Variables de entorno (archivo `.env`, a partir de `.env.example`):
 - **CORS.** El origen desde el que se sirve el frontend debe figurar en `Cors:OrigenesPermitidos` de la API.
 - **Rutas del cliente.** El servidor web debe redirigir las rutas desconocidas a `index.html`; `nginx.conf` lo resuelve con `try_files`.
 - **Google.** En Google Cloud Console, la dirección del frontend debe registrarse en *Orígenes autorizados de JavaScript* del Client ID.
+
+El botón **Ingresar** del catálogo abre el acceso de clientes con Google. El frontend
+envía la credencial a `POST /auth/google`; la API la valida y crea la cuenta si es la
+primera visita. La sesión se conserva al recargar y **Cerrar sesión** revoca el refresh
+token. Configura `VITE_GOOGLE_CLIENT_ID` en `.env` o `.env.local` con el mismo valor de
+`Google:ClientId` del backend. Si falta la configuración o falla la carga de Google,
+el diálogo muestra un mensaje; los errores de conexión permiten reintentar.
 
 ---
 

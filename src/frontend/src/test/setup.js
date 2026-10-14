@@ -31,6 +31,9 @@ if (!window.ResizeObserver) {
 }
 
 window.scrollTo = () => {}
+// jsdom no implementa el ciclo de apertura/cierre de los diálogos nativos.
+window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') }
+window.HTMLDialogElement.prototype.close = function () { this.removeAttribute('open') }
 window.HTMLElement.prototype.scrollIntoView = function () {}
 
 if (!URL.createObjectURL) URL.createObjectURL = () => 'blob:prueba'

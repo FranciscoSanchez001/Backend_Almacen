@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { cerrarSesion, login } from './auth'
+import { cerrarSesion, login, loginGoogle } from './auth'
 import { guardarToken, obtenerToken } from './cliente'
 
 let fetchSimulado
@@ -69,5 +69,24 @@ describe('cerrarSesion', () => {
 
     expect(fetchSimulado).not.toHaveBeenCalled()
     expect(obtenerToken()).toBeNull()
+  })
+})
+
+describe('loginGoogle', () => {
+  it('intercambia el ID token por la sesión del backend y la guarda', async () => {
+    fetchSimulado.mockResolvedValue(json(200, { token: 'jwt-cliente', refreshToken: 'refresh-cliente' }))
+    await loginGoogle('credencial-google')
+    const [url, opciones] = fetchSimulado.mock.calls[0]
+    expect(url.toString()).toBe('http://api.pruebas/auth/google')
+    expect(JSON.parse(opciones.body)).toEqual({ idToken: 'credencial-google' })
+    expect(obtenerToken()).toBe('jwt-cliente')
+    expect(localStorage.getItem('almacen.refresh')).toBe('refresh-cliente')
+  })
+
+  it('un token de Google rechazado no abre una sesión', async () => {
+    fetchSimulado.mockResolvedValue(json(401, { mensaje: 'El token de Google no es válido.' }))
+    await expect(loginGoogle('invalido')).rejects.toThrow('El token de Google no es válido.')
+    expect(obtenerToken()).toBeNull()
+    expect(localStorage.getItem('almacen.refresh')).toBeNull()
   })
 })

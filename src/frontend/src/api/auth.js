@@ -16,9 +16,22 @@ export async function login({ correo, clave }) {
     metodo: 'POST',
     cuerpo: { email: correo.trim(), password: clave },
   });
+  guardarSesion(sesion);
+  return sesion;
+}
+
+export async function loginGoogle(idToken) {
+  const sesion = await pedir('/auth/google', {
+    metodo: 'POST',
+    cuerpo: { idToken },
+  });
+  guardarSesion(sesion);
+  return sesion;
+}
+
+function guardarSesion(sesion) {
   guardarToken(sesion.token);
   localStorage.setItem(CLAVE_REFRESH, sesion.refreshToken);
-  return sesion;
 }
 
 // Cierra la sesión: revoca el refresh token en la API y borra todo del navegador.
@@ -35,4 +48,5 @@ export async function cerrarSesion() {
   guardarToken(null);
   localStorage.removeItem(CLAVE_REFRESH);
   localStorage.removeItem('almacen.usuario'); // Lo guardaban versiones anteriores.
+  window.google?.accounts?.id?.disableAutoSelect();
 }
