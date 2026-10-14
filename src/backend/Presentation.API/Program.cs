@@ -19,6 +19,13 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Railway (y Render) indican en PORT el puerto en el que deben escuchar las aplicaciones. Si no
+// viene, se usa ASPNETCORE_HTTP_PORTS (5000 en la imagen Docker).
+if (Environment.GetEnvironmentVariable("PORT") is { Length: > 0 } puerto)
+{
+    builder.WebHost.UseUrls($"http://+:{puerto}");
+}
+
 // Capas de la solución: Application (casos de uso) e Infrastructure (EF Core, repositorios,
 // servicios externos y jobs).
 builder.Services.AddApplication();

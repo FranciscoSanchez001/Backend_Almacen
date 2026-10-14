@@ -23,6 +23,21 @@ namespace Infrastructure.Persistencia.Semillas
             var hasher = scope.ServiceProvider.GetRequiredService<IHasherContrasenas>();
             var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
 
+            // En producción (Railway) no existe el contenedor de migraciones de docker-compose: con
+            // BaseDatos:AplicarMigraciones=true la API aplica las pendientes al arrancar. Va fuera del
+            // try: si una migración falla la API no arranca, el healthcheck falla y el hosting
+            // mantiene la versión anterior en lugar de publicar una con el esquema a medias.
+            if (configuracion.GetValue<bool>("BaseDatos:AplicarMigraciones"))
+            {
+                var pendientes = (await db.Database.GetPendingMigrationsAsync()).ToList();
+                if (pendientes.Count > 0)
+                {
+                    logger.LogInformation("Aplicando {Cantidad} migraciones: {Migraciones}",
+                        pendientes.Count, string.Join(", ", pendientes));
+                    await db.Database.MigrateAsync();
+                }
+            }
+
             try
             {
                 if (!await db.Configuracion.AnyAsync())

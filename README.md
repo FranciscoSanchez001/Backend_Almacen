@@ -287,6 +287,8 @@ Optimizaciones de la imagen de la API:
 >
 > Con el almacén de imágenes de containerd de Docker Desktop, `docker images` muestra una cifra mayor (≈243 MB) porque suma las capas comprimidas y descomprimidas.
 
+**Despliegue en la nube:** la misma imagen de la API se publica en Railway, la SPA en Vercel y la base en Neon. Ver [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
 ---
 
 ## 9. Ejecución sin Docker
@@ -418,7 +420,8 @@ Backend_Almacen/
 | Documento | Contenido |
 | :--- | :--- |
 | [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) | Capas, regla de dependencia, inyección de dependencias, pipeline HTTP y manejo de errores |
-| [`docs/MODELO_DATOS.md`](docs/MODELO_DATOS.md) | Diagrama entidad-relación, tablas, restricciones y enumeraciones |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | Despliegue en la nube: Neon (PostgreSQL), Railway (API) y Vercel (SPA), variables de entorno y entrega continua |
+| [`docs/MODELO_DATOS.md`](docs/MODELO_DATOS.md) | Diagrama entidad-relación, dimensiones operacionales, diccionario de datos, restricciones y enumeraciones |
 | [`docs/API.md`](docs/API.md) | Endpoints, roles requeridos, códigos de respuesta y ejemplos |
 | [`docs/REGLAS_NEGOCIO.md`](docs/REGLAS_NEGOCIO.md) | Flujo del pedido, stock, expiración, tasa de cambio y WhatsApp |
 | [`docs/GESTION_PROYECTO.md`](docs/GESTION_PROYECTO.md) | Metodología Scrum, épicas, carriles de trabajo y convención de commits |
