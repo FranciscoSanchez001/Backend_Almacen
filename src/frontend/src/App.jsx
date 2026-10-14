@@ -61,7 +61,7 @@ function App() {
           </Route>
         </Route>
 
-        {/* Entregas (repartidor) → /repartidor. Todavía sin construir. */}
+        {/* Entregas del repartidor → /repartidor. */}
         <Route
           path="/repartidor"
           element={

@@ -83,6 +83,7 @@ Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma.
 
 - Catálogo público con búsqueda, filtro por categoría, precios en USD y en bolívares y carrito de compras.
 - Bandeja de pedidos para el área de ventas: aprobación con asignación de repartidor, rechazo con motivo y contador de expiración.
+- Área del repartidor: entregas asignadas, contacto del cliente, navegación con Google Maps/Waze, confirmación de salida y entrega, e historial paginado.
 - Gestión de productos, categorías e inventario, con alertas de stock agotado o por debajo del mínimo.
 - Consulta de clientes y de su historial de pedidos.
 - Dashboard de indicadores (KPIs) con gráficos y descarga del informe en Excel.
@@ -95,7 +96,7 @@ Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma.
 | Tienda | `/`, `/checkout`, `/mis-pedidos` | Cliente | Catálogo, carrito, acceso con Google, checkout con comprobante e historial de pedidos |
 | Panel de ventas | `/panel` | `ventas`, `superadmin` | Disponible |
 | Administración | `/admin` | `superadmin` | Disponible |
-| Entregas | `/repartidor` | `repartidor`, `superadmin` | En desarrollo (maqueta de las secciones previstas) |
+| Entregas | `/repartidor` | `repartidor` | Entregas activas, detalle, mapas, cambios de estado e historial; el gerente accede a la gestión general de pedidos |
 
 ---
 
@@ -335,6 +336,15 @@ pendiente de revisión. Se conservan los productos añadidos durante el envío.
 Los errores conservan el carrito y los datos ingresados. `/mis-pedidos` permite
 consultar el historial paginado y actualizar sus estados. Si se pierde la respuesta
 del envío, se pide revisar ese historial antes de intentar crear otro pedido.
+
+En `/repartidor`, **Mis entregas** consulta únicamente los pedidos asignados al
+usuario y los que ya están en camino. El detalle se actualiza desde la API antes de
+habilitar acciones e incluye productos, cantidades, dirección, teléfono e historial
+de estados. **Iniciar entrega** y **Marcar entregado** requieren confirmación y
+bloquean envíos duplicados. Tras guardar se actualiza la lista; los pedidos entregados
+aparecen en **Historial**. Los enlaces a Google Maps y Waze usan coordenadas si existen
+o buscan la dirección escrita. Los errores permiten actualizar el estado antes de
+repetir una operación. El gerente gestiona las entregas desde `/panel/pedidos`.
 
 ---
 

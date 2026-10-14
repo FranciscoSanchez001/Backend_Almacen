@@ -16,6 +16,11 @@ export function crearPedido({ lineas, metodoPago, referenciaPago, zonaId, direcc
 
 export const listarMisPedidos = ({ pagina = 1, tamano = 20 } = {}) => pedir('/pedidos/mios', { consulta: { pagina, tamano } });
 
+export const listarEntregas = ({ historial = false, pagina = 1, tamano = 20 } = {}) =>
+  pedir('/repartidor/pedidos', { consulta: { historial, pagina, tamano } });
+
+export const obtenerPedido = (id) => pedir(`/pedidos/${id}`);
+
 // estado: pendiente | asignado | en_camino | entregado | rechazado | expirado.
 // Con estado=pendiente la API ordena primero los más cerca de vencer.
 export function listarPedidos({ estado, zonaId, pagina = 1, tamano = 20 } = {}) {

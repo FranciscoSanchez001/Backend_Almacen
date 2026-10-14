@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { aprobarPedido, crearPedido, listarMisPedidos, listarPedidos, listarRepartidores, marcarEnCamino, marcarEntregado, rechazarPedido } from './pedidos'
+import { aprobarPedido, crearPedido, listarEntregas, listarMisPedidos, listarPedidos, listarRepartidores, marcarEnCamino, marcarEntregado, obtenerPedido, rechazarPedido } from './pedidos'
 
 let fetchSimulado
 
@@ -16,6 +16,17 @@ const llamada = () => {
 }
 
 describe('pedidos', () => {
+  it('consulta entregas e historial con su paginación y obtiene el detalle protegido', async () => {
+    await listarEntregas()
+    expect(llamada().url.pathname).toBe('/repartidor/pedidos')
+    expect(Object.fromEntries(llamada().url.searchParams)).toEqual({ historial: 'false', pagina: '1', tamano: '20' })
+    fetchSimulado.mockClear()
+    await listarEntregas({ historial: true, pagina: 2 })
+    expect(Object.fromEntries(llamada().url.searchParams)).toEqual({ historial: 'true', pagina: '2', tamano: '20' })
+    fetchSimulado.mockClear()
+    await obtenerPedido('p1')
+    expect(llamada().url.pathname).toBe('/pedidos/p1')
+  })
   it('envía el checkout como multipart con ítems indexados y comprobante', async () => {
     const captura = new File(['imagen'], 'pago.png', { type: 'image/png' })
     await crearPedido({ lineas: [{ producto: { id: 'p1' }, cantidad: 2 }, { producto: { id: 'p2' }, cantidad: 3 }],
