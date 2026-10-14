@@ -5,6 +5,7 @@ import { listarCategorias } from '../api/catalogo'
 import { useCarrito } from '../context/CarritoContext'
 import BotonTema from '../components/BotonTema'
 import LoginCliente from '../components/LoginCliente'
+import Carrito from '../components/Carrito'
 import { useAuth } from '../context/AuthContext'
 import { INICIO_POR_ROL } from '../api/auth'
 import { formatoUsd } from '../utils/formato'
@@ -16,9 +17,11 @@ import { formatoUsd } from '../utils/formato'
 export default function TiendaLayout() {
   const [categorias, setCategorias] = useState([])
   const [accesoAbierto, setAccesoAbierto] = useState(false)
+  const [carritoAbierto, setCarritoAbierto] = useState(false)
   const [saliendo, setSaliendo] = useState(false)
   const { usuario, logout } = useAuth()
   const cerrarAcceso = useCallback(() => setAccesoAbierto(false), [])
+  const cerrarCarrito = useCallback(() => setCarritoAbierto(false), [])
   const [params] = useSearchParams()
   const navegar = useNavigate()
   const { totalUnidades, totalUsd } = useCarrito()
@@ -95,6 +98,8 @@ export default function TiendaLayout() {
               type="button"
               className="relative flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
               aria-label={`Carrito: ${totalUnidades} productos`}
+              aria-haspopup="dialog"
+              onClick={() => setCarritoAbierto(true)}
             >
               <span aria-hidden><Icono nombre="cesta" /></span>
               <span>{formatoUsd(totalUsd)}</span>
@@ -137,6 +142,7 @@ export default function TiendaLayout() {
       </header>
 
       {accesoAbierto && <LoginCliente alCerrar={cerrarAcceso} />}
+      {carritoAbierto && <Carrito alCerrar={cerrarCarrito} />}
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <Outlet context={{ categorias }} />
