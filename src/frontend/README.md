@@ -367,7 +367,7 @@ Todos los archivos de `src/` con lógica o interfaz tienen pruebas: 46 archivos 
 | Administración | `Personal`, `FormularioUsuario`, `Auditoria`, `Configuracion`, `PowerBIDashboard` | 76 |
 | **Total** | | **455** |
 
-Dos pruebas están marcadas con `it.fails` porque documentan un error conocido: `ESTADOS_PEDIDO` (`utils/panel.js`) no define el estado `aprobado` que el backend registra al aprobar un pedido, por lo que el historial del pedido y la auditoría lo muestran como «aprobado», en minúsculas. Cuando se corrija, esas pruebas empezarán a fallar y bastará con cambiar `it.fails` por `it`.
+Las pruebas del historial y la auditoría verifican que el estado `aprobado` se muestre como «Aprobado». Son pruebas normales y deben pasar; no se mantienen fallos esperados para ese estado.
 
 ### 13.4 Ejecución
 

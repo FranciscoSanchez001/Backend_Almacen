@@ -2,6 +2,7 @@
 
 export const ESTADOS_PEDIDO = {
   pendiente: { nombre: 'Pendiente', clase: 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300' },
+  aprobado: { nombre: 'Aprobado', clase: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },
   asignado: { nombre: 'Asignado', clase: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300' },
   en_camino: { nombre: 'En camino', clase: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300' },
   entregado: { nombre: 'Entregado', clase: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' },

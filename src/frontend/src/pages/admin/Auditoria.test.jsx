@@ -205,9 +205,7 @@ describe('Auditoria: estados de pedidos', () => {
     expect(fila('Asignado')).toHaveTextContent('Ana Pérez')
   })
 
-  // Error conocido: ESTADOS_PEDIDO (utils/panel.js) no define "aprobado", que el backend sí
-  // registra al aprobar un pedido, así que la transición se muestra con el valor crudo.
-  it.fails('muestra el estado "aprobado" con su nombre', async () => {
+  it('muestra el estado "aprobado" con su nombre', async () => {
     await verPedidos()
 
     expect(fila('#1025')).toHaveTextContent('Pendiente → Aprobado')

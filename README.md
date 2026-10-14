@@ -321,7 +321,7 @@ Los clientes se autentican con su cuenta de Google. Ver [Datos semilla y credenc
 | [`tests/IntegrationTests`](tests/IntegrationTests) | API completa contra PostgreSQL real en Docker | xUnit + WebApplicationFactory + Testcontainers | 20 |
 | [`src/frontend`](src/frontend/README.md#13-pruebas) | Frontend: servicios de la API, contextos, enrutado, componentes, layouts y todas las pantallas | Vitest + React Testing Library | 455 |
 
-**Total: 505 pruebas: 50 del backend y 455 del frontend.** Todas pasan, salvo dos del frontend marcadas como fallo esperado (`it.fails`) que documentan un error conocido. El detalle de cada prueba, la infraestructura de integración y las opciones de ejecución están en el [README de las pruebas](tests/README.md); el reporte de ejecución, en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md).
+Las pruebas del historial y la auditoría verifican que la aprobación se muestre como «Aprobado», sin fallos esperados. El detalle de cada prueba, la infraestructura de integración y las opciones de ejecución están en el [README de las pruebas](tests/README.md); el reporte de ejecución, en [`docs/evidencias/pruebas-xunit.md`](docs/evidencias/pruebas-xunit.md).
 
 ```bash
 dotnet test tests/UnitTests                       # Unitarias
