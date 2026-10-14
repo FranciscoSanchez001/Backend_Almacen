@@ -159,5 +159,13 @@ namespace Infrastructure.Persistencia.Repositorios
     public class MensajeWhatsappRepository(ApplicationDbContext db) : IMensajeWhatsappRepository
     {
         public void Agregar(MensajeWhatsapp mensaje) => db.MensajesWhatsapp.Add(mensaje);
+
+        public async Task<IReadOnlyList<MensajeWhatsappRegistrado>> UltimosAsync(int limite, CancellationToken ct = default) =>
+            await db.MensajesWhatsapp.AsNoTracking()
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(limite)
+                .Select(m => new MensajeWhatsappRegistrado(m.Id, m.Pedido.Numero, m.Telefono, m.Plantilla, m.Texto, m.Estado,
+                    m.Error, m.CreatedAt))
+                .ToListAsync(ct);
     }
 }

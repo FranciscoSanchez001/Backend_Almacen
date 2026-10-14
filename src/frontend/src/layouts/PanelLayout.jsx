@@ -36,6 +36,7 @@ const SECCIONES = [
       { ruta: '/admin', fin: true, titulo: 'Dashboard KPI', detalle: 'Indicadores, Excel y PDF', icono: icono('M4 20V10m6 10V4m6 16v-7m4 7H2') },
       { ruta: '/admin/personal', titulo: 'Personal', detalle: 'Vendedores y repartidores', icono: icono('M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm13 9v-1a4 4 0 0 0-3-3.87M16 4.13a3 3 0 0 1 0 5.74') },
       { ruta: '/admin/cupones', titulo: 'Cupones', detalle: 'Códigos de descuento', icono: icono('M7 7h.01M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9Z') },
+      { ruta: '/admin/whatsapp', titulo: 'WhatsApp', detalle: 'Vincular teléfono y mensajes', icono: icono('M4 20l1.3-3.9A8 8 0 1 1 8 19.1L4 20Zm5-11c0 3.3 2.7 6 6 6l1.2-1.4-2-1-1 .9a5 5 0 0 1-2.7-2.7l.9-1-1-2L9 9Z') },
       { ruta: '/admin/auditoria', titulo: 'Auditoría', detalle: 'Quién cambió qué', icono: icono('M9 12l2 2 4-4m5 2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z') },
       { ruta: '/admin/configuracion', titulo: 'Configuración', detalle: 'Tasa, zonas y pagos', icono: icono('M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-2-1.2L14.5 3h-4l-.4 2.6a7.5 7.5 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7.5 7.5 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z') },
     ],

@@ -63,6 +63,8 @@ namespace Infrastructure
             services.AddSingleton(configuracion.GetSection("Whatsapp").Get<WhatsappOptions>() ?? new WhatsappOptions());
             services.AddHttpClient(nameof(EnvioWhatsappWorker), c => c.Timeout = TimeSpan.FromSeconds(15));
             services.AddHostedService<EnvioWhatsappWorker>();
+            services.AddHttpClient(nameof(ClienteWhatsappBaileys), c => c.Timeout = TimeSpan.FromSeconds(20));
+            services.AddSingleton<IClienteWhatsapp, ClienteWhatsappBaileys>();
 
             // Job de expiración de pedidos pendientes.
             services.AddSingleton(configuracion.GetSection("Expiracion").Get<ExpiracionOptions>() ?? new ExpiracionOptions());

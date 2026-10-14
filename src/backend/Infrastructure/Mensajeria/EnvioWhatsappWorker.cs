@@ -17,10 +17,15 @@ namespace Infrastructure.Mensajeria
         // quedan registrados con estado error.
         public string? ServicioUrl { get; set; }
         public string? ApiKey { get; set; }
+
+        // Pausa entre un envío y el siguiente, para que los mensajes salgan de a uno y el número
+        // no parezca un bot que manda ráfagas (WhatsApp puede bloquearlo).
+        public int SegundosEntreEnvios { get; set; } = 60;
     }
 
     // Consume la ColaWhatsapp: aplica la lista blanca, llama al servicio de Baileys
     // (POST {ServicioUrl}/enviar con {telefono, texto}) y registra cada envío en mensajes_whatsapp.
+    // Los mensajes salen de a uno: tras cada intento de envío espera SegundosEntreEnvios.
     public class EnvioWhatsappWorker(
         ColaWhatsapp cola,
         IServiceScopeFactory scopes,
@@ -32,18 +37,26 @@ namespace Infrastructure.Mensajeria
         {
             await foreach (var mensaje in cola.Lector.ReadAllAsync(stoppingToken))
             {
+                var intentoEnvio = false;
                 try
                 {
-                    await ProcesarAsync(mensaje, stoppingToken);
+                    intentoEnvio = await ProcesarAsync(mensaje, stoppingToken);
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {
                     logger.LogError(ex, "No se pudo registrar el mensaje de WhatsApp del pedido {PedidoId}.", mensaje.PedidoId);
                 }
+
+                // Solo se espera si de verdad se llamó a WhatsApp; los bloqueados no cuentan.
+                if (intentoEnvio && options.SegundosEntreEnvios > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(options.SegundosEntreEnvios), stoppingToken);
+                }
             }
         }
 
-        private async Task ProcesarAsync(MensajeEnCola mensaje, CancellationToken ct)
+        // Devuelve true si se llamó al servicio de WhatsApp (haya salido bien o no).
+        private async Task<bool> ProcesarAsync(MensajeEnCola mensaje, CancellationToken ct)
         {
             using var scope = scopes.CreateScope();
             var configuracion = scope.ServiceProvider.GetRequiredService<IConfiguracionRepository>();
@@ -54,6 +67,7 @@ namespace Infrastructure.Mensajeria
                 .Select(Telefonos.NormalizarVenezolano)
                 .ToHashSet();
 
+            var intentoEnvio = false;
             var registro = new MensajeWhatsapp
             {
                 PedidoId = mensaje.PedidoId,
@@ -74,6 +88,7 @@ namespace Infrastructure.Mensajeria
             }
             else
             {
+                intentoEnvio = true;
                 try
                 {
                     var cliente = http.CreateClient(nameof(EnvioWhatsappWorker));
@@ -110,6 +125,7 @@ namespace Infrastructure.Mensajeria
 
             mensajes.Agregar(registro);
             await unidad.GuardarCambiosAsync(ct);
+            return intentoEnvio;
         }
     }
 }

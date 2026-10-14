@@ -301,7 +301,7 @@ namespace Core.Application.Servicios
 
             await unidad.GuardarCambiosAsync(ct);
             await tx.ConfirmarAsync(ct);
-            await EncolarMensajeAsync(pedido, PlantillaWhatsapp.Aprobado, ct);
+            EncolarMensaje(pedido, PlantillaWhatsapp.Aprobado);
             return ResultadoPedido.Ok(pedido.Id);
         }
 
@@ -333,7 +333,6 @@ namespace Core.Application.Servicios
 
             await unidad.GuardarCambiosAsync(ct);
             await tx.ConfirmarAsync(ct);
-            await EncolarMensajeAsync(pedido, PlantillaWhatsapp.Rechazado, ct);
             return ResultadoPedido.Ok(pedido.Id);
         }
 
@@ -372,8 +371,11 @@ namespace Core.Application.Servicios
 
             await unidad.GuardarCambiosAsync(ct);
             await tx.ConfirmarAsync(ct);
-            await EncolarMensajeAsync(pedido,
-                nuevoEstado == EstadoPedido.EnCamino ? PlantillaWhatsapp.EnCamino : PlantillaWhatsapp.Entregado, ct);
+            // Al cliente solo se le avisa la salida; la entrega la ve él mismo.
+            if (nuevoEstado == EstadoPedido.EnCamino)
+            {
+                EncolarMensaje(pedido, PlantillaWhatsapp.EnCamino);
+            }
             return ResultadoPedido.Ok(pedido.Id);
         }
 
@@ -402,7 +404,6 @@ namespace Core.Application.Servicios
 
                     await ExpirarBloqueadoAsync(pedido, ct);
                     await tx.ConfirmarAsync(ct);
-                    await EncolarMensajeAsync(pedido, PlantillaWhatsapp.Expirado, ct);
                     expirados++;
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
@@ -440,7 +441,6 @@ namespace Core.Application.Servicios
 
             await ExpirarBloqueadoAsync(pedido, ct);
             await tx.ConfirmarAsync(ct);
-            await EncolarMensajeAsync(pedido, PlantillaWhatsapp.Expirado, ct);
             return ResultadoPedido.Falla(ErrorPedido.EstadoInvalido,
                 $"El pedido #{pedido.Numero} venció sin ser revisado y se canceló; su stock volvió a la tienda.");
         }
@@ -469,13 +469,13 @@ namespace Core.Application.Servicios
             ResultadoPedido.Falla(ErrorPedido.EstadoInvalido,
                 $"No se puede {accion} el pedido #{pedido.Numero} porque está en estado \"{pedido.Estado}\".");
 
-        // Después del commit: un fallo aquí no deshace el cambio de estado, solo se registra.
-        private async Task EncolarMensajeAsync(Pedido pedido, PlantillaWhatsapp plantilla, CancellationToken ct)
+        // WhatsApp al cliente solo en dos momentos, para no abrumarlo: compra aprobada y pedido en
+        // camino. Después del commit: un fallo aquí no deshace el cambio de estado, solo se registra.
+        private void EncolarMensaje(Pedido pedido, PlantillaWhatsapp plantilla)
         {
             try
             {
-                var soporte = (await configuracion.ObtenerAsync(ct)).NumeroSoporte;
-                whatsapp.Encolar(pedido, plantilla, soporte);
+                whatsapp.Encolar(pedido, plantilla);
             }
             catch (Exception ex)
             {

@@ -82,8 +82,8 @@ El sistema permite a los clientes de un supermercado comprar en línea y al pers
 - Pedidos con pago por transferencia, pago móvil o Binance y comprobante adjunto.
 - Inventario con reserva de stock al crear el pedido y liberación automática si se rechaza o expira.
 - Aprobación de pedidos por el área de ventas con asignación de repartidor.
-- Área del repartidor, pensada para el celular: sus entregas con dirección, navegación (Google Maps o Waze), llamada o WhatsApp al cliente, y los botones "Salí a entregar" y "Marcar entregado".
-- Seguimiento de la entrega y notificaciones al cliente por WhatsApp en cada cambio de estado.
+- Área del repartidor, pensada para el celular: en cada tarjeta, dirección, Google Maps, llamada o WhatsApp al cliente, y los botones "Iniciar entrega" y "Marcar como entregado".
+- Avisos al cliente por WhatsApp (Baileys) cuando se aprueba su compra y cuando el pedido va en camino, enviados de a uno. El gerente vincula el teléfono de la tienda con un código QR.
 - Auditoría de cambios y dashboard de indicadores (KPIs) que incluye el comportamiento de los visitantes (búsquedas, embudo de compra, carrito), con informe descargable en **Excel** y en **PDF**.
 - Imágenes de demostración en todos los productos sembrados (fotos libres de Wikimedia Commons, ver [`docs/CREDITOS_IMAGENES.md`](docs/CREDITOS_IMAGENES.md)).
 
@@ -139,6 +139,12 @@ Pantalla principal del gerente (`/admin`). Arriba muestra los avisos del día (p
 
 Al final del mismo dashboard está el **comportamiento de los visitantes** de la tienda: visitas, búsquedas, porcentaje de búsquedas sin resultados, conversión, embudo de compra con el abandono entre pasos, lo más buscado, lo buscado sin resultados, productos agregados al carrito frente a vendidos, categorías visitadas y cupones. Los datos son anónimos.
 
+### WhatsApp (administrador)
+
+![Vincular WhatsApp con código QR](docs/capturas/whatsapp.png)
+
+Pantalla **Administración > WhatsApp** (`/admin/whatsapp`). El gerente pulsa **Vincular teléfono** y escanea el código QR desde WhatsApp > *Dispositivos vinculados* en el teléfono de la tienda; el estado cambia solo a *Conectado*. Desde aquí envía un mensaje de prueba, ve los números de prueba a los que se permite enviar y revisa los últimos avisos con su estado (enviado, error o fuera de la lista de prueba). Los clientes reciben dos avisos: cuando se aprueba su compra y cuando el pedido va en camino, y salen de a uno, con un minuto entre envíos.
+
 ### Bandeja de pedidos (ventas)
 
 ![Bandeja de pedidos de ventas](docs/capturas/pedidos_ventas.png)
@@ -149,7 +155,7 @@ Pantalla de pedidos del área de ventas (`/panel/pedidos`). Las pestañas filtra
 
 <p align="center"><img src="docs/capturas/repartidor.png" alt="Área del repartidor en el celular" width="300"></p>
 
-Área del repartidor (`/repartidor`), pensada para el celular. Muestra los pedidos que tiene asignados, con la dirección y la zona, el cliente y el total ya pagado. Puede abrir la ruta en **Google Maps** o **Waze**, **llamar** o escribir por **WhatsApp** al cliente y ver los productos. Un solo botón grande indica el siguiente paso: **Salí a entregar** (pasa el pedido a "en camino") y **Marcar entregado**, que pide confirmación. En cada paso se notifica al cliente por WhatsApp. La pestaña **Historial** lista sus entregas ya hechas.
+Área del repartidor (`/repartidor`), pensada para el celular. En **Entregas en curso**, cada tarjeta muestra el pedido con la dirección y la zona, el cliente y el total ya pagado; desde ahí abre la ruta en **Google Maps**, **llama** o escribe por **WhatsApp** al cliente y ve los productos. El botón de la tarjeta es el siguiente paso: **Iniciar entrega** pasa el pedido a "en camino" (y el cliente recibe un WhatsApp) y se reemplaza por **Marcar como entregado**, que lo saca de la lista. La pestaña **Historial** muestra sus entregas ya hechas.
 
 ---
 
@@ -161,6 +167,7 @@ Cada componente tiene su propia documentación detallada:
 | :--- | :--- | :--- | :--- |
 | **Backend** | [`src/backend/`](src/backend) | API REST en ASP.NET Core 10 con Onion Architecture, EF Core y PostgreSQL | [README del backend](src/backend/README.md) |
 | **Frontend** | [`src/frontend/`](src/frontend) | SPA en React 19, Vite y Tailwind CSS: tienda, panel de ventas, administración y entregas | [README del frontend](src/frontend/README.md) |
+| **WhatsApp** | [`src/whatsapp/`](src/whatsapp) | Servicio Node.js con Baileys: vincula por QR el teléfono de la tienda y envía los avisos de los pedidos. Lo administra el gerente en **Administración > WhatsApp** | [Reglas de WhatsApp](docs/REGLAS_NEGOCIO.md#7-notificaciones-por-whatsapp) |
 | **Pruebas** | [`tests/`](tests) y `src/frontend/src/` | Backend: pruebas unitarias, de arquitectura y de integración con xUnit. Frontend: pruebas de servicios, componentes y pantallas con Vitest | [README de las pruebas](tests/README.md) |
 | **Base de datos** | [`database/`](database) | Script SQL del esquema, volcado con datos sembrados y consultas de verificación | [Evidencias de base de datos](docs/evidencias/base-datos.md) |
 | **Documentación** | [`docs/`](docs) | Arquitectura, modelo de datos, API, reglas de negocio, gestión del proyecto y evidencias | [Sección 14](#14-documentación) |

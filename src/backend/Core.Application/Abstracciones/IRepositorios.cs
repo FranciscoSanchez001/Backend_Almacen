@@ -238,6 +238,9 @@ namespace Core.Application.Abstracciones
     public interface IMensajeWhatsappRepository
     {
         void Agregar(MensajeWhatsapp mensaje);
+
+        // Los más recientes primero.
+        Task<IReadOnlyList<MensajeWhatsappRegistrado>> UltimosAsync(int limite, CancellationToken ct = default);
     }
 
     // Datos crudos del dashboard y del informe en Excel; ReportesService calcula los KPIs.

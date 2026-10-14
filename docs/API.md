@@ -129,7 +129,17 @@ El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, 
 | :--- | :--- | :---: | :--- |
 | `GET` | `/repartidor/pedidos` | ![camion](../src/frontend/public/iconos/camion.svg) | Pedidos asignados al repartidor de la sesión. |
 
-## 10. Usuarios del personal — `/usuarios`
+## 10. WhatsApp — `/whatsapp`
+
+| Método | Ruta | Acceso | Descripción |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/whatsapp/estado` | 👔 | Estado del teléfono vinculado: `desconectado`, `conectando`, `esperando_qr` (con la imagen `qr`) o `conectado` (con `numero`). |
+| `POST` | `/whatsapp/vincular` | 👔 | Abre la sesión; si no hay teléfono vinculado, el QR aparece en `/whatsapp/estado`. |
+| `POST` | `/whatsapp/desvincular` | 👔 | Cierra la sesión en WhatsApp y borra las credenciales. |
+| `POST` | `/whatsapp/prueba` | 👔 | Envía un mensaje de prueba. Cuerpo: `{ "telefono" }` (venezolano). `204` si se envió, `502` con el motivo si no. |
+| `GET` | `/whatsapp/mensajes` | 👔 | Últimos mensajes de los pedidos con su estado (`enviado`, `error`, `bloqueado_lista_blanca`). Filtro: `limite` (1 a 100). |
+
+## 11. Usuarios del personal — `/usuarios`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -140,7 +150,7 @@ El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, 
 | `POST` | `/usuarios/{id}/activar` | ![personal](../src/frontend/public/iconos/personal.svg) | Reactiva un usuario. |
 | `POST` | `/usuarios/{id}/desactivar` | ![personal](../src/frontend/public/iconos/personal.svg) | Desactiva un usuario; pierde el acceso de inmediato. |
 
-## 11. Configuración — `/configuracion`
+## 12. Configuración — `/configuracion`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -149,7 +159,7 @@ El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, 
 | `PUT` | `/configuracion/tasa` | ![personal](../src/frontend/public/iconos/personal.svg) | Carga la **tasa Bs/USD del día**. Cuerpo: `{ "tasa" }`. Queda en el historial. **Es necesaria para que los clientes puedan crear pedidos.** |
 | `GET` | `/configuracion/tasas` | ![personal](../src/frontend/public/iconos/personal.svg) | Historial de tasas cargadas. |
 
-## 12. Zonas de entrega — `/zonas`
+## 13. Zonas de entrega — `/zonas`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -157,14 +167,14 @@ El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, 
 | `POST` | `/zonas` | ![personal](../src/frontend/public/iconos/personal.svg) | Crea una zona. |
 | `PUT` | `/zonas/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Edita o desactiva una zona. |
 
-## 13. Auditoría — `/auditoria`
+## 14. Auditoría — `/auditoria`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
 | `GET` | `/auditoria` | ![personal](../src/frontend/public/iconos/personal.svg) | Cambios registrados. Filtros: `usuarioId`, `productoId`, `entidad`, `entidadId`, `desde`, `hasta`, `pagina`, `tamano`. |
 | `GET` | `/auditoria/pedidos` | ![personal](../src/frontend/public/iconos/personal.svg) | Cambios de estado de los pedidos. Filtros: `usuarioId`, `pedidoId`, `desde`, `hasta`. |
 
-## 14. KPIs e informe en Excel
+## 15. KPIs e informe en Excel
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -184,7 +194,7 @@ El detalle de un pedido (`PedidoResponse`) incluye `subtotalUsd`, `subtotalBs`, 
 
 Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los datos del Excel coinciden con los de `/kpis`**. El informe trae las hojas: Resumen, Ventas por día, Productos, Categorías, Métodos de pago, Horas pico, Zonas, Inventario, Repartidores y Detalle de pedidos.
 
-## 14.1 Analítica de comportamiento — `/analitica`
+## 15.1 Analítica de comportamiento — `/analitica`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
@@ -193,13 +203,13 @@ Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los d
 
 `GET /catalogo` con `q` registra la búsqueda (y cuántos resultados dio) si la petición trae el encabezado `X-Sesion-Analitica` con el id de la visita. Solo cuenta la primera página.
 
-## 15. Diagnóstico — `/DbTest`
+## 16. Diagnóstico — `/DbTest`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
 | `GET` | `/DbTest` | ![personal](../src/frontend/public/iconos/personal.svg) | Verifica la conexión a PostgreSQL y devuelve las migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
 
-## 16. Pruebas del manejo de errores — `/pruebas/errores`
+## 17. Pruebas del manejo de errores — `/pruebas/errores`
 
 Provocan una excepción a propósito para comprobar el `ExceptionMiddleware`. Todas responden con `application/problem+json` (RFC 7807).
 

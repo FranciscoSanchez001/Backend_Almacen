@@ -4,13 +4,12 @@ using Core.Domain.Entidades;
 
 namespace Core.Application.Servicios
 {
+    // Solo dos avisos al cliente, para no abrumarlo: cuando se aprueba la compra y cuando el
+    // pedido sale a entregarse.
     public enum PlantillaWhatsapp
     {
         Aprobado,
-        Rechazado,
-        Expirado,
-        EnCamino,
-        Entregado
+        EnCamino
     }
 
     public record MensajeEnCola(Guid PedidoId, string Telefono, PlantillaWhatsapp Plantilla, string Texto);
@@ -25,27 +24,19 @@ namespace Core.Application.Servicios
         public ChannelReader<MensajeEnCola> Lector => canal.Reader;
 
         // El pedido debe traer cargados Cliente y Zona.
-        public void Encolar(Pedido pedido, PlantillaWhatsapp plantilla, string? soporte)
+        public void Encolar(Pedido pedido, PlantillaWhatsapp plantilla)
         {
-            var texto = Armar(pedido, plantilla, soporte ?? "número de soporte");
+            var texto = Armar(pedido, plantilla);
             canal.Writer.TryWrite(new MensajeEnCola(pedido.Id, pedido.TelefonoContacto, plantilla, texto));
         }
 
-        public static string Armar(Pedido p, PlantillaWhatsapp plantilla, string soporte) => plantilla switch
+        public static string Armar(Pedido p, PlantillaWhatsapp plantilla) => plantilla switch
         {
             PlantillaWhatsapp.Aprobado =>
                 $"¡Hola {p.Cliente.Nombre}! Tu compra #{p.Numero} por ${Monto(p.TotalUsd)} (Bs {Monto(p.TotalBs)}) " +
                 $"fue aprobada y será enviada a: {p.DireccionTexto}, {p.Zona.Nombre}.",
-            PlantillaWhatsapp.Rechazado =>
-                $"Hola {p.Cliente.Nombre}, tu compra #{p.Numero} fue rechazada porque {p.MotivoRechazo}. " +
-                $"Si crees que es un error, escríbenos al {soporte}.",
-            PlantillaWhatsapp.Expirado =>
-                $"Hola {p.Cliente.Nombre}, tu pedido #{p.Numero} no pudo ser procesado a tiempo y fue cancelado. " +
-                $"Si ya realizaste el pago, comunícate al {soporte}.",
             PlantillaWhatsapp.EnCamino =>
                 $"Tu pedido #{p.Numero} ya va en camino.",
-            PlantillaWhatsapp.Entregado =>
-                $"Tu pedido #{p.Numero} fue entregado. Si no llegó o no llegó en buen estado, comunícate al {soporte}.",
             _ => throw new ArgumentOutOfRangeException(nameof(plantilla)),
         };
 

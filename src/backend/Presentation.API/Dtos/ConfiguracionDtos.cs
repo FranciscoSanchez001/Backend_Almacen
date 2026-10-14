@@ -36,4 +36,7 @@ namespace Presentation.API.Dtos
             c.NumeroSoporte, c.HorasExpiracion, c.DatosTransferencia, c.DatosPagoMovil, c.WalletBinance,
             string.Join(", ", c.NumerosPrueba));
     }
+
+    // POST /whatsapp/prueba: teléfono venezolano al que se envía el mensaje de prueba.
+    public record PruebaWhatsappRequest(string? Telefono);
 }

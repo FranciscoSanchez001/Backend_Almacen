@@ -5,11 +5,12 @@
 #   api         ASP.NET Core 10 Web API          -> http://localhost:5000
 #   spa         React + Vite servido por Nginx   -> http://localhost:8080
 #   postgrest   API REST automática sobre la base -> http://localhost:3000
+#   whatsapp    Servicio de Baileys (envío de WhatsApp); solo lo usa la API, no se publica
 #
 # Orden de arranque: db (healthy) -> migraciones (terminada) -> api (healthy) -> spa
 #
 # Redes:
-#   backend   db, migraciones, api y postgrest. La SPA no tiene acceso a la base de datos.
+#   backend   db, migraciones, api, postgrest y whatsapp. La SPA no tiene acceso a la base de datos.
 #   frontend  api y spa.
 #
 # Uso (desde la raíz del repositorio):  docker compose up -d --build
@@ -91,6 +92,9 @@ services:
       # Datos de demostración (90 días de pedidos, clientes y personal) para el dashboard KPI.
       # Solo siembra si la base no tiene pedidos: en los arranques siguientes no hace nada.
       SiembraDemo__Habilitada: "true"
+      # Servicio de WhatsApp (Baileys). La clave debe coincidir con API_KEY del servicio.
+      Whatsapp__ServicioUrl: http://whatsapp:3001
+      Whatsapp__ApiKey: ${WHATSAPP_API_KEY:-clave-local-whatsapp}
     volumes:
       # Capturas de pago subidas por los clientes (cuando no hay Cloudinary configurado).
       - capturas_pago:/app/wwwroot/capturas
@@ -136,6 +140,24 @@ services:
         condition: service_healthy
 
   # -------------------------------------------------------------
+  # WhatsApp con Baileys: el gerente vincula el teléfono desde
+  # Administración > WhatsApp (código QR) y la API envía por aquí los mensajes de los pedidos.
+  # No publica puertos: solo la API lo alcanza por la red interna.
+  # -------------------------------------------------------------
+  whatsapp:
+    build:
+      context: src/whatsapp
+    container_name: almacen_whatsapp
+    restart: unless-stopped
+    environment:
+      API_KEY: ${WHATSAPP_API_KEY:-clave-local-whatsapp}
+    volumes:
+      # Sesión del teléfono vinculado: sobrevive a reinicios (no hay que volver a escanear el QR).
+      - whatsapp_sesion:/app/sesion
+    networks:
+      - backend
+
+  # -------------------------------------------------------------
   # PostgREST (API REST automática sobre la base de datos)
   # -------------------------------------------------------------
   postgrest:
@@ -161,3 +183,4 @@ networks:
 volumes:
   postgres15_data:
   capturas_pago:
+  whatsapp_sesion:
