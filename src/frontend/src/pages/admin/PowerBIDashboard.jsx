@@ -1,3 +1,4 @@
+import Icono from '../../components/Icono'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { descargarExcel, obtenerKpis } from '../../api/reportes'
@@ -82,20 +83,20 @@ function AvisosDelDia({ inventario }) {
   return (
     <nav aria-label="Avisos del día" className="flex flex-wrap items-center gap-2">
       <Link to="/panel/pedidos" className={chip}>
-        <span aria-hidden>🧾</span>
+        <span aria-hidden><Icono nombre="recibo" /></span>
         <strong className="text-slate-900">{datos.pendientes.total}</strong> por revisar
         {urgente && <ContadorExpiracion expiraEn={urgente.expiraEn} />}
       </Link>
       <Link to="/panel/inventario" className={chip}>
-        <span aria-hidden>⛔</span>
+        <span aria-hidden><Icono nombre="agotado" /></span>
         <strong className={agotados > 0 ? 'text-red-700 dark:text-red-300' : 'text-slate-900'}>{agotados}</strong> agotados
       </Link>
       <Link to="/panel/inventario" className={chip}>
-        <span aria-hidden>⚠️</span>
+        <span aria-hidden><Icono nombre="advertencia" /></span>
         <strong className="text-slate-900">{bajos}</strong> bajo el mínimo
       </Link>
       <Link to="/panel#avisos" className={chip}>
-        <span aria-hidden>🔔</span>
+        <span aria-hidden><Icono nombre="campana" /></span>
         <strong className="text-slate-900">{datos.avisos.total}</strong> avisos sin leer
       </Link>
     </nav>
@@ -218,7 +219,7 @@ export default function PowerBIDashboard() {
           <div className="flex items-center gap-2 lg:ml-auto">
             {cargando && kpis && <span className="text-xs text-slate-500">Actualizando…</span>}
             <button type="button" onClick={alDescargar} disabled={descargando || rangoInvalido} className={claseBoton.primario}>
-              {descargando ? 'Generando…' : '⬇ Descargar Excel'}
+              {descargando ? 'Generando…' : <><Icono nombre="descargar" /> Descargar Excel</>}
             </button>
           </div>
         </div>
@@ -443,7 +444,7 @@ export default function PowerBIDashboard() {
                         {rotacion.map((p) => (
                           <tr key={p.productoId}>
                             <td className="py-2">
-                              {p.producto} {p.agotado && <span className="text-xs font-semibold text-red-700 dark:text-red-300">⛔ agotado</span>}
+                              {p.producto} {p.agotado && <span className="text-xs font-semibold text-red-700 dark:text-red-300"><Icono nombre="agotado" /> agotado</span>}
                             </td>
                             <td className="py-2 text-slate-600">{p.categoria}</td>
                             <td className="py-2 text-right">{p.unidadesVendidas}</td>

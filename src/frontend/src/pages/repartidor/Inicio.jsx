@@ -1,3 +1,4 @@
+import Icono from '../../components/Icono'
 // Entregas (repartidor). Pensado para el celular.
 const SECCIONES = [
   ['Mis entregas', 'Lista de los pedidos asignados a este repartidor.'],
@@ -11,7 +12,7 @@ export default function Inicio() {
   return (
     <div className="space-y-6">
       <section>
-        <h2 className="text-2xl font-bold">Entregas 🛵</h2>
+        <h2 className="text-2xl font-bold">Entregas <Icono nombre="moto" /></h2>
         <p className="mt-1 text-slate-600">Área del repartidor, pensada para el celular.</p>
       </section>
 

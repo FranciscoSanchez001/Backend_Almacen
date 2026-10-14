@@ -151,7 +151,7 @@ describe('PowerBIDashboard: período', () => {
     fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-10-20' } })
 
     expect(await screen.findByText(/Elige un rango válido/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '⬇ Descargar Excel' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Descargar Excel' })).toBeDisabled()
     expect(obtenerKpis).toHaveBeenCalledTimes(llamadas)
   })
 
@@ -290,12 +290,12 @@ describe('PowerBIDashboard: Excel y errores', () => {
     const { user } = montar()
     await screen.findByText('$1,234.50')
 
-    await user.click(screen.getByRole('button', { name: '⬇ Descargar Excel' }))
+    await user.click(screen.getByRole('button', { name: 'Descargar Excel' }))
 
     expect(descargarExcel).toHaveBeenCalledWith({ tipo: 'mensual', desde: HOY })
     expect(screen.getByRole('button', { name: 'Generando…' })).toBeDisabled()
     terminar()
-    expect(await screen.findByRole('button', { name: '⬇ Descargar Excel' })).toBeEnabled()
+    expect(await screen.findByRole('button', { name: 'Descargar Excel' })).toBeEnabled()
   })
 
   it('si la descarga falla muestra el error', async () => {
@@ -303,7 +303,7 @@ describe('PowerBIDashboard: Excel y errores', () => {
     const { user } = montar()
     await screen.findByText('$1,234.50')
 
-    await user.click(screen.getByRole('button', { name: '⬇ Descargar Excel' }))
+    await user.click(screen.getByRole('button', { name: 'Descargar Excel' }))
 
     expect(await screen.findByText('No se pudo generar el informe.')).toBeInTheDocument()
   })

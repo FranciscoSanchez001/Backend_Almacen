@@ -14,13 +14,13 @@ Fecha de ejecución: **2026-10-02 01:55 UTC**. Roles: **Admin** = `superadmin`, 
 
 | Escenario | Petición | Esperado | Obtenido | Aserciones |
 | :--- | :--- | :---: | :---: | :---: |
-| 1a. Login Admin (superadmin) | `POST /api/auth/login` | 200 | `200 OK` | 3/3 ✅ |
-| Preparar: Admin crea el Employee de prueba | `POST /usuarios` | 201 / 409 | `201 Created` | 1/1 ✅ |
-| 1b. Login Employee (ventas) | `POST /api/auth/login` | 200 | `200 OK` | 3/3 ✅ |
-| 2. GET /productos sin token | `GET /productos` | 401 | `401 Unauthorized` | 4/4 ✅ |
-| 3. Employee intenta DELETE /productos/{id} | `DELETE /productos/a1000000-0000-4000-8000-000000000001` | 403 | `403 Forbidden` | 3/3 ✅ |
-| 3b. Admin comprueba que el producto sigue activo | `GET /productos/a1000000-0000-4000-8000-000000000001` | 200 | `200 OK` | 2/2 ✅ |
-| 4. POST /productos con precio negativo | `POST /productos` | 400 | `400 Bad Request` | 5/5 ✅ |
+| 1a. Login Admin (superadmin) | `POST /api/auth/login` | 200 | `200 OK` | 3/3 ![correcto](../../src/frontend/public/iconos/correcto.svg) |
+| Preparar: Admin crea el Employee de prueba | `POST /usuarios` | 201 / 409 | `201 Created` | 1/1 ![correcto](../../src/frontend/public/iconos/correcto.svg) |
+| 1b. Login Employee (ventas) | `POST /api/auth/login` | 200 | `200 OK` | 3/3 ![correcto](../../src/frontend/public/iconos/correcto.svg) |
+| 2. GET /productos sin token | `GET /productos` | 401 | `401 Unauthorized` | 4/4 ![correcto](../../src/frontend/public/iconos/correcto.svg) |
+| 3. Employee intenta DELETE /productos/{id} | `DELETE /productos/a1000000-0000-4000-8000-000000000001` | 403 | `403 Forbidden` | 3/3 ![correcto](../../src/frontend/public/iconos/correcto.svg) |
+| 3b. Admin comprueba que el producto sigue activo | `GET /productos/a1000000-0000-4000-8000-000000000001` | 200 | `200 OK` | 2/2 ![correcto](../../src/frontend/public/iconos/correcto.svg) |
+| 4. POST /productos con precio negativo | `POST /productos` | 400 | `400 Bad Request` | 5/5 ![correcto](../../src/frontend/public/iconos/correcto.svg) |
 
 **Total: 7 peticiones, 21 aserciones, 0 fallos.**
 
@@ -89,9 +89,9 @@ Token decodificado (cabecera y claims):
 
 **Aserciones**
 
-- ✅ 200 OK
-- ✅ Respuesta con token, username, email y rol superadmin
-- ✅ JWT HS256 con claim role = superadmin y exp futura
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) 200 OK
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) Respuesta con token, username, email y rol superadmin
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) JWT HS256 con claim role = superadmin y exp futura
 
 ### Preparar: Admin crea el Employee de prueba — 201 / 409
 
@@ -133,7 +133,7 @@ Location: http://localhost:5085/usuarios/01a0fa52-a928-7637-839d-d48aaa76e610
 
 **Aserciones**
 
-- ✅ 201 Created o 409 si ya existía
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) 201 Created o 409 si ya existía
 
 ### 1b. Login Employee (ventas) — 200
 
@@ -194,9 +194,9 @@ Token decodificado (cabecera y claims):
 
 **Aserciones**
 
-- ✅ 200 OK
-- ✅ Respuesta con token y rol ventas (Employee)
-- ✅ Claim role = ventas
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) 200 OK
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) Respuesta con token y rol ventas (Employee)
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) Claim role = ventas
 
 ---
 
@@ -231,10 +231,10 @@ WWW-Authenticate: Bearer
 
 **Aserciones**
 
-- ✅ 401 Unauthorized
-- ✅ WWW-Authenticate: Bearer
-- ✅ application/problem+json
-- ✅ status 401 en el cuerpo
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) 401 Unauthorized
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) WWW-Authenticate: Bearer
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) application/problem+json
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) status 401 en el cuerpo
 
 ---
 
@@ -269,9 +269,9 @@ Content-Type: application/problem+json
 
 **Aserciones**
 
-- ✅ 403 Forbidden
-- ✅ application/problem+json
-- ✅ status 403 en el cuerpo
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) 403 Forbidden
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) application/problem+json
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) status 403 en el cuerpo
 
 ### 3b. Admin comprueba que el producto sigue activo — 200
 
@@ -316,8 +316,8 @@ Content-Type: application/json; charset=utf-8
 
 **Aserciones**
 
-- ✅ 200 OK
-- ✅ El producto sigue activo
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) 200 OK
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) El producto sigue activo
 
 ---
 
@@ -371,8 +371,8 @@ Content-Type: application/problem+json; charset=utf-8
 
 **Aserciones**
 
-- ✅ 400 Bad Request
-- ✅ application/problem+json
-- ✅ status 400 en el cuerpo
-- ✅ Mensaje de validación en precioUsd
-- ✅ Solo falla el precio
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) 400 Bad Request
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) application/problem+json
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) status 400 en el cuerpo
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) Mensaje de validación en precioUsd
+- ![correcto](../../src/frontend/public/iconos/correcto.svg) Solo falla el precio

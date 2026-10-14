@@ -1,3 +1,4 @@
+import Icono from './Icono'
 import { useState } from 'react'
 import { useCarrito } from '../context/CarritoContext'
 import { formatoBs, formatoUsd } from '../utils/formato'
@@ -15,7 +16,7 @@ export default function TarjetaProducto({ producto }) {
       <div className="relative aspect-square bg-slate-50">
         {sinImagen ? (
           <div className="grid h-full place-items-center text-5xl text-slate-300" aria-hidden>
-            🛍️
+            <Icono nombre="bolsa" />
           </div>
         ) : (
           <img

@@ -7,7 +7,7 @@ import { listarNotificaciones } from '../api/notificaciones'
 
 // Layout de los paneles del personal (ventas y gerente).
 // - Escritorio (lg+): barra lateral fija a la izquierda.
-// - Móvil: la barra lateral se abre como cajón con el botón ☰.
+// - Móvil: la barra lateral se abre como cajón con el botón de menú.
 // El menú se arma según el rol: ventas ve "Ventas"; el gerente (superadmin)
 // ve todo lo de ventas más "Administración" (ver especificación, roles y permisos).
 const icono = (d) => (

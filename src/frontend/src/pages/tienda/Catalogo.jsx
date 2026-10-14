@@ -1,3 +1,4 @@
+import Icono from '../../components/Icono'
 import { useEffect, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { listarCatalogo } from '../../api/catalogo'
@@ -86,7 +87,7 @@ export default function Catalogo() {
       ) : resultado.items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-superficie p-10 text-center">
           <p className="text-4xl" aria-hidden>
-            🔎
+            <Icono nombre="buscar" />
           </p>
           <p className="mt-2 font-semibold text-slate-800">No encontramos productos</p>
           <p className="text-sm text-slate-500">Prueba con otra palabra o revisa otra categoría.</p>
@@ -149,7 +150,7 @@ function Bienvenida() {
         <p className="mt-3 text-emerald-50">Precios en dólares y en bolívares a la tasa del día.</p>
       </div>
       <div aria-hidden className="absolute -right-6 -bottom-10 select-none text-[9rem] leading-none opacity-30 sm:right-10 sm:opacity-90">
-        🥑🍞
+        <Icono nombre="aguacate" /><Icono nombre="pan" />
       </div>
     </section>
   )

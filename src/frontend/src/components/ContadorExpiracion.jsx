@@ -1,3 +1,4 @@
+import Icono from './Icono'
 import { useEffect, useState } from 'react'
 
 // Tiempo que le queda a un pedido pendiente antes de expirar (5 h por defecto).
@@ -21,7 +22,7 @@ export default function ContadorExpiracion({ expiraEn }) {
 
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${clase}`}>
-      <span aria-hidden>⏱</span> Vence en {texto}
+      <span aria-hidden><Icono nombre="temporizador" /></span> Vence en {texto}
     </span>
   )
 }

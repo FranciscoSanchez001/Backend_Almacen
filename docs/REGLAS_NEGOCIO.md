@@ -10,14 +10,14 @@ Este documento describe cómo se comporta el sistema y dónde vive cada regla en
 
 | Acción | Cliente | Repartidor | Ventas | Superadmin |
 | :--- | :---: | :---: | :---: | :---: |
-| Ver catálogo y comprar | ✅ | — | — | — |
-| Aprobar o rechazar pedidos | — | — | ✅ | ✅ |
-| Asignar repartidor | — | — | ✅ | ✅ |
-| Marcar "en camino" o "entregado" | — | ✅ (solo sus pedidos) | — | ✅ |
-| Crear y editar productos y stock | — | — | ✅ (queda auditado) | ✅ |
-| **Borrar** productos | — | — | ❌ | ✅ |
-| Ver historial de compras de un cliente | — | — | ✅ | ✅ |
-| Gestionar usuarios del personal y configuración | — | — | — | ✅ |
+| Ver catálogo y comprar | ![correcto](../src/frontend/public/iconos/correcto.svg) | — | — | — |
+| Aprobar o rechazar pedidos | — | — | ![correcto](../src/frontend/public/iconos/correcto.svg) | ![correcto](../src/frontend/public/iconos/correcto.svg) |
+| Asignar repartidor | — | — | ![correcto](../src/frontend/public/iconos/correcto.svg) | ![correcto](../src/frontend/public/iconos/correcto.svg) |
+| Marcar "en camino" o "entregado" | — | ![correcto](../src/frontend/public/iconos/correcto.svg) (solo sus pedidos) | — | ![correcto](../src/frontend/public/iconos/correcto.svg) |
+| Crear y editar productos y stock | — | — | ![correcto](../src/frontend/public/iconos/correcto.svg) (queda auditado) | ![correcto](../src/frontend/public/iconos/correcto.svg) |
+| **Borrar** productos | — | — | ![cerrar](../src/frontend/public/iconos/cerrar.svg) | ![correcto](../src/frontend/public/iconos/correcto.svg) |
+| Ver historial de compras de un cliente | — | — | ![correcto](../src/frontend/public/iconos/correcto.svg) | ![correcto](../src/frontend/public/iconos/correcto.svg) |
+| Gestionar usuarios del personal y configuración | — | — | — | ![correcto](../src/frontend/public/iconos/correcto.svg) |
 
 - El **personal** inicia sesión con correo y contraseña; los **clientes**, con Google.
 - Si un usuario se **desactiva**, pierde el acceso de inmediato aunque su token siga vigente.

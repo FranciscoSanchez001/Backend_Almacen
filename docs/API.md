@@ -12,12 +12,12 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 
 | Símbolo | Quién puede usarlo |
 | :--- | :--- |
-| 🌐 Público | Cualquiera, sin token |
-| 🔑 Autenticado | Cualquier usuario con sesión iniciada |
-| 🛒 Cliente | `cliente` |
-| 🧾 Personal | `ventas` (Employee) y `superadmin` (Admin) |
-| 🚚 Repartidor | `repartidor` (y `superadmin` donde se indica) |
-| 👔 Superadmin | Solo `superadmin` (Admin) |
+| ![mundo](../src/frontend/public/iconos/mundo.svg) Público | Cualquiera, sin token |
+| ![llave](../src/frontend/public/iconos/llave.svg) Autenticado | Cualquier usuario con sesión iniciada |
+| ![carrito](../src/frontend/public/iconos/carrito.svg) Cliente | `cliente` |
+| ![recibo](../src/frontend/public/iconos/recibo.svg) Personal | `ventas` (Employee) y `superadmin` (Admin) |
+| ![camion](../src/frontend/public/iconos/camion.svg) Repartidor | `repartidor` (y `superadmin` donde se indica) |
+| ![personal](../src/frontend/public/iconos/personal.svg) Superadmin | Solo `superadmin` (Admin) |
 
 ---
 
@@ -25,67 +25,67 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `POST` | `/api/auth/login` | 🌐 | Inicio de sesión del personal. Cuerpo (`LoginDto`): `{ "email", "password" }`. Devuelve `AuthResponseDto`: `{ "token", "expiraEn", "username", "email", "rol", "usuario" }`. `401` si las credenciales no son válidas. |
-| `POST` | `/api/auth/google` | 🌐 | Inicio de sesión del cliente. Cuerpo: `{ "idToken" }` (token de Google). Si el cliente no existe, se crea. |
-| `GET` | `/api/auth/yo` | 🔑 | Datos del usuario de la sesión actual. |
+| `POST` | `/api/auth/login` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Inicio de sesión del personal. Cuerpo (`LoginDto`): `{ "email", "password" }`. Devuelve `AuthResponseDto`: `{ "token", "expiraEn", "username", "email", "rol", "usuario" }`. `401` si las credenciales no son válidas. |
+| `POST` | `/api/auth/google` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Inicio de sesión del cliente. Cuerpo: `{ "idToken" }` (token de Google). Si el cliente no existe, se crea. |
+| `GET` | `/api/auth/yo` | ![llave](../src/frontend/public/iconos/llave.svg) | Datos del usuario de la sesión actual. |
 
 ## 2. Catálogo público — `/catalogo`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/catalogo` | 🌐 | Productos activos con stock. Filtros: `q` (texto), `categoriaId`, `pagina`, `tamano` (24 por defecto). Incluye el precio en USD y en Bs. |
-| `GET` | `/catalogo/{id}` | 🌐 | Detalle de un producto. |
-| `GET` | `/catalogo/inicio` | 🌐 | Inicio personalizado: los más vendidos y, si hay sesión de cliente, sus productos frecuentes y últimas compras. Parámetro: `limite` (10 por defecto, máximo 30). |
-| `GET` | `/catalogo/pago` | 🔑 | Datos para pagar: cuentas de transferencia, pago móvil y wallet de Binance. |
-| `GET` | `/catalogo/zonas` | 🌐 | Zonas de entrega activas. |
+| `GET` | `/catalogo` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Productos activos con stock. Filtros: `q` (texto), `categoriaId`, `pagina`, `tamano` (24 por defecto). Incluye el precio en USD y en Bs. |
+| `GET` | `/catalogo/{id}` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Detalle de un producto. |
+| `GET` | `/catalogo/inicio` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Inicio personalizado: los más vendidos y, si hay sesión de cliente, sus productos frecuentes y últimas compras. Parámetro: `limite` (10 por defecto, máximo 30). |
+| `GET` | `/catalogo/pago` | ![llave](../src/frontend/public/iconos/llave.svg) | Datos para pagar: cuentas de transferencia, pago móvil y wallet de Binance. |
+| `GET` | `/catalogo/zonas` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Zonas de entrega activas. |
 
 ## 3. Categorías — `/categorias`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/categorias` | 🌐 | Lista de categorías. Es pública porque la tienda la usa para filtrar el catálogo. |
-| `POST` | `/categorias` | 👔 | Crea una categoría. Cuerpo: `{ "nombre" }`. Responde `409` si el nombre ya existe y `403` a un Employee (ventas). |
-| `PUT` | `/categorias/{id}` | 👔 | Renombra una categoría. `403` a un Employee (ventas). |
+| `GET` | `/categorias` | ![mundo](../src/frontend/public/iconos/mundo.svg) | Lista de categorías. Es pública porque la tienda la usa para filtrar el catálogo. |
+| `POST` | `/categorias` | ![personal](../src/frontend/public/iconos/personal.svg) | Crea una categoría. Cuerpo: `{ "nombre" }`. Responde `409` si el nombre ya existe y `403` a un Employee (ventas). |
+| `PUT` | `/categorias/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Renombra una categoría. `403` a un Employee (ventas). |
 
 ## 4. Productos — `/productos`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/productos` | 🧾 | Lista para el personal. Filtros: `q`, `categoriaId`, `incluirInactivos`, `pagina`, `tamano`. |
-| `GET` | `/productos/{id}` | 🧾 | Detalle de un producto. |
-| `POST` | `/productos` | 🧾 | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial` y, opcionales, `stockMinimo` (5), `stockMaximo` (100), `ubicacion`, `unidadMedida` (`unidad`). Validación: precio y costo `> 0`, stocks `>= 0`, `stockMaximo > stockMinimo`. Queda registrado en la auditoría. |
-| `PUT` | `/productos/{id}` | 🧾 | Edita un producto (mismos campos, con `stockDisponible` opcional en lugar de `stockInicial`). Si cambia el stock disponible, se registra como ajuste de inventario. |
-| `DELETE` | `/productos/{id}` | 👔 | Borrado lógico (el producto deja de aparecer en `/catalogo`, pero se conserva su historial). Un Employee (ventas) recibe `403`. |
+| `GET` | `/productos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Lista para el personal. Filtros: `q`, `categoriaId`, `incluirInactivos`, `pagina`, `tamano`. |
+| `GET` | `/productos/{id}` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Detalle de un producto. |
+| `POST` | `/productos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Crea un producto. Cuerpo: `codigoSku`, `nombre`, `descripcion`, `precioUsd`, `costoUsd`, `imagenUrl`, `categoriaId`, `stockInicial` y, opcionales, `stockMinimo` (5), `stockMaximo` (100), `ubicacion`, `unidadMedida` (`unidad`). Validación: precio y costo `> 0`, stocks `>= 0`, `stockMaximo > stockMinimo`. Queda registrado en la auditoría. |
+| `PUT` | `/productos/{id}` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Edita un producto (mismos campos, con `stockDisponible` opcional en lugar de `stockInicial`). Si cambia el stock disponible, se registra como ajuste de inventario. |
+| `DELETE` | `/productos/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Borrado lógico (el producto deja de aparecer en `/catalogo`, pero se conserva su historial). Un Employee (ventas) recibe `403`. |
 
 ## 5. Inventario — `/inventario`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/inventario` | 🧾 | Stock disponible y reservado por producto. Filtros: `q`, `categoriaId`, `soloAgotados`. |
-| `POST` | `/inventario/{productoId}/reponer` | 🧾 | Suma stock cuando llega mercancía. Cuerpo: `{ "cantidad" }`. |
-| `GET` | `/inventario/{productoId}/movimientos` | 🧾 | Historial de movimientos del producto (reservas, ventas, liberaciones, reposiciones, ajustes). |
+| `GET` | `/inventario` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Stock disponible y reservado por producto. Filtros: `q`, `categoriaId`, `soloAgotados`. |
+| `POST` | `/inventario/{productoId}/reponer` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Suma stock cuando llega mercancía. Cuerpo: `{ "cantidad" }`. |
+| `GET` | `/inventario/{productoId}/movimientos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Historial de movimientos del producto (reservas, ventas, liberaciones, reposiciones, ajustes). |
 
 ## 6. Notificaciones — `/notificaciones`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/notificaciones` | 🧾 | Avisos de producto agotado, pedido nuevo y pedido por expirar. Filtro: `soloNoLeidas` (verdadero por defecto). |
-| `POST` | `/notificaciones/{id}/leer` | 🧾 | Marca una notificación como leída. |
-| `POST` | `/notificaciones/leer-todas` | 🧾 | Marca todas como leídas. |
+| `GET` | `/notificaciones` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Avisos de producto agotado, pedido nuevo y pedido por expirar. Filtro: `soloNoLeidas` (verdadero por defecto). |
+| `POST` | `/notificaciones/{id}/leer` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Marca una notificación como leída. |
+| `POST` | `/notificaciones/leer-todas` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Marca todas como leídas. |
 
 ## 7. Pedidos — `/pedidos`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `POST` | `/pedidos` | 🛒 | Crea un pedido y reserva el stock. **`multipart/form-data`** (ver abajo). |
-| `GET` | `/pedidos/mios` | 🛒 | Pedidos del cliente de la sesión. |
-| `GET` | `/pedidos` | 🧾 | Bandeja del personal. Filtros: `estado`, `zonaId`, `repartidorId`, `desde`, `hasta`, `pagina`, `tamano`. Con `estado=pendiente` salen primero los más cerca de vencer. |
-| `GET` | `/pedidos/repartidores` | 🧾 | Repartidores activos, para elegir al aprobar. |
-| `GET` | `/pedidos/{id}` | 🔑 | Detalle de un pedido con su historial de estados. |
-| `POST` | `/pedidos/{id}/aprobar` | 🧾 | Aprueba y asigna repartidor. Cuerpo: `{ "repartidorId" }`. Confirma el stock. |
-| `POST` | `/pedidos/{id}/rechazar` | 🧾 | Rechaza el pedido y libera el stock. Cuerpo opcional: `{ "motivo" }` (por defecto, "el método de pago no procede"). |
-| `POST` | `/pedidos/{id}/en-camino` | 🚚 👔 | El repartidor recogió el pedido. |
-| `POST` | `/pedidos/{id}/entregado` | 🚚 👔 | El pedido fue entregado (estado final). |
+| `POST` | `/pedidos` | ![carrito](../src/frontend/public/iconos/carrito.svg) | Crea un pedido y reserva el stock. **`multipart/form-data`** (ver abajo). |
+| `GET` | `/pedidos/mios` | ![carrito](../src/frontend/public/iconos/carrito.svg) | Pedidos del cliente de la sesión. |
+| `GET` | `/pedidos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Bandeja del personal. Filtros: `estado`, `zonaId`, `repartidorId`, `desde`, `hasta`, `pagina`, `tamano`. Con `estado=pendiente` salen primero los más cerca de vencer. |
+| `GET` | `/pedidos/repartidores` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Repartidores activos, para elegir al aprobar. |
+| `GET` | `/pedidos/{id}` | ![llave](../src/frontend/public/iconos/llave.svg) | Detalle de un pedido con su historial de estados. |
+| `POST` | `/pedidos/{id}/aprobar` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Aprueba y asigna repartidor. Cuerpo: `{ "repartidorId" }`. Confirma el stock. |
+| `POST` | `/pedidos/{id}/rechazar` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Rechaza el pedido y libera el stock. Cuerpo opcional: `{ "motivo" }` (por defecto, "el método de pago no procede"). |
+| `POST` | `/pedidos/{id}/en-camino` | ![camion](../src/frontend/public/iconos/camion.svg) ![personal](../src/frontend/public/iconos/personal.svg) | El repartidor recogió el pedido. |
+| `POST` | `/pedidos/{id}/entregado` | ![camion](../src/frontend/public/iconos/camion.svg) ![personal](../src/frontend/public/iconos/personal.svg) | El pedido fue entregado (estado final). |
 
 ### Campos para crear un pedido (`multipart/form-data`)
 
@@ -104,56 +104,56 @@ Los valores de las enumeraciones se envían y reciben en `snake_case` (por ejemp
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/clientes` | 🧾 | Busca clientes por nombre, correo o teléfono (`buscar`). |
-| `GET` | `/clientes/{id}/pedidos` | 🧾 | Historial de compras de un cliente. |
+| `GET` | `/clientes` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Busca clientes por nombre, correo o teléfono (`buscar`). |
+| `GET` | `/clientes/{id}/pedidos` | ![recibo](../src/frontend/public/iconos/recibo.svg) | Historial de compras de un cliente. |
 
 ## 9. Repartidor — `/repartidor`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/repartidor/pedidos` | 🚚 | Pedidos asignados al repartidor de la sesión. |
+| `GET` | `/repartidor/pedidos` | ![camion](../src/frontend/public/iconos/camion.svg) | Pedidos asignados al repartidor de la sesión. |
 
 ## 10. Usuarios del personal — `/usuarios`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/usuarios` | 👔 | Lista de usuarios. Filtros: `buscar`, `rol`, `activo`, `pagina`, `tamano`. |
-| `GET` | `/usuarios/{id}` | 👔 | Detalle de un usuario. |
-| `POST` | `/usuarios` | 👔 | Crea un usuario de ventas o repartidor. Cuerpo: `nombre`, `email`, `telefono`, `rol`, `password` (8 a 72 caracteres). |
-| `PUT` | `/usuarios/{id}` | 👔 | Edita un usuario. |
-| `POST` | `/usuarios/{id}/activar` | 👔 | Reactiva un usuario. |
-| `POST` | `/usuarios/{id}/desactivar` | 👔 | Desactiva un usuario; pierde el acceso de inmediato. |
+| `GET` | `/usuarios` | ![personal](../src/frontend/public/iconos/personal.svg) | Lista de usuarios. Filtros: `buscar`, `rol`, `activo`, `pagina`, `tamano`. |
+| `GET` | `/usuarios/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Detalle de un usuario. |
+| `POST` | `/usuarios` | ![personal](../src/frontend/public/iconos/personal.svg) | Crea un usuario de ventas o repartidor. Cuerpo: `nombre`, `email`, `telefono`, `rol`, `password` (8 a 72 caracteres). |
+| `PUT` | `/usuarios/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Edita un usuario. |
+| `POST` | `/usuarios/{id}/activar` | ![personal](../src/frontend/public/iconos/personal.svg) | Reactiva un usuario. |
+| `POST` | `/usuarios/{id}/desactivar` | ![personal](../src/frontend/public/iconos/personal.svg) | Desactiva un usuario; pierde el acceso de inmediato. |
 
 ## 11. Configuración — `/configuracion`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/configuracion` | 👔 | Parámetros actuales del sistema. |
-| `PUT` | `/configuracion` | 👔 | Actualiza número de soporte, horas de expiración (1 a 168), datos de transferencia, pago móvil, wallet de Binance y números de prueba de WhatsApp (hasta 20). |
-| `PUT` | `/configuracion/tasa` | 👔 | Carga la **tasa Bs/USD del día**. Cuerpo: `{ "tasa" }`. Queda en el historial. **Es necesaria para que los clientes puedan crear pedidos.** |
-| `GET` | `/configuracion/tasas` | 👔 | Historial de tasas cargadas. |
+| `GET` | `/configuracion` | ![personal](../src/frontend/public/iconos/personal.svg) | Parámetros actuales del sistema. |
+| `PUT` | `/configuracion` | ![personal](../src/frontend/public/iconos/personal.svg) | Actualiza número de soporte, horas de expiración (1 a 168), datos de transferencia, pago móvil, wallet de Binance y números de prueba de WhatsApp (hasta 20). |
+| `PUT` | `/configuracion/tasa` | ![personal](../src/frontend/public/iconos/personal.svg) | Carga la **tasa Bs/USD del día**. Cuerpo: `{ "tasa" }`. Queda en el historial. **Es necesaria para que los clientes puedan crear pedidos.** |
+| `GET` | `/configuracion/tasas` | ![personal](../src/frontend/public/iconos/personal.svg) | Historial de tasas cargadas. |
 
 ## 12. Zonas de entrega — `/zonas`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/zonas` | 👔 | Todas las zonas, activas e inactivas. |
-| `POST` | `/zonas` | 👔 | Crea una zona. |
-| `PUT` | `/zonas/{id}` | 👔 | Edita o desactiva una zona. |
+| `GET` | `/zonas` | ![personal](../src/frontend/public/iconos/personal.svg) | Todas las zonas, activas e inactivas. |
+| `POST` | `/zonas` | ![personal](../src/frontend/public/iconos/personal.svg) | Crea una zona. |
+| `PUT` | `/zonas/{id}` | ![personal](../src/frontend/public/iconos/personal.svg) | Edita o desactiva una zona. |
 
 ## 13. Auditoría — `/auditoria`
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/auditoria` | 👔 | Cambios registrados. Filtros: `usuarioId`, `productoId`, `entidad`, `entidadId`, `desde`, `hasta`, `pagina`, `tamano`. |
-| `GET` | `/auditoria/pedidos` | 👔 | Cambios de estado de los pedidos. Filtros: `usuarioId`, `pedidoId`, `desde`, `hasta`. |
+| `GET` | `/auditoria` | ![personal](../src/frontend/public/iconos/personal.svg) | Cambios registrados. Filtros: `usuarioId`, `productoId`, `entidad`, `entidadId`, `desde`, `hasta`, `pagina`, `tamano`. |
+| `GET` | `/auditoria/pedidos` | ![personal](../src/frontend/public/iconos/personal.svg) | Cambios de estado de los pedidos. Filtros: `usuarioId`, `pedidoId`, `desde`, `hasta`. |
 
 ## 14. KPIs e informe en Excel
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/kpis` | 👔 | Indicadores (KPIs) de ventas, productos, pagos, horas pico, zonas, inventario y operación, en JSON. |
-| `GET` | `/reportes/excel` | 👔 | Descarga el informe en Excel (`.xlsx`). |
+| `GET` | `/kpis` | ![personal](../src/frontend/public/iconos/personal.svg) | Indicadores (KPIs) de ventas, productos, pagos, horas pico, zonas, inventario y operación, en JSON. |
+| `GET` | `/reportes/excel` | ![personal](../src/frontend/public/iconos/personal.svg) | Descarga el informe en Excel (`.xlsx`). |
 
 **Parámetros de período** (ambos endpoints). Las fechas van en formato `yyyy-MM-dd`, en hora local de la tienda, y ambas son inclusive:
 
@@ -171,7 +171,7 @@ Los dos endpoints salen del mismo cálculo (`ReportesService`), así que **los d
 
 | Método | Ruta | Acceso | Descripción |
 | :--- | :--- | :---: | :--- |
-| `GET` | `/DbTest` | 👔 | Verifica la conexión a PostgreSQL y devuelve las migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
+| `GET` | `/DbTest` | ![personal](../src/frontend/public/iconos/personal.svg) | Verifica la conexión a PostgreSQL y devuelve las migraciones aplicadas, configuración y totales de categorías y productos. Responde `503` si no hay conexión. |
 
 ## 16. Pruebas del manejo de errores — `/pruebas/errores`
 
@@ -179,9 +179,9 @@ Provocan una excepción a propósito para comprobar el `ExceptionMiddleware`. To
 
 | Método | Ruta | Acceso | Excepción | Respuesta |
 | :--- | :--- | :---: | :--- | :---: |
-| `GET` | `/pruebas/errores/no-encontrado` | 👔 | `KeyNotFoundException` | `404` |
-| `GET` | `/pruebas/errores/operacion-invalida` | 👔 | `InvalidOperationException` | `400` |
-| `GET` | `/pruebas/errores/interno` | 👔 | `NullReferenceException` | `500`, sin detalles internos |
+| `GET` | `/pruebas/errores/no-encontrado` | ![personal](../src/frontend/public/iconos/personal.svg) | `KeyNotFoundException` | `404` |
+| `GET` | `/pruebas/errores/operacion-invalida` | ![personal](../src/frontend/public/iconos/personal.svg) | `InvalidOperationException` | `400` |
+| `GET` | `/pruebas/errores/interno` | ![personal](../src/frontend/public/iconos/personal.svg) | `NullReferenceException` | `500`, sin detalles internos |
 
 ---
 

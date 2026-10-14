@@ -1,3 +1,4 @@
+import Icono from '../../components/Icono'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listarPedidos } from '../../api/pedidos'
@@ -13,9 +14,9 @@ import { formatoFechaHora, formatoUsd } from '../../utils/formato'
 // más cerca de vencer primero), alertas de stock y avisos sin leer.
 // No es el dashboard de KPIs: ese es solo del gerente.
 const TIPOS_AVISO = {
-  stock_agotado: { icono: '⛔', texto: (n) => `Se agotó ${n.producto ?? 'un producto'}` },
-  pedido_nuevo: { icono: '🛒', texto: () => 'Llegó un pedido nuevo' },
-  pedido_por_expirar: { icono: '⏱', texto: () => 'Un pedido está por expirar' },
+  stock_agotado: { icono: 'agotado', texto: (n) => `Se agotó ${n.producto ?? 'un producto'}` },
+  pedido_nuevo: { icono: 'carrito', texto: () => 'Llegó un pedido nuevo' },
+  pedido_por_expirar: { icono: 'temporizador', texto: () => 'Un pedido está por expirar' },
 }
 
 function Tarjeta({ titulo, valor, detalle, a, alerta }) {
@@ -67,7 +68,7 @@ export default function Resumen() {
 
   return (
     <div className="space-y-6">
-      <EncabezadoPagina titulo={`Hola, ${primerNombre} 👋`} detalle="Esto es lo que necesita atención ahora.">
+      <EncabezadoPagina titulo={<>Hola, {primerNombre} <Icono nombre="saludo" /></>} detalle="Esto es lo que necesita atención ahora.">
         <button type="button" onClick={cargar} className={claseBoton.secundario}>
           Actualizar
         </button>
@@ -124,11 +125,11 @@ export default function Resumen() {
                 ) : (
                   <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto">
                     {datos.avisos.items.map((n) => {
-                      const tipo = TIPOS_AVISO[n.tipo] ?? { icono: '🔔', texto: () => n.tipo }
+                      const tipo = TIPOS_AVISO[n.tipo] ?? { icono: 'campana', texto: () => n.tipo }
                       return (
                         <li key={n.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
                           <span>
-                            <span aria-hidden>{tipo.icono}</span> {tipo.texto(n)}
+                            <Icono nombre={tipo.icono} /> {tipo.texto(n)}
                             <span className="block text-xs text-slate-500">{formatoFechaHora(n.creadoEn)}</span>
                           </span>
                           <button type="button" onClick={() => leer(n.id)} className={claseBoton.pequeno}>
