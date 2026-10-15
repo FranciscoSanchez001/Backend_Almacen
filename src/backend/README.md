@@ -84,7 +84,7 @@ Esta carpeta (`src/backend/`) contiene la **API REST** de la plataforma. Concent
 - Creación de pedidos con pago por transferencia, pago móvil o Binance y comprobante adjunto.
 - Inventario con **reserva de stock** al crear el pedido y liberación automática si se rechaza o expira.
 - Aprobación de pedidos por el área de ventas y asignación de repartidor.
-- Seguimiento de la entrega y notificaciones al cliente por WhatsApp en cada cambio de estado.
+- Seguimiento de la entrega y avisos al cliente por WhatsApp al aprobar su compra y al salir en camino.
 - Auditoría de cambios, indicadores de negocio (KPIs) e informe descargable en Excel.
 
 **Perfiles de usuario**
@@ -187,7 +187,7 @@ stateDiagram-v2
 - Toda transición se valida en el dominio (`Pedido.CambiarEstado`) y queda registrada en el historial del pedido.
 - Aprobar y asignar ocurren en la misma operación: no se aprueba un pedido sin repartidor.
 - Cada operación bloquea la fila del pedido (`SELECT ... FOR UPDATE`), de modo que dos vendedores o el job de expiración no pueden modificar el mismo pedido a la vez.
-- El cliente recibe un mensaje de WhatsApp en cada cambio de estado.
+- El cliente recibe un WhatsApp cuando su compra se aprueba y cuando va en camino (de a uno, con un minuto entre envíos).
 
 Reglas completas en [`docs/REGLAS_NEGOCIO.md`](../../docs/REGLAS_NEGOCIO.md).
 
@@ -569,7 +569,7 @@ Secciones de `src/backend/Presentation.API/appsettings.Development.json`:
 | `Google:ClientId` | Login de clientes con Google. Preconfigurado en `appsettings.json` (es un identificador público) | Preconfigurada |
 | `Cors:OrigenesPermitidos` | Orígenes del frontend autorizados. En desarrollo incluye los puertos locales habituales (5173, 3000, 4200, 8080) | Preconfigurada |
 | `Cloudinary` | Almacenamiento de comprobantes; si está vacío se usa el disco local | No |
-| `Whatsapp` | URL y clave del microservicio de Baileys; si está vacío no se envían mensajes | No |
+| `Whatsapp` | URL y clave del servicio de Baileys (`src/whatsapp`) y segundos entre envíos (60 por defecto); sin URL no se envían mensajes | No |
 | `Expiracion` | Frecuencia del job de expiración y anticipación del aviso | No |
 | `SiembraDemo` | Generación de datos de demostración (desactivada por defecto) | No |
 

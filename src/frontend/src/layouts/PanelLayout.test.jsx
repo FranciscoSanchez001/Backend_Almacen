@@ -61,6 +61,7 @@ describe('PanelLayout: menú según el rol', () => {
       ['Personal', '/admin/personal'],
       ['Auditoría', '/admin/auditoria'],
       ['Configuración', '/admin/configuracion'],
+      ['WhatsApp', '/admin/whatsapp'],
     ]) {
       expect(within(menu).getByRole('link', { name: new RegExp(opcion) })).toHaveAttribute('href', ruta)
     }

@@ -1,0 +1,3 @@
+node_modules/
+# Credenciales del teléfono vinculado: nunca se suben.
+sesion/

@@ -15,6 +15,18 @@ namespace Core.Application.Abstracciones
         byte[] Generar(Kpis kpis, Comportamiento comportamiento);
     }
 
+    // Sesión del servicio de WhatsApp (Baileys) para la pantalla Administración > WhatsApp:
+    // ver el estado y el QR, vincular o desvincular el teléfono y enviar un mensaje de prueba.
+    public interface IClienteWhatsapp
+    {
+        Task<EstadoWhatsapp> EstadoAsync(CancellationToken ct = default);
+        Task<EstadoWhatsapp> VincularAsync(CancellationToken ct = default);
+        Task<EstadoWhatsapp> DesvincularAsync(CancellationToken ct = default);
+
+        // null si se envió; si no, el motivo para mostrarlo al gerente.
+        Task<string?> EnviarAsync(string telefono, string texto, CancellationToken ct = default);
+    }
+
     // Dónde se guardan las capturas de pago (Cloudinary o disco local).
     public interface IAlmacenamientoArchivos
     {

@@ -24,6 +24,7 @@ const Personal = lazy(() => import('./pages/admin/Personal'))
 const Auditoria = lazy(() => import('./pages/admin/Auditoria'))
 const Configuracion = lazy(() => import('./pages/admin/Configuracion'))
 const Cupones = lazy(() => import('./pages/admin/Cupones'))
+const Whatsapp = lazy(() => import('./pages/admin/Whatsapp'))
 const RepartidorInicio = lazy(() => import('./pages/repartidor/Inicio'))
 
 // Las 4 áreas del sistema (ver especificación). Cada área del personal está
@@ -63,6 +64,7 @@ function App() {
             <Route path="auditoria" element={<Auditoria />} />
             <Route path="configuracion" element={<Configuracion />} />
             <Route path="cupones" element={<Cupones />} />
+            <Route path="whatsapp" element={<Whatsapp />} />
             {/* El comportamiento ahora es una sección del Dashboard KPI; se conserva el enlace viejo. */}
             <Route path="comportamiento" element={<Navigate to="/admin#comportamiento" replace />} />
           </Route>

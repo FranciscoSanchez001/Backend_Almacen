@@ -97,10 +97,10 @@ Esta carpeta (`src/frontend/`) contiene la **aplicación web** de la plataforma.
 | Administración | `/admin` | `superadmin` | Disponible |
 | Entregas | `/repartidor` | `repartidor`, `superadmin` | Entregas activas, detalle actualizado, mapas, confirmaciones e historial; el gerente gestiona los pedidos desde el panel |
 
-El detalle del repartidor consulta el pedido actual antes de habilitar acciones.
-Las confirmaciones de salida y entrega bloquean solicitudes duplicadas; si falla
-la respuesta o cambia el estado, se actualiza el pedido antes de continuar.
-Los enlaces a Google Maps/Waze usan coordenadas o la dirección escrita. La lista
+Cada tarjeta del repartidor trae su acción: "Iniciar entrega" y, después,
+"Marcar como entregado". Un segundo toque mientras se guarda se ignora; si el
+pedido cambió (409) o ya no es suyo, se muestra el motivo y la lista se actualiza.
+El enlace a Google Maps usa las coordenadas o la dirección escrita. La lista
 de asignaciones se actualiza cada minuto y el historial conserva su paginación.
 
 El checkout conserva la cotización del servidor, ofertas, cupones y analítica.

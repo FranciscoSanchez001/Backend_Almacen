@@ -30,14 +30,14 @@ Este documento describe cómo se comporta el sistema y dónde vive cada regla en
 Cliente confirma el pedido  (se reserva el stock)
         │
         ▼
-    PENDIENTE ──── 5 horas sin revisar ────► EXPIRADO   (stock liberado + WhatsApp)
+    PENDIENTE ──── 5 horas sin revisar ────► EXPIRADO   (stock liberado)
         │
-        ├── Ventas rechaza ──► RECHAZADO                 (stock liberado + WhatsApp)
+        ├── Ventas rechaza ──► RECHAZADO                 (stock liberado)
         │
-        └── Ventas aprueba y asigna repartidor           (stock confirmado)
+        └── Ventas aprueba y asigna repartidor           (stock confirmado + WhatsApp)
                 │
                 ▼
-            ASIGNADO ──► EN CAMINO ──► ENTREGADO         (WhatsApp en cada paso)
+            ASIGNADO ──► EN CAMINO ──► ENTREGADO         (WhatsApp al salir en camino)
 ```
 
 **Transiciones permitidas** (`Core.Domain/Reglas/TransicionesPedido.cs`):
@@ -120,18 +120,22 @@ Reglas:
 
 ## 7. Notificaciones por WhatsApp
 
-Los mensajes se generan en `Core.Application/Servicios/ColaWhatsapp.cs` y los envía `Infrastructure/Mensajeria/EnvioWhatsappWorker.cs` a través del microservicio de **Baileys** (`POST {ServicioUrl}/enviar`).
+Los mensajes se generan en `Core.Application/Servicios/ColaWhatsapp.cs` y los envía `Infrastructure/Mensajeria/EnvioWhatsappWorker.cs` a través del servicio de **Baileys** (`src/whatsapp`, `POST {ServicioUrl}/enviar`).
+
+**Vincular el teléfono.** El gerente entra a **Administración > WhatsApp**, pulsa *Vincular teléfono* y escanea el código QR desde WhatsApp > *Dispositivos vinculados*. La sesión queda guardada en el volumen `whatsapp_sesion`, así que no hay que volver a escanear al reiniciar. Desde esa pantalla también se envía un mensaje de prueba y se revisan los últimos mensajes con su estado.
+
+Para no abrumar al cliente, solo recibe **dos mensajes**:
 
 | Evento | Mensaje |
 | :--- | :--- |
 | Aprobado | "¡Hola {nombre}! Tu compra #{número} por ${total USD} (Bs {total Bs}) fue aprobada y será enviada a: {dirección}, {zona}." |
-| Rechazado | "Hola {nombre}, tu compra #{número} fue rechazada porque {motivo}. Si crees que es un error, escríbenos al {soporte}." |
-| Expirado | "Hola {nombre}, tu pedido #{número} no pudo ser procesado a tiempo y fue cancelado. Si ya realizaste el pago, comunícate al {soporte}." |
 | En camino | "Tu pedido #{número} ya va en camino." |
-| Entregado | "Tu pedido #{número} fue entregado. Si no llegó o no llegó en buen estado, comunícate al {soporte}." |
+
+El rechazo, la expiración y la entrega no se notifican por WhatsApp; el cliente ve el estado en **Mis pedidos**.
 
 Reglas:
 - **Lista blanca de pruebas.** Solo se envía a los números registrados en `configuracion.numeros_prueba`; los demás quedan registrados como `bloqueado_lista_blanca`.
+- **De a uno.** Los mensajes salen uno por uno, con 60 segundos entre cada envío (`Whatsapp:SegundosEntreEnvios`), para que el número de la tienda no mande ráfagas y WhatsApp no lo bloquee. Los que esperan turno están en una cola en memoria: si la API se reinicia en ese momento, se pierden.
 - **Registro.** Cada intento queda en `mensajes_whatsapp` con su estado (`enviado`, `error` o `bloqueado_lista_blanca`).
 - **Un fallo de WhatsApp no afecta al pedido.** Los mensajes van por una cola en segundo plano; si el envío falla, el cambio de estado del pedido ya quedó guardado.
 - Si la sección `Whatsapp` de la configuración está vacía, los mensajes no se envían.
