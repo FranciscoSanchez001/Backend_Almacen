@@ -19,6 +19,19 @@ describe('MenuCliente', () => {
     expect(screen.getByText(/Usa tu cuenta de Google/)).toBeInTheDocument()
   })
 
+  it('el acceso con Google ofrece al personal ir a su login y cierra la ventana', async () => {
+    const { user } = renderizar(<MenuCliente />)
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(screen.getByText(/¿Trabajas aquí\?/)).toBeInTheDocument()
+    const enlace = screen.getByRole('link', { name: 'Acceso del personal' })
+    expect(enlace).toHaveAttribute('href', '/internal-login')
+
+    await user.click(enlace)
+
+    expect(screen.queryByRole('dialog', { name: 'Ingresa a tu cuenta' })).not.toBeInTheDocument()
+  })
+
   it('un cliente ve su cuenta, el enlace a sus pedidos y puede cerrar sesión', async () => {
     const { user } = renderizar(<MenuCliente />, { rol: 'cliente', nombre: 'Ana Pérez' })
 
