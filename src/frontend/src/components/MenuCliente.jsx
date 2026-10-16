@@ -40,6 +40,17 @@ export default function MenuCliente() {
             Usa tu cuenta de Google para comprar y seguir tus pedidos. Si es tu primera vez, la cuenta se crea sola.
           </p>
           <BotonGoogle alIngresar={() => setIngresando(false)} />
+          {/* El personal no entra con Google: tiene su propio acceso con correo y contraseña. */}
+          <p className="mt-5 text-center text-xs text-slate-400">
+            ¿Trabajas aquí?{' '}
+            <Link
+              to="/internal-login"
+              onClick={() => setIngresando(false)}
+              className="underline underline-offset-2 hover:text-emerald-700 dark:hover:text-emerald-300"
+            >
+              Acceso del personal
+            </Link>
+          </p>
         </Modal>
       </>
     )
