@@ -2,8 +2,8 @@ import { Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import MenuPerfil from '../components/MenuPerfil'
 import BotonTema from '../components/BotonTema'
+import CampanaAvisos from '../components/CampanaAvisos'
 import { useAuth } from '../context/AuthContext'
-import { listarNotificaciones } from '../api/notificaciones'
 
 // Layout de los paneles del personal (ventas y gerente).
 // - Escritorio (lg+): barra lateral fija a la izquierda, que se puede ocultar con el botón ☰
@@ -82,43 +82,6 @@ function Marca({ rol }) {
         <span className="block text-sm font-bold text-slate-900">Supermercado</span>
         <span className="block text-xs text-marca-600 dark:text-marca-200">{rol === 'superadmin' ? 'Administración' : 'Panel de ventas'}</span>
       </span>
-    </Link>
-  )
-}
-
-// Campana con la cantidad de avisos sin leer. Se actualiza cada minuto y al cambiar de página.
-function Campana() {
-  const [sinLeer, setSinLeer] = useState(0)
-  const { pathname } = useLocation()
-
-  useEffect(() => {
-    let vigente = true
-    const cargar = () =>
-      listarNotificaciones()
-        .then((r) => vigente && setSinLeer(r.total))
-        .catch(() => {}) // La campana no debe romper la pantalla.
-    cargar()
-    const t = setInterval(cargar, 60_000)
-    return () => {
-      vigente = false
-      clearInterval(t)
-    }
-  }, [pathname])
-
-  return (
-    <Link
-      to="/panel#avisos"
-      aria-label={`Avisos sin leer: ${sinLeer}`}
-      className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0m6 0H9" />
-      </svg>
-      {sinLeer > 0 && (
-        <span className="absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white">
-          {sinLeer > 99 ? '99+' : sinLeer}
-        </span>
-      )}
     </Link>
   )
 }
@@ -231,7 +194,7 @@ export default function PanelLayout() {
           </div>
           <div className="ml-auto flex items-center gap-1">
             <BotonTema />
-            <Campana />
+            <CampanaAvisos />
             <MenuPerfil />
           </div>
         </header>

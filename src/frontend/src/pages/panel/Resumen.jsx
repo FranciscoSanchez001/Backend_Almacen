@@ -9,16 +9,11 @@ import { EncabezadoPagina, EstadoCarga } from '../../components/ui'
 import { claseBoton } from '../../utils/panel'
 import { formatoFechaHora, formatoUsd } from '../../utils/formato'
 import Icono from '../../components/Icono'
+import { EVENTO_AVISOS, avisarCambioAvisos, tipoAviso } from '../../utils/avisos'
 
 // Inicio del panel de ventas: lo que hay que atender ya. Pedidos pendientes (los
 // más cerca de vencer primero), alertas de stock y avisos sin leer.
 // No es el dashboard de KPIs: ese es solo del gerente.
-const TIPOS_AVISO = {
-  stock_agotado: { icono: 'agotado', texto: (n) => `Se agotó ${n.producto ?? 'un producto'}` },
-  pedido_nuevo: { icono: 'carrito', texto: () => 'Llegó un pedido nuevo' },
-  pedido_por_expirar: { icono: 'reloj', texto: () => 'Un pedido está por expirar' },
-}
-
 function Tarjeta({ titulo, valor, detalle, a, alerta }) {
   return (
     <Link to={a} className="rounded-xl border border-slate-200 bg-superficie p-4 transition hover:border-marca-200 dark:hover:border-marca-500 hover:shadow-sm">
@@ -48,18 +43,22 @@ export default function Resumen() {
     }
   }, [])
 
+  // También se recarga cuando los avisos se marcan desde la campana del encabezado.
   useEffect(() => {
     cargar()
+    window.addEventListener(EVENTO_AVISOS, cargar)
+    return () => window.removeEventListener(EVENTO_AVISOS, cargar)
   }, [cargar])
 
+  // avisarCambioAvisos actualiza esta página (por el evento) y la campana a la vez.
   async function leer(id) {
     await marcarLeida(id).catch(() => {})
-    cargar()
+    avisarCambioAvisos()
   }
 
   async function leerTodas() {
     await marcarTodasLeidas().catch(() => {})
-    cargar()
+    avisarCambioAvisos()
   }
 
   const agotados = datos?.inventario.filter((p) => p.stockDisponible === 0) ?? []
@@ -132,7 +131,7 @@ export default function Resumen() {
                 ) : (
                   <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto">
                     {datos.avisos.items.map((n) => {
-                      const tipo = TIPOS_AVISO[n.tipo] ?? { icono: 'campana', texto: () => n.tipo }
+                      const tipo = tipoAviso(n)
                       return (
                         <li key={n.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
                           <span>

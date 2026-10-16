@@ -164,9 +164,9 @@ describe('PanelLayout: avisos sin leer', () => {
 
     renderizarPanel('ventas')
 
-    const campana = await screen.findByRole('link', { name: 'Avisos sin leer: 7' })
+    const campana = await screen.findByRole('button', { name: 'Avisos sin leer: 7' })
     expect(campana).toHaveTextContent('7')
-    expect(campana).toHaveAttribute('href', '/panel#avisos')
+    expect(campana).toHaveAttribute('aria-expanded', 'false')
   })
 
   it('con más de 99 avisos muestra "99+"', async () => {
@@ -174,13 +174,13 @@ describe('PanelLayout: avisos sin leer', () => {
 
     renderizarPanel('ventas')
 
-    expect(await screen.findByRole('link', { name: 'Avisos sin leer: 150' })).toHaveTextContent('99+')
+    expect(await screen.findByRole('button', { name: 'Avisos sin leer: 150' })).toHaveTextContent('99+')
   })
 
   it('sin avisos no muestra contador', async () => {
     renderizarPanel('ventas')
 
-    const campana = await screen.findByRole('link', { name: 'Avisos sin leer: 0' })
+    const campana = await screen.findByRole('button', { name: 'Avisos sin leer: 0' })
     expect(campana).not.toHaveTextContent(/\d/)
   })
 
@@ -190,7 +190,7 @@ describe('PanelLayout: avisos sin leer', () => {
     renderizarPanel('ventas')
 
     await waitFor(() => expect(listarNotificaciones).toHaveBeenCalled())
-    expect(screen.getByRole('link', { name: 'Avisos sin leer: 0' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Avisos sin leer: 0' })).toBeInTheDocument()
     expect(screen.getByText('Página Resumen')).toBeInTheDocument()
   })
 
@@ -203,7 +203,7 @@ describe('PanelLayout: avisos sin leer', () => {
     await act(() => vi.advanceTimersByTimeAsync(60_000))
 
     expect(listarNotificaciones).toHaveBeenCalledTimes(2)
-    expect(await screen.findByRole('link', { name: 'Avisos sin leer: 3' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Avisos sin leer: 3' })).toBeInTheDocument()
   })
 
   it('vuelve a consultar los avisos al cambiar de página', async () => {
